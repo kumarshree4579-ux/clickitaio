@@ -1,0 +1,16 @@
+{
+  "name": "ecom-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --prefix packages/api",
+    "dev:admin": "npm run dev --prefix apps/admin -- --port 3001",
+    "dev:web": "npm run dev --prefix apps/web -- --port 3000",
+    "build:api": "npm run build --prefix packages/api",
+    "build:admin": "npm run build --prefix apps/admin",
+    "build:web": "npm run build --prefix apps/web"
+  }
+}
