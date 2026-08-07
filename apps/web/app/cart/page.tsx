@@ -6,6 +6,8 @@ import Link from 'next/link';
 const API = process.env.NEXT_PUBLIC_API_URL;
 interface CartItem { _id: string; name: string; price: number; image?: string; qty: number; }
 
+const fmt = (n: number) => n.toLocaleString('en-IN');
+
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState('');
@@ -49,8 +51,10 @@ export default function CartPage() {
   }
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const shipping = subtotal >= 500 ? 0 : 49;
+  const baseShipping = subtotal >= 500 ? 0 : 49;
   const discount = coupon?.discount || 0;
+  const freeShipping = coupon?.coupon?.type === 'free_shipping';
+  const shipping = freeShipping ? 0 : baseShipping;
   const total = subtotal + shipping - discount;
 
   return (
@@ -62,7 +66,7 @@ export default function CartPage() {
           <div className="text-center py-20 text-gray-400">
             <p className="text-5xl mb-4">🛒</p>
             <p className="mb-4">Your cart is empty</p>
-            <Link href="/products" className="bg-blue-600 text-white px-6 py-2.5 rounded-full hover:bg-blue-700">Shop Now</Link>
+            <Link href="/products" className="bg-indigo-600 text-white px-6 py-2.5 rounded-full hover:bg-indigo-700">Shop Now</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -72,17 +76,17 @@ export default function CartPage() {
                   <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                     {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800 text-sm">{item.name}</p>
-                    <p className="text-blue-600 font-bold">₹{item.price}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-800 text-sm truncate">{item.name}</p>
+                    <p className="text-indigo-600 font-bold">₹{fmt(item.price)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button onClick={() => update(item._id, item.qty - 1)} className="w-7 h-7 border rounded-full text-gray-600 hover:bg-gray-100">−</button>
-                    <span className="w-6 text-center text-sm">{item.qty}</span>
+                    <span className="w-6 text-center text-sm font-medium">{item.qty}</span>
                     <button onClick={() => update(item._id, item.qty + 1)} className="w-7 h-7 border rounded-full text-gray-600 hover:bg-gray-100">+</button>
                   </div>
-                  <p className="font-bold text-gray-800 w-16 text-right">₹{item.price * item.qty}</p>
-                  <button onClick={() => update(item._id, 0)} className="text-red-400 hover:text-red-600 text-lg">×</button>
+                  <p className="font-bold text-gray-800 w-20 text-right shrink-0">₹{fmt(item.price * item.qty)}</p>
+                  <button onClick={() => update(item._id, 0)} className="text-red-400 hover:text-red-600 text-lg shrink-0">×</button>
                 </div>
               ))}
             </div>
@@ -91,18 +95,22 @@ export default function CartPage() {
               <h2 className="font-bold text-gray-800">Order Summary</h2>
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Subtotal ({cart.reduce((s, i) => s + i.qty, 0)} items)</span>
-                <span>₹{subtotal}</span>
+                <span>₹{fmt(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Shipping</span>
-                <span className={shipping === 0 ? 'text-green-600' : ''}>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
+                <span className={shipping === 0 ? 'text-green-600' : ''}>
+                  {shipping === 0 ? 'Free' : `₹${shipping}`}
+                </span>
               </div>
 
               {coupon ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-green-700">{coupon.coupon.code} applied</p>
-                    <p className="text-xs text-green-600">-₹{discount} discount</p>
+                    <p className="text-xs text-green-600">
+                      {freeShipping ? 'Free shipping!' : `-₹${fmt(discount)} discount`}
+                    </p>
                   </div>
                   <button onClick={removeCoupon} className="text-red-400 hover:text-red-600">×</button>
                 </div>
@@ -123,13 +131,13 @@ export default function CartPage() {
 
               {discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount</span><span>-₹{discount}</span>
+                  <span>Discount</span><span>-₹{fmt(discount)}</span>
                 </div>
               )}
               <div className="border-t pt-3 flex justify-between font-bold text-gray-800">
-                <span>Total</span><span>₹{total}</span>
+                <span>Total</span><span>₹{fmt(total)}</span>
               </div>
-              <Link href="/checkout" className="block w-full bg-blue-600 text-white text-center py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors">
+              <Link href="/checkout" className="block w-full bg-indigo-600 text-white text-center py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors">
                 Proceed to Checkout
               </Link>
             </div>

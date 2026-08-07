@@ -41,9 +41,16 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   }
 });
 
-router.get('/admin', requireAuth, requireRole('super_admin'), async (_req, res: Response) => {
-  const reviews = await Review.find().populate('customer', 'name email').populate('product', 'name').sort({ createdAt: -1 }).limit(100);
-  return res.json(reviews);
+router.get('/admin', requireAuth, requireRole('super_admin'), async (req: Request, res: Response) => {
+  const { page = '1', limit = '50', status } = req.query as any;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const filter: any = {};
+  if (status) filter.status = status;
+  const [items, total] = await Promise.all([
+    Review.find(filter).populate('customer', 'name email').populate('product', 'name').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+    Review.countDocuments(filter),
+  ]);
+  return res.json({ items, total });
 });
 
 router.put('/:id/status', requireAuth, requireRole('super_admin'), async (req: Request, res: Response) => {

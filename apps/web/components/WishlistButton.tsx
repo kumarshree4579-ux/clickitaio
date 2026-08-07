@@ -1,9 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function WishlistButton({ productId }: { productId: string }) {
+  const router = useRouter();
   const [inWishlist, setInWishlist] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +18,7 @@ export default function WishlistButton({ productId }: { productId: string }) {
 
   async function toggle() {
     const token = localStorage.getItem('token');
-    if (!token) { window.location.href = '/login'; return; }
+    if (!token) { router.push('/login'); return; }
     setLoading(true);
     if (inWishlist) {
       await fetch(`${API}/wishlist/${productId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });

@@ -19,3 +19,7 @@ export function signRefreshToken(payload: object) {
 export function verifyAccessToken(token: string) {
   return jwt.verify(token, requireEnv('JWT_SECRET'));
 }
+
+export function verifyRefreshToken(token: string) {
+  return jwt.verify(token, requireEnv('JWT_REFRESH_SECRET'));
+}

@@ -1,141 +1,185 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-const STATUS_STEPS = ['pending','confirmed','packed','shipped','out_for_delivery','delivered'];
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Order Placed', confirmed: 'Confirmed', packed: 'Packed',
-  shipped: 'Shipped', out_for_delivery: 'Out for Delivery', delivered: 'Delivered',
-  cancelled: 'Cancelled', returned: 'Returned', refunded: 'Refunded',
+const STATUS_COLOR: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-700',
+  confirmed: 'bg-blue-100 text-blue-700',
+  packed: 'bg-indigo-100 text-indigo-700',
+  shipped: 'bg-purple-100 text-purple-700',
+  out_for_delivery: 'bg-orange-100 text-orange-700',
+  delivered: 'bg-green-100 text-green-700',
+  cancelled: 'bg-red-100 text-red-700',
+  returned: 'bg-gray-100 text-gray-700',
+  refunded: 'bg-gray-100 text-gray-700',
 };
 
+const STEPS = ['pending', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
+const fmt = (n: number) => n.toLocaleString('en-IN');
+
 export default function OrderDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  return (
+    <Suspense fallback={<><Header /><div className="flex items-center justify-center h-64 text-gray-400">Loading...</div></>}>
+      <OrderDetail />
+    </Suspense>
+  );
+}
+
+function OrderDetail() {
+  const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
   const isSuccess = searchParams.get('success') === '1';
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`${API}/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setOrder).finally(() => setLoading(false));
-  }, [id]);
+    if (!token) { router.push('/login'); return; }
+    fetch(`${API}/orders/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { setOrder(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [params.id]);
 
   async function cancelOrder() {
     if (!confirm('Cancel this order?')) return;
+    setCancelling(true);
     const token = localStorage.getItem('token');
-    const res = await fetch(`${API}/orders/${id}/cancel`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
-    if (res.ok) setOrder(await res.json());
+    const res = await fetch(`${API}/orders/${order._id}/cancel`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setOrder(updated);
+    }
+    setCancelling(false);
   }
 
   if (loading) return <><Header /><div className="flex items-center justify-center h-64 text-gray-400">Loading...</div></>;
-  if (!order) return <><Header /><div className="text-center py-20 text-gray-400">Order not found</div></>;
+  if (!order || order.error) return <><Header /><div className="text-center py-20 text-gray-400">Order not found. <Link href="/orders" className="text-indigo-600 underline">Back to orders</Link></div></>;
 
-  const stepIdx = STATUS_STEPS.indexOf(order.status);
-  const isCancelled = ['cancelled','returned','refunded'].includes(order.status);
+  const stepIdx = STEPS.indexOf(order.status);
+  const isCancelled = ['cancelled', 'returned', 'refunded'].includes(order.status);
 
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-8 space-y-5">
 
         {isSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
-            <p className="text-3xl mb-2">🎉</p>
-            <p className="font-bold text-green-700 text-lg">Order Placed Successfully!</p>
-            <p className="text-green-600 text-sm">Order #{order.orderNumber}</p>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-2xl shrink-0">✅</div>
+            <div>
+              <p className="font-bold text-emerald-800">Order placed successfully!</p>
+              <p className="text-sm text-emerald-600 mt-0.5">We'll send you updates via email.</p>
+            </div>
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="font-bold text-gray-800 text-lg">Order #{order.orderNumber}</h1>
-              <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-            </div>
-            <div className="text-right">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${isCancelled ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                {STATUS_LABELS[order.status] || order.status}
-              </span>
-              <p className="text-sm text-gray-500 mt-1">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'} · {order.paymentStatus}</p>
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <Link href="/orders" className="text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">
+              ← My Orders
+            </Link>
+            <h1 className="text-xl font-bold text-gray-900">#{order.orderNumber}</h1>
+            <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
+          <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
+            {order.status.replace(/_/g, ' ')}
+          </span>
+        </div>
 
-          {/* Timeline */}
-          {!isCancelled && (
-            <div className="flex items-center gap-0 mb-6 overflow-x-auto pb-2">
-              {STATUS_STEPS.map((step, i) => (
-                <div key={step} className="flex items-center flex-1 min-w-0">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i <= stepIdx ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                      {i < stepIdx ? '✓' : i + 1}
-                    </div>
-                    <p className={`text-xs mt-1 text-center whitespace-nowrap ${i <= stepIdx ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
-                      {STATUS_LABELS[step]}
-                    </p>
+        {/* Progress tracker */}
+        {!isCancelled && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="flex items-center justify-between relative">
+              <div className="absolute left-0 right-0 top-4 h-0.5 bg-gray-100 z-0" />
+              <div className="absolute left-0 top-4 h-0.5 bg-indigo-500 z-0 transition-all"
+                style={{ width: stepIdx >= 0 ? `${(stepIdx / (STEPS.length - 1)) * 100}%` : '0%' }} />
+              {STEPS.map((s, i) => (
+                <div key={s} className="flex flex-col items-center gap-1.5 z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${i <= stepIdx ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-400'}`}>
+                    {i < stepIdx ? '✓' : i + 1}
                   </div>
-                  {i < STATUS_STEPS.length - 1 && (
-                    <div className={`h-0.5 flex-1 mx-1 ${i < stepIdx ? 'bg-blue-600' : 'bg-gray-200'}`} />
-                  )}
+                  <span className="text-[10px] text-gray-500 text-center capitalize hidden sm:block">{s.replace(/_/g, ' ')}</span>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Items */}
-          <div className="space-y-3 mb-4">
+        {/* Items */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-800">Items ({order.items.length})</h2>
+          </div>
+          <div className="divide-y divide-gray-50">
             {order.items.map((item: any, i: number) => (
-              <div key={i} className="flex gap-3 items-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0">
                   {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">📦</div>}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">{item.name}</p>
-                  <p className="text-xs text-gray-500">SKU: {item.sku} · Qty: {item.qty}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-800 text-sm truncate">{item.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">SKU: {item.sku} · Qty: {item.qty}</p>
                 </div>
-                <p className="font-medium text-gray-800">₹{item.price * item.qty}</p>
+                <div className="text-right shrink-0">
+                  <p className="font-bold text-gray-900">₹{fmt(item.price * item.qty)}</p>
+                  <p className="text-xs text-gray-400">₹{fmt(item.price)} each</p>
+                </div>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Totals */}
-          <div className="border-t pt-3 space-y-1 text-sm text-gray-600">
-            <div className="flex justify-between"><span>Subtotal</span><span>₹{order.subtotal}</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span>{order.shippingCharge === 0 ? 'Free' : `₹${order.shippingCharge}`}</span></div>
-            <div className="flex justify-between font-bold text-gray-800 text-base pt-1 border-t"><span>Total</span><span>₹{order.total}</span></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Delivery address */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h2 className="font-semibold text-gray-800 mb-3">Delivery Address</h2>
+            <p className="text-sm font-medium text-gray-800">{order.address?.name}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{order.address?.phone}</p>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {order.address?.line1}{order.address?.line2 ? `, ${order.address.line2}` : ''}<br />
+              {order.address?.city}, {order.address?.state} - {order.address?.pincode}
+            </p>
+          </div>
+
+          {/* Price summary */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h2 className="font-semibold text-gray-800 mb-3">Price Details</h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>₹{fmt(order.subtotal)}</span></div>
+              <div className="flex justify-between text-gray-600">
+                <span>Shipping</span>
+                <span className={order.shippingCharge === 0 ? 'text-green-600' : ''}>{order.shippingCharge === 0 ? 'Free' : `₹${order.shippingCharge}`}</span>
+              </div>
+              {order.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{fmt(order.discount)}</span></div>}
+              <div className="flex justify-between font-bold text-gray-900 border-t border-gray-100 pt-2 mt-2">
+                <span>Total</span><span>₹{fmt(order.total)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 pt-1">
+                <span>Payment</span>
+                <span className="capitalize">{order.paymentMethod} · <span className={order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}>{order.paymentStatus}</span></span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Address */}
-        <div className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="font-bold text-gray-800 mb-2">Delivery Address</h2>
-          <p className="text-sm text-gray-700">{order.address.name} · {order.address.phone}</p>
-          <p className="text-sm text-gray-500">{order.address.line1}{order.address.line2 ? `, ${order.address.line2}` : ''}, {order.address.city}, {order.address.state} - {order.address.pincode}</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 flex-wrap">
-          <Link href="/orders" className="border px-4 py-2 rounded-lg text-sm hover:bg-gray-50">← My Orders</Link>
-          {['pending','confirmed'].includes(order.status) && (
-            <button onClick={cancelOrder} className="border border-red-300 text-red-600 px-4 py-2 rounded-lg text-sm hover:bg-red-50">Cancel Order</button>
-          )}
-          <a href="#" onClick={e => {
-            e.preventDefault();
-            const token = localStorage.getItem('token');
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-              .then(r => r.text()).then(html => {
-                const w = window.open('', '_blank');
-                w?.document.write(html);
-                w?.document.close();
-              });
-          }} className="border px-4 py-2 rounded-lg text-sm hover:bg-gray-50">🧾 Invoice</a>
-          <Link href="/products" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Continue Shopping</Link>
-        </div>
+        {/* Cancel button */}
+        {['pending', 'confirmed'].includes(order.status) && (
+          <button onClick={cancelOrder} disabled={cancelling}
+            className="w-full border border-red-200 text-red-500 hover:bg-red-50 py-3 rounded-2xl text-sm font-medium transition-colors disabled:opacity-50">
+            {cancelling ? 'Cancelling...' : 'Cancel Order'}
+          </button>
+        )}
       </main>
     </>
   );

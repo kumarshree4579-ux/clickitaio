@@ -5,14 +5,20 @@ interface Props {
   product: {
     _id: string;
     name: string;
-    slug: string;
     mrp: number;
     sellingPrice: number;
     images: { url: string; alt?: string }[];
-    isFeatured?: boolean;
     isNewArrival?: boolean;
+    isBestSeller?: boolean;
+    isFeatured?: boolean;
     stock?: number;
+    brand?: { name: string };
   };
+}
+
+// Consistent number formatting — avoids SSR/client locale mismatch
+function fmt(n: number) {
+  return n.toLocaleString('en-IN');
 }
 
 export default function ProductCard({ product }: Props) {
@@ -20,7 +26,8 @@ export default function ProductCard({ product }: Props) {
     ? Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100)
     : 0;
 
-  function addToCart() {
+  function addToCart(e: React.MouseEvent) {
+    e.preventDefault();
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const idx = cart.findIndex((i: any) => i._id === product._id);
     if (idx > -1) cart[idx].qty += 1;
@@ -30,40 +37,60 @@ export default function ProductCard({ product }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
-      <Link href={`/products/${product._id}`}>
-        <div className="relative aspect-square bg-gray-100 overflow-hidden">
-          {product.images[0] ? (
-            <img src={product.images[0].url} alt={product.images[0].alt || product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📦</div>
-          )}
+    <Link href={`/products/${product._id}`}
+      className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-indigo-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
+
+      {/* Image */}
+      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+        {product.images[0] ? (
+          <img src={product.images[0].url} alt={product.images[0].alt || product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg className="w-14 h-14 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )}
+        {/* Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           {discount > 0 && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{discount}% off</span>
+            <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{discount}% OFF</span>
           )}
           {product.isNewArrival && (
-            <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">New</span>
+            <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">NEW</span>
+          )}
+          {product.isBestSeller && (
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">BESTSELLER</span>
           )}
         </div>
-      </Link>
-      <div className="p-3">
-        <Link href={`/products/${product._id}`}>
-          <p className="text-sm font-medium text-gray-800 line-clamp-2 hover:text-blue-600">{product.name}</p>
-        </Link>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="font-bold text-gray-900">₹{product.sellingPrice}</span>
-          {discount > 0 && <span className="text-xs text-gray-400 line-through">₹{product.mrp}</span>}
+      </div>
+
+      {/* Info */}
+      <div className="p-3 flex flex-col flex-1">
+        {product.brand && (
+          <p className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wide mb-0.5">{product.brand.name}</p>
+        )}
+        <p className="text-sm font-medium text-gray-800 line-clamp-2 flex-1 leading-snug">{product.name}</p>
+
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className="text-base font-bold text-gray-900">₹{fmt(product.sellingPrice)}</span>
+          {discount > 0 && (
+            <span className="text-xs text-gray-400 line-through">₹{fmt(product.mrp)}</span>
+          )}
         </div>
-        {product.stock === 0 ? (
-          <p className="text-xs text-red-500 mt-2">Out of stock</p>
+
+        {(product.stock ?? 1) === 0 ? (
+          <div className="mt-2.5 w-full text-center text-xs text-gray-400 py-2 border border-gray-100 rounded-xl bg-gray-50">
+            Out of Stock
+          </div>
         ) : (
           <button onClick={addToCart}
-            className="mt-2 w-full bg-blue-600 text-white text-xs py-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+            className="mt-2.5 w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-medium py-2 rounded-xl transition-all">
             Add to Cart
           </button>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

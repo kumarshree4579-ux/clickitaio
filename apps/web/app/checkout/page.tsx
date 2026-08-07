@@ -10,6 +10,8 @@ interface Address { _id?: string; name: string; phone: string; line1: string; li
 
 const emptyAddress: Address = { name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India' };
 
+const fmt = (n: number) => n.toLocaleString('en-IN');
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -38,8 +40,18 @@ export default function CheckoutPage() {
   }, []);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const shipping = subtotal >= 500 ? 0 : 49;
-  const total = subtotal + shipping;
+  const [coupon, setCoupon] = useState<any>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('coupon');
+    if (saved) setCoupon(JSON.parse(saved));
+  }, []);
+
+  const discount = coupon?.discount || 0;
+  const freeShipping = coupon?.coupon?.type === 'free_shipping';
+  const baseShipping = subtotal >= 500 ? 0 : 49;
+  const shipping = freeShipping ? 0 : baseShipping;
+  const total = subtotal + shipping - discount;
 
   async function saveNewAddress() {
     const res = await fetch(`${API}/addresses`, {
@@ -61,13 +73,14 @@ export default function CheckoutPage() {
       const res = await fetch(`${API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-        body: JSON.stringify({ items: cart, address: selectedAddr, paymentMethod }),
+        body: JSON.stringify({ items: cart, address: selectedAddr, paymentMethod, couponCode: coupon?.coupon?.code }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Failed to place order'); setLoading(false); return; }
 
       if (paymentMethod === 'cod') {
         localStorage.removeItem('cart');
+        localStorage.removeItem('coupon');
         window.dispatchEvent(new Event('cart-updated'));
         router.push(`/orders/${data.order._id}?success=1`);
         return;
@@ -97,6 +110,7 @@ export default function CheckoutPage() {
             });
             if (verifyRes.ok) {
               localStorage.removeItem('cart');
+              localStorage.removeItem('coupon');
               window.dispatchEvent(new Event('cart-updated'));
               router.push(`/orders/${data.order._id}?success=1`);
             } else {
@@ -190,20 +204,25 @@ export default function CheckoutPage() {
                 {cart.map(item => (
                   <div key={item._id} className="flex justify-between text-sm">
                     <span className="text-gray-600 truncate flex-1 mr-2">{item.name} × {item.qty}</span>
-                    <span className="font-medium">₹{item.price * item.qty}</span>
+                    <span className="font-medium">₹{fmt(item.price * item.qty)}</span>
                   </div>
                 ))}
               </div>
               <div className="border-t pt-3 space-y-1 text-sm text-gray-600">
-                <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal}</span></div>
+                <div className="flex justify-between"><span>Subtotal</span><span>₹{fmt(subtotal)}</span></div>
                 <div className="flex justify-between"><span>Shipping</span><span className={shipping === 0 ? 'text-green-600' : ''}>{shipping === 0 ? 'Free' : `₹${shipping}`}</span></div>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-sm text-green-600 pt-1">
+                  <span>Discount</span><span>-₹{fmt(discount)}</span>
+                </div>
+              )}
               <div className="border-t pt-3 flex justify-between font-bold text-gray-800">
-                <span>Total</span><span>₹{total}</span>
+                <span>Total</span><span>₹{fmt(total)}</span>
               </div>
               <button onClick={placeOrder} disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Place Order' : `Pay ₹${total}`}
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Place Order' : `Pay ₹${fmt(total)}`}
               </button>
             </div>
           </div>

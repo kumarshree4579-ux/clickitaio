@@ -8,6 +8,7 @@ import { User } from '../models/user';
 import { Coupon } from '../models/coupon';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from '../utils/mailer';
+import { validate, OrderSchema } from '../utils/validation';
 
 const router = Router();
 
@@ -16,21 +17,13 @@ function genOrderNumber() {
 }
 
 function getRazorpay() {
-  return new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || '',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-  });
+  return new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID || '', key_secret: process.env.RAZORPAY_KEY_SECRET || '' });
 }
 
-// POST /orders — place order
-router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
+router.post('/', requireAuth, validate(OrderSchema), async (req: AuthedRequest, res: Response) => {
   try {
     const { items, address, paymentMethod, couponCode, notes } = req.body;
-    if (!items?.length || !address || !paymentMethod) {
-      return res.status(400).json({ error: 'items, address and paymentMethod are required' });
-    }
 
-    // Validate stock and build order items
     const orderItems = [];
     let subtotal = 0;
     for (const item of items) {
@@ -44,7 +37,6 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
     const shippingCharge = subtotal >= 500 ? 0 : 49;
     let discount = 0;
 
-    // Apply coupon
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
       if (coupon && (!coupon.expiresAt || coupon.expiresAt > new Date()) && (!coupon.usageLimit || coupon.usedCount < coupon.usageLimit)) {
@@ -60,37 +52,28 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
     const total = subtotal + shippingCharge - discount;
 
     const order = await Order.create({
-      orderNumber: genOrderNumber(),
-      customer: req.user!.sub,
-      items: orderItems,
-      address,
-      subtotal,
-      shippingCharge,
-      discount,
-      total,
-      couponCode,
-      paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
-      status: 'pending',
-      notes,
+      orderNumber: genOrderNumber(), customer: req.user!.sub, items: orderItems, address,
+      subtotal, shippingCharge, discount, total, couponCode, paymentMethod,
+      paymentStatus: 'pending', status: 'pending', notes,
       statusHistory: [{ status: 'pending', at: new Date() }],
     });
 
-    // Deduct stock + record movements
-    for (const item of items) {
-      const prod = await Product.findById(item._id);
-      if (prod) {
-        const before = prod.stock;
-        const after = before - item.qty;
-        await Product.findByIdAndUpdate(item._id, { stock: after });
-        await StockMovement.create({ product: item._id, type: 'sale', qty: -item.qty, before, after, reference: order.orderNumber, createdBy: req.user!.sub });
+    // For COD: deduct stock immediately. For Razorpay: deduct only after payment verified.
+    if (paymentMethod === 'cod') {
+      for (const item of items) {
+        const prod = await Product.findById(item._id);
+        if (prod) {
+          const before = prod.stock;
+          const after = before - item.qty;
+          await Product.findByIdAndUpdate(item._id, { stock: after });
+          await StockMovement.create({ product: item._id, type: 'sale', qty: -item.qty, before, after, reference: order.orderNumber, createdBy: req.user!.sub });
+        }
       }
     }
-    // Send confirmation email
+
     const user = await User.findById(req.user!.sub);
     if (user?.email) sendOrderConfirmationEmail(user.email, order).catch(() => {});
 
-    // If Razorpay, create payment order
     if (paymentMethod === 'razorpay') {
       const rpOrder = await getRazorpay().orders.create({ amount: total * 100, currency: 'INR', receipt: order.orderNumber });
       await Order.findByIdAndUpdate(order._id, { razorpayOrderId: rpOrder.id });
@@ -104,35 +87,42 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   }
 });
 
-// POST /orders/verify-payment
 router.post('/verify-payment', requireAuth, async (req: AuthedRequest, res: Response) => {
   try {
     const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
     const secret = process.env.RAZORPAY_KEY_SECRET || '';
-    const body = razorpayOrderId + '|' + razorpayPaymentId;
-    const expectedSig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    const expectedSig = crypto.createHmac('sha256', secret).update(`${razorpayOrderId}|${razorpayPaymentId}`).digest('hex');
     if (expectedSig !== razorpaySignature) return res.status(400).json({ error: 'Invalid payment signature' });
     const order = await Order.findByIdAndUpdate(orderId, {
       paymentStatus: 'paid', status: 'confirmed', razorpayPaymentId,
       $push: { statusHistory: { status: 'confirmed', at: new Date(), note: 'Payment received' } },
     }, { new: true }).populate('customer', 'email');
+    // Deduct stock now that payment is confirmed
+    const pendingOrder = await Order.findById(orderId);
+    if (pendingOrder) {
+      for (const item of pendingOrder.items) {
+        const prod = await Product.findById(item.product);
+        if (prod) {
+          const before = prod.stock;
+          const after = Math.max(0, before - item.qty);
+          await Product.findByIdAndUpdate(item.product, { stock: after });
+          await StockMovement.create({ product: item.product, type: 'sale', qty: -item.qty, before, after, reference: pendingOrder.orderNumber, createdBy: pendingOrder.customer });
+        }
+      }
+    }
     const customer = order?.customer as any;
     if (customer?.email) sendOrderStatusEmail(customer.email, order!.orderNumber, 'confirmed').catch(() => {});
     return res.json({ success: true, order });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Server error' });
   }
 });
 
-// GET /orders — customer's own orders
 router.get('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   const { page = '1', limit = '10' } = req.query as any;
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const filter: any = {};
-  // admins see all, customers see own
-  if (!['super_admin', 'order_manager'].includes(req.user!.role)) {
-    filter.customer = req.user!.sub;
-  }
+  if (!['super_admin', 'order_manager'].includes(req.user!.role)) filter.customer = req.user!.sub;
   const [items, total] = await Promise.all([
     Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).populate('customer', 'name email'),
     Order.countDocuments(filter),
@@ -140,23 +130,21 @@ router.get('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   return res.json({ items, total });
 });
 
-// GET /orders/:id
 router.get('/:id', requireAuth, async (req: AuthedRequest, res: Response) => {
   const order = await Order.findById(req.params.id).populate('customer', 'name email').populate('items.product', 'name slug');
   if (!order) return res.status(404).json({ error: 'Not found' });
-  // customers can only see their own
   if (!['super_admin', 'order_manager'].includes(req.user!.role) && order.customer.toString() !== req.user!.sub) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   return res.json(order);
 });
 
-// PUT /orders/:id/status — admin update status
 router.put('/:id/status', requireAuth, requireRole('super_admin', 'order_manager'), async (req: AuthedRequest, res: Response) => {
   const { status, note } = req.body;
+  const validStatuses = ['pending','confirmed','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'];
+  if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
   const order = await Order.findByIdAndUpdate(req.params.id, {
-    status,
-    $push: { statusHistory: { status, at: new Date(), note } },
+    status, $push: { statusHistory: { status, at: new Date(), note } },
   }, { new: true }).populate('customer', 'email');
   if (!order) return res.status(404).json({ error: 'Not found' });
   const customer = order.customer as any;
@@ -164,13 +152,11 @@ router.put('/:id/status', requireAuth, requireRole('super_admin', 'order_manager
   return res.json(order);
 });
 
-// PUT /orders/:id/cancel — customer cancel
 router.put('/:id/cancel', requireAuth, async (req: AuthedRequest, res: Response) => {
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ error: 'Not found' });
   if (order.customer.toString() !== req.user!.sub) return res.status(403).json({ error: 'Forbidden' });
   if (!['pending', 'confirmed'].includes(order.status)) return res.status(400).json({ error: 'Cannot cancel at this stage' });
-  // restore stock
   for (const item of order.items) {
     await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.qty } });
   }

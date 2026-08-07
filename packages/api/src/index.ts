@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth';
@@ -18,8 +19,7 @@ import reportsRoutes from './routes/reports';
 import wishlistRoutes from './routes/wishlist';
 import bannersRoutes from './routes/banners';
 import importRoutes from './routes/import';
-
-dotenv.config();
+import notificationsRoutes from './routes/notifications';
 
 // ── Startup validation ─────────────────────────────────
 const REQUIRED_ENV = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGO_URI'];
@@ -63,6 +63,7 @@ app.use('/reports', reportsRoutes);
 app.use('/wishlist', wishlistRoutes);
 app.use('/banners', bannersRoutes);
 app.use('/import', importRoutes);
+app.use('/notifications', notificationsRoutes);
 
 const port = process.env.PORT || 4000;
 

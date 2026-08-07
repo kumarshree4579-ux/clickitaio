@@ -7,6 +7,8 @@ import Link from 'next/link';
 const API = process.env.NEXT_PUBLIC_API_URL;
 const token = () => localStorage.getItem('token');
 
+const fmt = (n: number) => n.toLocaleString('en-IN');
+
 export default function WishlistPage() {
   const router = useRouter();
   const [items, setItems] = useState<any[]>([]);
@@ -71,8 +73,8 @@ export default function WishlistPage() {
                       <p className="text-sm font-medium text-gray-800 line-clamp-2 hover:text-blue-600">{product.name}</p>
                     </Link>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-bold text-gray-900">₹{product.sellingPrice}</span>
-                      {discount > 0 && <span className="text-xs text-gray-400 line-through">₹{product.mrp}</span>}
+                      <span className="font-bold text-gray-900">₹{fmt(product.sellingPrice)}</span>
+                      {discount > 0 && <span className="text-xs text-gray-400 line-through">₹{fmt(product.mrp)}</span>}
                     </div>
                     <div className="flex gap-2 mt-2">
                       {product.stock > 0 ? (

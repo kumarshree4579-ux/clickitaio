@@ -1,76 +1,169 @@
 import Link from 'next/link';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
+import HeroBanner from '../components/HeroBanner';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 async function getData() {
   try {
-    const [featuredRes, newRes, catsRes] = await Promise.all([
-      fetch(`${API}/products?limit=8&status=active`, { next: { revalidate: 60 } }),
-      fetch(`${API}/products?limit=8&status=active`, { next: { revalidate: 60 } }),
-      fetch(`${API}/categories`, { next: { revalidate: 60 } }),
+    const [featuredRes, newRes, bestRes, catsRes] = await Promise.all([
+      fetch(`${API}/products?limit=8&status=active&featured=true`, { cache: 'no-store' }),
+      fetch(`${API}/products?limit=8&status=active&newArrival=true`, { cache: 'no-store' }),
+      fetch(`${API}/products?limit=4&status=active&bestSeller=true`, { cache: 'no-store' }),
+      fetch(`${API}/categories`, { cache: 'no-store' }),
     ]);
-    const [featured, newArrivals, categories] = await Promise.all([featuredRes.json(), newRes.json(), catsRes.json()]);
-    return { featured: featured.items || [], categories: categories.slice(0, 8) };
+    const [featured, newArrivals, bestSellers, categories] = await Promise.all([
+      featuredRes.json(), newRes.json(), bestRes.json(), catsRes.json(),
+    ]);
+    let featuredItems = featured.items || [];
+    if (!featuredItems.length) {
+      const fallback = await fetch(`${API}/products?limit=8&status=active`, { cache: 'no-store' }).then(r => r.json());
+      featuredItems = fallback.items || [];
+    }
+    return {
+      featured: featuredItems,
+      newArrivals: newArrivals.items || [],
+      bestSellers: bestSellers.items || [],
+      categories: (categories || []).filter((c: any) => !c.parent).slice(0, 6),
+    };
   } catch {
-    return { featured: [], categories: [] };
+    return { featured: [], newArrivals: [], bestSellers: [], categories: [] };
   }
 }
 
 export default async function HomePage() {
-  const { featured, categories } = await getData();
+  const { featured, newArrivals, bestSellers, categories } = await getData();
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-10">
+      <main className="flex-1">
 
-        {/* Hero */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl p-10 text-white text-center">
-          <h1 className="text-4xl font-bold mb-2">Welcome to Ecom</h1>
-          <p className="text-blue-100 mb-6">Discover amazing products at great prices</p>
-          <Link href="/products" className="bg-white text-blue-600 font-semibold px-6 py-2.5 rounded-full hover:bg-blue-50 transition-colors">
-            Shop Now
-          </Link>
-        </div>
+        {/* Hero Slider — managed from admin banners */}
+        <section>
+          <HeroBanner />
+        </section>
 
-        {/* Categories */}
-        {categories.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Shop by Category</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {categories.map((c: any) => (
-                <Link key={c._id} href={`/products?category=${c._id}`}
-                  className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-3xl mb-2">🗂️</div>
-                  <p className="text-sm font-medium text-gray-700">{c.name}</p>
-                </Link>
+        {/* Trust badges */}
+        <section className="bg-white border-b border-slate-100">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { icon: '🚚', title: 'Free Shipping', sub: 'On orders above ₹500' },
+                { icon: '↩️', title: 'Easy Returns', sub: '7-day return policy' },
+                { icon: '🔒', title: 'Secure Payment', sub: 'Razorpay & COD' },
+                { icon: '⭐', title: 'Top Quality', sub: 'Verified products' },
+              ].map(b => (
+                <div key={b.title} className="flex items-center gap-3 py-2">
+                  <span className="text-2xl">{b.icon}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{b.title}</p>
+                    <p className="text-xs text-slate-500">{b.sub}</p>
+                  </div>
+                </div>
               ))}
             </div>
-          </section>
-        )}
-
-        {/* Featured Products */}
-        {featured.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Featured Products</h2>
-              <Link href="/products" className="text-sm text-blue-600 hover:underline">View all →</Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {featured.map((p: any) => <ProductCard key={p._id} product={p} />)}
-            </div>
-          </section>
-        )}
-
-        {featured.length === 0 && (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-5xl mb-4">🛍️</p>
-            <p className="text-lg">No products yet. Check back soon!</p>
           </div>
-        )}
+        </section>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-14">
+
+          {/* Categories */}
+          {categories.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Shop by Category</h2>
+                  <p className="text-slate-500 text-sm mt-1">Browse our wide selection of categories</p>
+                </div>
+                <Link href="/products" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                {categories.map((c: any) => (
+                  <Link key={c._id} href={`/products?category=${c._id}`}
+                    className="group flex flex-col items-center gap-2 p-3 bg-white rounded-2xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                      {c.image ? (
+                        <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
+                      ) : (
+                        <svg className="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                      )}
+                    </div>
+                    <p className="text-xs font-medium text-slate-700 text-center leading-tight">{c.name}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Best Sellers */}
+          {bestSellers.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Best Sellers</h2>
+                  <p className="text-slate-500 text-sm mt-1">Our most popular products</p>
+                </div>
+                <Link href="/products?bestSeller=true" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {bestSellers.map((p: any) => <ProductCard key={p._id} product={p} />)}
+              </div>
+            </section>
+          )}
+
+          {/* Featured Products */}
+          {featured.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Featured Products</h2>
+                  <p className="text-slate-500 text-sm mt-1">Handpicked just for you</p>
+                </div>
+                <Link href="/products" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {featured.map((p: any) => <ProductCard key={p._id} product={p} />)}
+              </div>
+            </section>
+          )}
+
+          {/* New Arrivals */}
+          {newArrivals.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">New Arrivals</h2>
+                  <p className="text-slate-500 text-sm mt-1">Fresh products just added</p>
+                </div>
+                <Link href="/products?newArrival=true" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {newArrivals.map((p: any) => <ProductCard key={p._id} product={p} />)}
+              </div>
+            </section>
+          )}
+
+          {featured.length === 0 && newArrivals.length === 0 && (
+            <div className="text-center py-24">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+              </div>
+              <h3 className="text-xl font-semibold text-slate-700 mb-2">No products yet</h3>
+              <p className="text-slate-500">Check back soon for amazing products!</p>
+            </div>
+          )}
+        </div>
       </main>
-    </>
+    </div>
   );
 }
