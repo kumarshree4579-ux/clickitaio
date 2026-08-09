@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 interface Product { _id: string; name: string; sku: string; sellingPrice: number; mrp: number; stock: number; status: string; category?: { name: string }; brand?: { name: string }; images?: { url: string }[]; }
@@ -345,3 +345,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+

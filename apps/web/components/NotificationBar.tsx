@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import API from '../lib/api';
 
 const BG: Record<string, string> = {
   info: 'bg-blue-600',

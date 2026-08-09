@@ -4,7 +4,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ecom';
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  console.error('Missing required env var: MONGO_URI');
+  process.exit(1);
+}
+
+const mongoUri = MONGO_URI;
 
 // Inline schemas to avoid import issues
 const UserSchema = new mongoose.Schema({ name: String, email: { type: String, unique: true }, passwordHash: String, role: String, isActive: Boolean }, { timestamps: true });
@@ -24,7 +30,7 @@ const Banner = mongoose.model('Banner', BannerSchema);
 const CmsPage = mongoose.model('CmsPage', CmsPageSchema);
 
 async function seed() {
-  await mongoose.connect(MONGO_URI);
+  await mongoose.connect(mongoUri);
   console.log('Connected to MongoDB');
 
   // ── Users ──────────────────────────────────────────────

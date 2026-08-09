@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 const empty = { code: '', type: 'flat', value: '', minOrderAmount: '0', maxDiscount: '', usageLimit: '', perCustomerLimit: '1', expiresAt: '', description: '', isActive: true };
@@ -109,3 +109,4 @@ export default function CouponsPage() {
     </div>
   );
 }
+

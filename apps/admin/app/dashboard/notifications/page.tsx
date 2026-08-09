@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 const TYPES = ['info', 'success', 'warning', 'error'] as const;
@@ -174,3 +174,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

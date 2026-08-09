@@ -1,26 +1,27 @@
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 
-const FROM = process.env.FROM_EMAIL || 'no-reply@ecom.local';
+const FROM = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const STORE_NAME = 'Ecom Store';
 
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+function getClient() {
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
 async function send(to: string, subject: string, html: string) {
-  if (process.env.SENDGRID_API_KEY) {
-    try {
-      await sgMail.send({ to, from: FROM, subject, html } as any);
-    } catch (err) {
-      console.error('SendGrid error', err);
-    }
-  } else {
+  if (!process.env.RESEND_API_KEY) {
     console.log(`[DEV EMAIL] To: ${to} | Subject: ${subject}`);
+    return;
+  }
+  try {
+    const { error } = await getClient().emails.send({ from: FROM, to, subject, html });
+    if (error) console.error('Resend error', error);
+  } catch (err) {
+    console.error('Resend error', err);
   }
 }
 
 export async function sendOtpEmail(email: string, otp: string) {
-  if (!process.env.SENDGRID_API_KEY) {
+  if (!process.env.RESEND_API_KEY) {
     console.log(`[DEV OTP] ${email}: ${otp}`);
     return;
   }

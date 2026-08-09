@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import Link from 'next/link';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../lib/api';
 
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',

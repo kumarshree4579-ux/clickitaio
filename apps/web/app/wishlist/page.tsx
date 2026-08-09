@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import Link from 'next/link';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../lib/api';
 const token = () => localStorage.getItem('token');
 
 const fmt = (n: number) => n.toLocaleString('en-IN');

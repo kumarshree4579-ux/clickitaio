@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 export default function CustomersPage() {
@@ -85,3 +85,4 @@ export default function CustomersPage() {
     </div>
   );
 }
+

@@ -1,0 +1,56 @@
+import { Schema, model, Document } from 'mongoose';
+
+export interface IDeliveryZone {
+  name: string;
+  coordinates: [number, number][]; // [lng, lat] pairs forming a polygon
+  isActive: boolean;
+}
+
+export interface ITrustBadge {
+  icon: string;
+  title: string;
+  subtitle: string;
+  isActive: boolean;
+}
+
+export interface IStoreSettings extends Document {
+  storeName: string;
+  storeLocation: { lat: number; lng: number };
+  deliveryZones: IDeliveryZone[];
+  estimatedDeliveryMinutes: number; // default ETA
+  deliveryMessage: string;          // shown to customer e.g. "Delivered in X"
+  unserviceableMessage: string;
+  isDeliveryEnabled: boolean;
+  minOrderAmount: number;
+  freeDeliveryAbove: number;
+  deliveryCharge: number;
+  trustBadges: ITrustBadge[];
+}
+
+const StoreSettingsSchema = new Schema<IStoreSettings>({
+  storeName: { type: String, default: 'Ecom Store' },
+  storeLocation: {
+    lat: { type: Number, default: 20.5937 },
+    lng: { type: Number, default: 78.9629 },
+  },
+  deliveryZones: [{
+    name: { type: String, required: true },
+    coordinates: [[Number]], // array of [lng, lat]
+    isActive: { type: Boolean, default: true },
+  }],
+  estimatedDeliveryMinutes: { type: Number, default: 45 },
+  deliveryMessage: { type: String, default: 'Delivery in {time}' },
+  unserviceableMessage: { type: String, default: 'Sorry, we do not deliver to your area yet.' },
+  isDeliveryEnabled: { type: Boolean, default: true },
+  minOrderAmount: { type: Number, default: 0 },
+  freeDeliveryAbove: { type: Number, default: 500 },
+  deliveryCharge: { type: Number, default: 49 },
+  trustBadges: [{
+    icon: { type: String, default: '' },
+    title: { type: String, default: '' },
+    subtitle: { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
+  }],
+}, { timestamps: true });
+
+export const StoreSettings = model<IStoreSettings>('StoreSettings', StoreSettingsSchema);

@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 const STARS = (n: number) => '★'.repeat(n) + '☆'.repeat(5 - n);
 
@@ -11,7 +10,7 @@ export default function ReviewsPage() {
 
   async function load() {
     const data = await fetch(`${API}/reviews/admin`, { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
-    setReviews(data);
+    setReviews(Array.isArray(data) ? data : data.items || []);
   }
 
   useEffect(() => { load(); }, []);

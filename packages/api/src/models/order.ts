@@ -30,6 +30,9 @@ export interface IOrder extends Document {
   customer: Types.ObjectId;
   items: IOrderItem[];
   address: IAddress;
+  deliveryLocation?: { lat: number; lng: number };
+  estimatedDeliveryMinutes?: number;
+  estimatedDeliveryAt?: Date;
   subtotal: number;
   discount: number;
   shippingCharge: number;
@@ -58,6 +61,9 @@ const OrderSchema = new Schema<IOrder>({
     price: Number, mrp: Number, qty: Number,
   }],
   address: { type: AddressSchema, required: true },
+  deliveryLocation: { lat: Number, lng: Number },
+  estimatedDeliveryMinutes: { type: Number },
+  estimatedDeliveryAt: { type: Date },
   subtotal: { type: Number, required: true },
   discount: { type: Number, default: 0 },
   shippingCharge: { type: Number, default: 0 },

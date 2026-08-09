@@ -2,19 +2,21 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import HeroBanner from '../components/HeroBanner';
+import RecentlyViewed from '../components/RecentlyViewed';
 
-const API = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import API from '../lib/api';
 
 async function getData() {
   try {
-    const [featuredRes, newRes, bestRes, catsRes] = await Promise.all([
+    const [featuredRes, newRes, bestRes, catsRes, settingsRes] = await Promise.all([
       fetch(`${API}/products?limit=8&status=active&featured=true`, { cache: 'no-store' }),
       fetch(`${API}/products?limit=8&status=active&newArrival=true`, { cache: 'no-store' }),
       fetch(`${API}/products?limit=4&status=active&bestSeller=true`, { cache: 'no-store' }),
       fetch(`${API}/categories`, { cache: 'no-store' }),
+      fetch(`${API}/settings/public`, { next: { revalidate: 300 } }),
     ]);
-    const [featured, newArrivals, bestSellers, categories] = await Promise.all([
-      featuredRes.json(), newRes.json(), bestRes.json(), catsRes.json(),
+    const [featured, newArrivals, bestSellers, categories, settings] = await Promise.all([
+      featuredRes.json(), newRes.json(), bestRes.json(), catsRes.json(), settingsRes.json(),
     ]);
     let featuredItems = featured.items || [];
     if (!featuredItems.length) {
@@ -26,14 +28,23 @@ async function getData() {
       newArrivals: newArrivals.items || [],
       bestSellers: bestSellers.items || [],
       categories: (categories || []).filter((c: any) => !c.parent).slice(0, 6),
+      trustBadges: (settings.trustBadges || []).filter((b: any) => b.isActive),
     };
   } catch {
-    return { featured: [], newArrivals: [], bestSellers: [], categories: [] };
+    return { featured: [], newArrivals: [], bestSellers: [], categories: [], trustBadges: [] };
   }
 }
 
 export default async function HomePage() {
-  const { featured, newArrivals, bestSellers, categories } = await getData();
+  const { featured, newArrivals, bestSellers, categories, trustBadges } = await getData();
+
+  const defaultBadges = [
+    { icon: '🚚', title: 'Free Shipping', subtitle: 'On orders above ₹500' },
+    { icon: '↩️', title: 'Easy Returns', subtitle: '7-day return policy' },
+    { icon: '🔒', title: 'Secure Payment', subtitle: 'Razorpay & COD' },
+    { icon: '⭐', title: 'Top Quality', subtitle: 'Verified products' },
+  ];
+  const badges = trustBadges.length ? trustBadges : defaultBadges;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,26 +57,23 @@ export default async function HomePage() {
         </section>
 
         {/* Trust badges */}
+        {badges.length > 0 && (
         <section className="bg-white border-b border-slate-100">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { icon: '🚚', title: 'Free Shipping', sub: 'On orders above ₹500' },
-                { icon: '↩️', title: 'Easy Returns', sub: '7-day return policy' },
-                { icon: '🔒', title: 'Secure Payment', sub: 'Razorpay & COD' },
-                { icon: '⭐', title: 'Top Quality', sub: 'Verified products' },
-              ].map(b => (
+              {badges.map((b: any) => (
                 <div key={b.title} className="flex items-center gap-3 py-2">
                   <span className="text-2xl">{b.icon}</span>
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{b.title}</p>
-                    <p className="text-xs text-slate-500">{b.sub}</p>
+                    <p className="text-xs text-slate-500">{b.subtitle || b.sub}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
+        )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-14">
 
@@ -98,6 +106,9 @@ export default async function HomePage() {
               </div>
             </section>
           )}
+
+          {/* Recently Viewed — personalised, from localStorage */}
+          <RecentlyViewed />
 
           {/* Best Sellers */}
           {bestSellers.length > 0 && (

@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Link from 'next/link';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../lib/api';
 
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -97,7 +97,7 @@ function OrderDetail() {
           </span>
         </div>
 
-        {/* Progress tracker */}
+        {/* Progress bar */}
         {!isCancelled && (
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="flex items-center justify-between relative">
@@ -112,6 +112,45 @@ function OrderDetail() {
                   <span className="text-[10px] text-gray-500 text-center capitalize hidden sm:block">{s.replace(/_/g, ' ')}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status Timeline */}
+        {order.statusHistory?.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h2 className="font-semibold text-gray-800 mb-4">Order Timeline</h2>
+            <div className="space-y-0">
+              {[...order.statusHistory].reverse().map((h: any, i: number) => (
+                <div key={i} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-3 h-3 rounded-full shrink-0 mt-0.5 ${i === 0 ? 'bg-indigo-600' : 'bg-gray-300'}`} />
+                    {i < order.statusHistory.length - 1 && <div className="w-0.5 flex-1 bg-gray-100 my-1" />}
+                  </div>
+                  <div className="pb-4">
+                    <p className={`text-sm font-semibold capitalize ${i === 0 ? 'text-indigo-700' : 'text-gray-600'}`}>
+                      {h.status.replace(/_/g, ' ')}
+                    </p>
+                    {h.note && <p className="text-xs text-gray-400 mt-0.5">{h.note}</p>}
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(h.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ETA */}
+        {order.estimatedDeliveryAt && !['delivered','cancelled','returned','refunded'].includes(order.status) && (
+          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-5 py-4 flex items-center gap-3">
+            <span className="text-2xl">🚀</span>
+            <div>
+              <p className="text-sm font-semibold text-indigo-800">Estimated Delivery</p>
+              <p className="text-xs text-indigo-600 mt-0.5">
+                {new Date(order.estimatedDeliveryAt).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
           </div>
         )}

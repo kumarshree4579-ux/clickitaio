@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 interface Category { _id: string; name: string; slug: string; parent?: { name: string } | null; isActive: boolean; image?: string; }
@@ -135,3 +135,4 @@ export default function CategoriesPage() {
     </div>
   );
 }
+

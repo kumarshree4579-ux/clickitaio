@@ -1,0 +1,23 @@
+[INFO] 10:00:48 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.3)
+Connected to MongoDB
+Error: listen EADDRINUSE: address already in use :::4000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (d:\Study\Ecom\packages\api\node_modules\express\lib\application.js:635:24)
+    at start (d:\Study\Ecom\packages\api\src\index.ts:81:7)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[ERROR] 10:00:54 Error: listen EADDRINUSE: address already in use :::4000
+[INFO] 11:09:08 Restarting: d:\Study\Ecom\packages\api\src\models\storeSettings.ts has been modified
+Connected to MongoDB
+API listening on port 4000
+[INFO] 11:09:50 Restarting: d:\Study\Ecom\packages\api\src\routes\settings.ts has been modified
+Connected to MongoDB
+Error: listen EADDRINUSE: address already in use :::4000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (d:\Study\Ecom\packages\api\node_modules\express\lib\application.js:635:24)
+    at start (d:\Study\Ecom\packages\api\src\index.ts:81:7)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[ERROR] 11:10:03 Error: listen EADDRINUSE: address already in use :::4000

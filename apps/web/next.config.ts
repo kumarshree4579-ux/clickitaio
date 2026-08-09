@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'plus.unsplash.com' },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.API_URL || 'http://localhost:4000'}/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

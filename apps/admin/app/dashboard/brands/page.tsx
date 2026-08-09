@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 interface Brand { _id: string; name: string; slug: string; website?: string; isActive: boolean; }
@@ -108,3 +108,4 @@ export default function BrandsPage() {
     </div>
   );
 }
+

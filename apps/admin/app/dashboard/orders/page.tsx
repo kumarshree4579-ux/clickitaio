@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
 const STATUSES = ['pending','confirmed','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'];
@@ -127,3 +127,4 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
+

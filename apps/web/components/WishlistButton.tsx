@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../lib/api';
 
 export default function WishlistButton({ productId }: { productId: string }) {
   const router = useRouter();
@@ -32,9 +32,15 @@ export default function WishlistButton({ productId }: { productId: string }) {
 
   return (
     <button onClick={toggle} disabled={loading}
-      className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${inWishlist ? 'bg-red-50 border-red-300 text-red-500' : 'bg-white border-gray-200 text-gray-400 hover:text-red-400'}`}
+      className={`w-12 h-12 md:w-11 md:h-11 rounded-2xl border-2 flex items-center justify-center transition-all shrink-0 ${
+        inWishlist
+          ? 'bg-rose-50 border-rose-300 text-rose-500 scale-105'
+          : 'bg-white border-gray-200 text-gray-400 hover:border-rose-300 hover:text-rose-400'
+      }`}
       title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}>
-      {inWishlist ? '❤️' : '🤍'}
+      <svg className="w-5 h-5" fill={inWishlist ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
     </button>
   );
 }

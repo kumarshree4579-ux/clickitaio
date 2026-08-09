@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 const TYPES = ['slider', 'offer', 'category', 'popup', 'mobile'];
 const empty = { title: '', image: '', link: '', type: 'slider', sortOrder: '0', isActive: true };
@@ -152,3 +152,4 @@ export default function BannersPage() {
     </div>
   );
 }
+

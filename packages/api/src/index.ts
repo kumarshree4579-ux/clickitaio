@@ -20,9 +20,10 @@ import wishlistRoutes from './routes/wishlist';
 import bannersRoutes from './routes/banners';
 import importRoutes from './routes/import';
 import notificationsRoutes from './routes/notifications';
+import settingsRoutes from './routes/settings';
 
 // ── Startup validation ─────────────────────────────────
-const REQUIRED_ENV = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGO_URI'];
+const REQUIRED_ENV = ['PORT', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGO_URI', 'ALLOWED_ORIGINS'];
 const missing = REQUIRED_ENV.filter(k => !process.env[k]);
 if (missing.length) {
   console.error(`Missing required env vars: ${missing.join(', ')}`);
@@ -31,10 +32,11 @@ if (missing.length) {
 
 const app = express();
 
-// ── CORS — restrict to known origins in production ─────
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:3000', 'http://localhost:3001'];
+// ── CORS — restrict to known origins from env ─────
+const allowedOrigins = process.env.ALLOWED_ORIGINS!
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
@@ -64,8 +66,9 @@ app.use('/wishlist', wishlistRoutes);
 app.use('/banners', bannersRoutes);
 app.use('/import', importRoutes);
 app.use('/notifications', notificationsRoutes);
+app.use('/settings', settingsRoutes);
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT!;
 
 async function start() {
   try {

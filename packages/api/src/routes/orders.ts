@@ -9,6 +9,7 @@ import { Coupon } from '../models/coupon';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from '../utils/mailer';
 import { validate, OrderSchema } from '../utils/validation';
+import { StoreSettings } from '../models/storeSettings';
 
 const router = Router();
 
@@ -22,7 +23,7 @@ function getRazorpay() {
 
 router.post('/', requireAuth, validate(OrderSchema), async (req: AuthedRequest, res: Response) => {
   try {
-    const { items, address, paymentMethod, couponCode, notes } = req.body;
+    const { items, address, paymentMethod, couponCode, notes, deliveryLocation } = req.body;
 
     const orderItems = [];
     let subtotal = 0;
@@ -51,8 +52,16 @@ router.post('/', requireAuth, validate(OrderSchema), async (req: AuthedRequest, 
 
     const total = subtotal + shippingCharge - discount;
 
+    // Get estimated delivery time from settings
+    const settings = await StoreSettings.findOne();
+    const etaMinutes = settings?.estimatedDeliveryMinutes || 45;
+    const estimatedDeliveryAt = new Date(Date.now() + etaMinutes * 60 * 1000);
+
     const order = await Order.create({
       orderNumber: genOrderNumber(), customer: req.user!.sub, items: orderItems, address,
+      deliveryLocation: deliveryLocation || undefined,
+      estimatedDeliveryMinutes: etaMinutes,
+      estimatedDeliveryAt,
       subtotal, shippingCharge, discount, total, couponCode, paymentMethod,
       paymentStatus: 'pending', status: 'pending', notes,
       statusHistory: [{ status: 'pending', at: new Date() }],
@@ -133,7 +142,8 @@ router.get('/', requireAuth, async (req: AuthedRequest, res: Response) => {
 router.get('/:id', requireAuth, async (req: AuthedRequest, res: Response) => {
   const order = await Order.findById(req.params.id).populate('customer', 'name email').populate('items.product', 'name slug');
   if (!order) return res.status(404).json({ error: 'Not found' });
-  if (!['super_admin', 'order_manager'].includes(req.user!.role) && order.customer.toString() !== req.user!.sub) {
+  const customerId = (order.customer as any)?._id?.toString() ?? order.customer.toString();
+  if (!['super_admin', 'order_manager'].includes(req.user!.role) && customerId !== req.user!.sub) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   return res.json(order);
