@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Link from 'next/link';
 
-import API from '../../lib/api';
+import API from '../../../lib/api';
 
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -40,11 +40,23 @@ function OrderDetail() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    if (!token) {
+      setLoading(false);
+      setOrder({ error: 'Please sign in to view your order.' });
+      return;
+    }
+
     fetch(`${API}/orders/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => { setOrder(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          setOrder({ error: data.error || 'Unable to load order.' });
+        } else {
+          setOrder(data);
+        }
+      })
+      .catch(() => setOrder({ error: 'Unable to load order.' }))
+      .finally(() => setLoading(false));
   }, [params.id]);
 
   async function cancelOrder() {
@@ -63,7 +75,10 @@ function OrderDetail() {
   }
 
   if (loading) return <><Header /><div className="flex items-center justify-center h-64 text-gray-400">Loading...</div></>;
-  if (!order || order.error) return <><Header /><div className="text-center py-20 text-gray-400">Order not found. <Link href="/orders" className="text-indigo-600 underline">Back to orders</Link></div></>;
+  if (!order || order.error) return <><Header /><div className="text-center py-20 text-gray-400">
+    <p className="mb-2">{order?.error || 'Order not found.'}</p>
+    <Link href="/orders" className="text-indigo-600 underline">Back to orders</Link>
+  </div></>;
 
   const stepIdx = STEPS.indexOf(order.status);
   const isCancelled = ['cancelled', 'returned', 'refunded'].includes(order.status);
