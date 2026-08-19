@@ -9,6 +9,7 @@ import productsRoutes from './routes/products';
 import categoriesRoutes from './routes/categories';
 import brandsRoutes from './routes/brands';
 import ordersRoutes from './routes/orders';
+// test
 import addressesRoutes from './routes/addresses';
 import inventoryRoutes from './routes/inventory';
 import invoicesRoutes from './routes/invoices';
