@@ -1,15 +1,7 @@
 import { MetadataRoute } from 'next';
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL;
-const API = process.env.NEXT_PUBLIC_API_URL;
-
-if (!BASE) {
-  throw new Error('NEXT_PUBLIC_SITE_URL is not defined in environment');
-}
-
-if (!API) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment');
-}
+const BASE = process.env.NEXT_PUBLIC_SITE_URL!;
+const API = process.env.NEXT_PUBLIC_API_URL!;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
