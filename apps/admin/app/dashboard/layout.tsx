@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Sidebar from '../../components/Sidebar';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -85,7 +85,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-30 transform transition-transform duration-200 lg:static lg:translate-x-0 h-full flex-shrink-0 flex ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <Suspense fallback={<div className="w-64 bg-slate-900 h-full" />}>
+          <Sidebar onClose={() => setSidebarOpen(false)} />
+        </Suspense>
       </div>
 
       {/* Main */}
