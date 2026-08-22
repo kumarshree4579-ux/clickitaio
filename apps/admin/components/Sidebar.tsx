@@ -23,7 +23,8 @@ const menuItems = [
       { href: '/dashboard/orders?status=out_for_delivery', label: 'Out for Delivery' },
       { href: '/dashboard/orders?status=completed', label: 'Completed' },
       { href: '/dashboard/orders?status=cancelled', label: 'Cancelled' },
-      { href: '/dashboard/orders?status=abandoned', label: 'Abandoned Cart' },
+      { href: '/dashboard/carts', label: 'All Carts' },
+      { href: '/dashboard/carts?status=abandoned', label: 'Abandoned Carts' },
     ]
   },
   {
@@ -40,14 +41,18 @@ const menuItems = [
   },
   {
     label: 'Customers',
-    href: '/dashboard/customers',
     icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+    links: [
+      { href: '/dashboard/customers', label: 'All Customers' },
+      { href: '/dashboard/marketing', label: 'Marketing Broadcast' }
+    ]
   },
   {
     label: 'System & Content',
     icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
     links: [
       { href: '/dashboard/settings', label: 'Settings' },
+      { href: '/dashboard/users', label: 'Staff & Users' },
       { href: '/dashboard/banners', label: 'Banners' },
       { href: '/dashboard/coupons', label: 'Coupons' },
       { href: '/dashboard/reviews', label: 'Reviews' },
@@ -125,31 +130,38 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   }
 
   return (
-    <div className="flex h-full bg-[#0f172a] shadow-xl relative z-30">
+    <div className="flex h-full bg-white relative z-30">
       
       {/* Primary Sidebar (Icons only) */}
-      <aside className="w-20 shrink-0 flex flex-col items-center py-5 h-full relative z-20 bg-[#0f172a]">
+      <aside className="w-20 shrink-0 flex flex-col items-center py-5 h-full relative z-20 bg-white border-r border-gray-100">
         
         {/* Logo */}
-        <Link href="/dashboard" className="mb-8 w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg transition-transform hover:scale-105">
+        <Link href="/dashboard" className="mb-8 w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-[0_4px_10px_rgba(99,102,241,0.4)] transition-transform hover:scale-105">
           <span className="text-white font-extrabold text-lg">DB</span>
         </Link>
 
         {/* Primary Links */}
         <div className="flex-1 w-full flex flex-col items-center gap-4 px-2">
-          {menuItems.map(item => {
+          {menuItems.filter(item => {
+            const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+            const role = user.role || 'super_admin';
+            if (role === 'super_admin') return true;
+            if (role === 'order_manager' && ['Dashboard', 'Orders', 'Customers'].includes(item.label)) return true;
+            if (role === 'inventory_staff' && ['Dashboard', 'Products'].includes(item.label)) return true;
+            return false;
+          }).map(item => {
             const isActive = activePrimary === item.label;
             return (
               <div key={item.label} className="w-full relative group">
                 {item.href ? (
                   <Link href={item.href} onClick={() => handlePrimaryClick(item)}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/[0.08]'}`}>
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 ${isActive ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-indigo-500 hover:bg-gray-50'}`}>
                     <NavIcon d={item.icon} />
                     <span className="text-[10px] font-semibold mt-1 tracking-wide">{item.label}</span>
                   </Link>
                 ) : (
                   <button onClick={() => handlePrimaryClick(item)}
-                    className={`w-full flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 ${isActive || openSubMenu === item.label ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/[0.08]'}`}>
+                    className={`w-full flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 ${isActive || openSubMenu === item.label ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-indigo-500 hover:bg-gray-50'}`}>
                     <NavIcon d={item.icon} />
                     <span className="text-[10px] font-semibold mt-1 tracking-wide text-center leading-tight truncate w-full">{item.label}</span>
                   </button>
@@ -162,7 +174,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         {/* Logout */}
         <div className="mt-auto px-2 w-full pt-4">
           <button onClick={logout}
-            className="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+            className="w-full flex flex-col items-center justify-center p-3 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
             <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
           </button>
         </div>
@@ -170,13 +182,13 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
 
       {/* Secondary Sliding Sidebar */}
       <div 
-        className={`bg-[#161e31] overflow-hidden transition-all duration-300 ease-in-out border-l border-white/[0.05] flex flex-col h-full ${openSubMenu ? 'w-56 opacity-100' : 'w-0 opacity-0 border-none'}`}
+        className={`bg-gray-50 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 flex flex-col h-full shadow-sm ${openSubMenu ? 'w-56 opacity-100' : 'w-0 opacity-0 border-none'}`}
       >
         {activeGroup && (
           <>
-            <div className="px-5 h-16 flex items-center justify-between border-b border-white/[0.05] shrink-0 sticky top-0 bg-[#161e31] z-10 w-56">
-              <h2 className="text-white font-bold text-base tracking-wide">{activeGroup.label}</h2>
-              <button onClick={() => setOpenSubMenu(null)} className="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-1.5 rounded-lg">
+            <div className="px-5 h-16 flex items-center justify-between border-b border-gray-200 shrink-0 sticky top-0 bg-gray-50 z-10 w-56">
+              <h2 className="text-gray-800 font-bold text-sm tracking-wide uppercase">{activeGroup.label}</h2>
+              <button onClick={() => setOpenSubMenu(null)} className="text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 shadow-sm border border-gray-200 p-1.5 rounded-lg">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -186,7 +198,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                 const isActive = isExactActive(link.href);
                 return (
                   <Link key={link.href} href={link.href} onClick={() => { if (window.innerWidth < 1024 && onClose) onClose(); }}
-                    className={`block py-2.5 px-3 rounded-xl text-[13px] font-medium transition-all ${isActive ? 'bg-indigo-500/15 text-indigo-400 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'}`}
+                    className={`block py-2.5 px-3 rounded-xl text-[13px] font-medium transition-all ${isActive ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-800 hover:bg-white/50'}`}
                   >
                     {link.label}
                   </Link>

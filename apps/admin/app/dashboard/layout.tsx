@@ -34,29 +34,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const lastOrderCount = useRef<number | null>(null);
 
   useEffect(() => {
-    const checkNewOrders = async () => {
-      try {
-        const res = await fetch(`${API}/orders?status=received`, {
-          headers: { Authorization: `Bearer ${token()}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const currentCount = Array.isArray(data) ? data.length : 0;
-        
-        if (lastOrderCount.current !== null && currentCount > lastOrderCount.current) {
-          playNotificationSound();
-          setNewOrderToast({ show: true, count: currentCount - lastOrderCount.current });
-          setTimeout(() => setNewOrderToast({ show: false, count: 0 }), 5000);
-        }
-        lastOrderCount.current = currentCount;
-      } catch (e) {}
-    };
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
-    // Initial check
-    checkNewOrders();
-    // Poll every 15 seconds
-    const interval = setInterval(checkNewOrders, 15000);
-    return () => clearInterval(interval);
+    const t = token();
+    if (!t) return;
+
+    const es = new EventSource(`${API}/stream?token=${t}`);
+    
+    es.addEventListener('new_order', (e) => {
+      try {
+        const order = JSON.parse(e.data);
+        playNotificationSound();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('New Order Received!', { body: `Order #${order.orderNumber} has been placed.` });
+        }
+        setNewOrderToast(prev => ({ show: true, count: prev.count + 1 }));
+        setTimeout(() => setNewOrderToast(prev => ({ show: prev.count > 0, count: Math.max(0, prev.count - 1) })), 5000);
+      } catch(err) {}
+    });
+
+    return () => {
+      es.close();
+    };
   }, []);
 
   return (
@@ -85,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-30 transform transition-transform duration-200 lg:static lg:translate-x-0 h-full flex-shrink-0 flex ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <Suspense fallback={<div className="w-64 bg-slate-900 h-full" />}>
+        <Suspense fallback={<div className="w-[304px] bg-white border-r border-gray-200 h-full shadow-sm" />}>
           <Sidebar onClose={() => setSidebarOpen(false)} />
         </Suspense>
       </div>

@@ -22,6 +22,9 @@ import bannersRoutes from './routes/banners';
 import importRoutes from './routes/import';
 import notificationsRoutes from './routes/notifications';
 import settingsRoutes from './routes/settings';
+import cartsRoutes from './routes/carts';
+import usersRoutes from './routes/users';
+import eventsRoutes from './routes/events';
 
 // ── Startup validation ─────────────────────────────────
 const REQUIRED_ENV = ['PORT', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGO_URI', 'ALLOWED_ORIGINS'];
@@ -68,6 +71,9 @@ app.use('/banners', bannersRoutes);
 app.use('/import', importRoutes);
 app.use('/notifications', notificationsRoutes);
 app.use('/settings', settingsRoutes);
+app.use('/carts', cartsRoutes);
+app.use('/users', usersRoutes);
+app.use('/', eventsRoutes);
 
 const port = process.env.PORT!;
 

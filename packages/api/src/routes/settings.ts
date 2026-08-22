@@ -89,7 +89,7 @@ router.get('/', requireAuth, requireRole('super_admin'), async (_req, res: Respo
 router.put('/', requireAuth, requireRole('super_admin'), async (req: Request, res: Response) => {
   let s = await StoreSettings.findOne();
   if (!s) s = await StoreSettings.create(req.body);
-  else Object.assign(s, req.body);
+  else s.set(req.body);
   await s.save();
   return res.json(s);
 });

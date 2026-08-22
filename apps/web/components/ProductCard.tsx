@@ -1,6 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { syncCartToServer } from '../lib/cart-sync';
+import { useState, useEffect } from 'react';
+import { useLocation } from '../lib/LocationContext';
+import { useRouter } from 'next/navigation';
 
 interface Props {
   product: {
@@ -23,23 +26,45 @@ const fmt = (n: number) => n.toLocaleString('en-IN');
 export default function ProductCard({ product }: Props) {
   const [added, setAdded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const { isServiceable } = useLocation();
 
   const discount = product.mrp > product.sellingPrice
     ? Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100) : 0;
   const outOfStock = (product.stock ?? 1) === 0;
   const img = product.images?.[0];
 
-  function addToCart(e: React.MouseEvent) {
+  const [qtyInCart, setQtyInCart] = useState(0);
+  const router = useRouter();
+
+  useEffect(() => {
+    const updateQty = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const item = cart.find((i: any) => i._id === product._id);
+      setQtyInCart(item ? item.qty : 0);
+    };
+    updateQty();
+    window.addEventListener('cart-updated', updateQty);
+    return () => window.removeEventListener('cart-updated', updateQty);
+  }, [product._id]);
+
+  function updateCart(e: React.MouseEvent, delta: number) {
     e.preventDefault();
-    if (outOfStock) return;
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (isServiceable === false) return;
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const idx = cart.findIndex((i: any) => i._id === product._id);
-    if (idx > -1) cart[idx].qty += 1;
-    else cart.push({ _id: product._id, name: product.name, price: product.sellingPrice, image: img?.url, qty: 1 });
+    
+    if (idx > -1) {
+      cart[idx].qty += delta;
+      if (cart[idx].qty <= 0) {
+        cart.splice(idx, 1);
+      }
+    } else if (delta > 0) {
+      cart.push({ _id: product._id, name: product.name, price: product.sellingPrice, image: img?.url, qty: 1 });
+    }
+    
     localStorage.setItem('cart', JSON.stringify(cart));
+    syncCartToServer(cart);
     window.dispatchEvent(new Event('cart-updated'));
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
   }
 
   return (
@@ -92,15 +117,30 @@ export default function ProductCard({ product }: Props) {
           <span className="text-sm sm:text-base font-bold text-gray-900">₹{fmt(product.sellingPrice)}</span>
           {discount > 0 && <span className="text-[10px] sm:text-xs text-gray-400 line-through">₹{fmt(product.mrp)}</span>}
         </div>
-
-        <button onClick={addToCart} disabled={outOfStock}
-          className={`mt-2 w-full text-xs sm:text-sm font-medium py-1.5 sm:py-2 rounded-xl transition-all active:scale-95 ${
-            outOfStock ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : added ? 'bg-emerald-600 text-white'
-            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-          }`}>
-          {outOfStock ? 'Out of Stock' : added ? '✓ Added!' : 'Add to Cart'}
-        </button>
+        {isServiceable === false ? (
+          <button disabled className="mt-2 w-full text-xs sm:text-sm font-medium py-1.5 sm:py-2 rounded-xl bg-red-50 text-red-400 cursor-not-allowed">
+            Unserviceable
+          </button>
+        ) : qtyInCart > 0 ? (
+          <div className="flex gap-1.5 mt-2 w-full items-center">
+            <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg px-1.5 py-1 flex-1">
+              <button onClick={(e) => updateCart(e, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded text-indigo-600 font-bold shadow-sm active:scale-95 transition-transform">-</button>
+              <span className="text-xs font-bold text-indigo-900">{qtyInCart}</span>
+              <button onClick={(e) => updateCart(e, 1)} disabled={qtyInCart >= (product.stock || 1)} className="w-6 h-6 flex items-center justify-center bg-indigo-600 rounded text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform">+</button>
+            </div>
+            <button onClick={(e) => { e.preventDefault(); router.push('/cart'); }} className="bg-emerald-500 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold hover:bg-emerald-600 flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            </button>
+          </div>
+        ) : (
+          <button onClick={(e) => updateCart(e, 1)} disabled={outOfStock}
+            className={`mt-2 w-full text-xs sm:text-sm font-medium py-1.5 sm:py-2 rounded-xl transition-all active:scale-95 ${
+              outOfStock ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+            }`}>
+            {outOfStock ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        )}
       </div>
     </Link>
   );

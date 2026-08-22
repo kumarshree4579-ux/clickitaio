@@ -5,6 +5,7 @@ export type UserRole = 'super_admin' | 'inventory_staff' | 'order_manager' | 'cu
 export interface IUser extends Document {
   name?: string;
   email: string;
+  mobile?: string;
   passwordHash?: string;
   role: UserRole;
   isActive: boolean;
@@ -14,6 +15,7 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>({
   name: { type: String },
   email: { type: String, required: true, unique: true },
+  mobile: { type: String },
   passwordHash: { type: String },
   role: { type: String, enum: ['super_admin', 'inventory_staff', 'order_manager', 'customer'], default: 'customer' },
   isActive: { type: Boolean, default: true },

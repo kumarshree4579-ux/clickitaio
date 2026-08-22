@@ -67,7 +67,22 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
   function initMap() {
     if (!mapRef.current || mapInstanceRef.current) return;
     const L = (window as any).L;
-    const center = storeSettings?.storeLocation || { lat: 20.5937, lng: 78.9629 };
+    
+    let center = storeSettings?.storeLocation || { lat: 20.5937, lng: 78.9629 };
+    
+    // If active zones exist, try to default to the center of the first zone
+    if (storeSettings?.hasZones && storeSettings?.deliveryZones?.length > 0) {
+      const firstZone = storeSettings.deliveryZones.find((z: any) => z.active);
+      if (firstZone && firstZone.coordinates && firstZone.coordinates.length > 0) {
+        let latSum = 0, lngSum = 0;
+        firstZone.coordinates.forEach((c: any) => { latSum += c.lat; lngSum += c.lng; });
+        center = { 
+          lat: latSum / firstZone.coordinates.length, 
+          lng: lngSum / firstZone.coordinates.length 
+        };
+      }
+    }
+
     const map = L.map(mapRef.current).setView([center.lat, center.lng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
@@ -77,31 +92,31 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
     const storeIcon = L.divIcon({ html: '<div style="font-size:24px">🏪</div>', className: '', iconSize: [30, 30] });
     L.marker([center.lat, center.lng], { icon: storeIcon }).addTo(map).bindPopup('Our Store');
 
-    // Draggable pin for customer location
-    const pinIcon = L.divIcon({ html: '<div style="font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">📍</div>', className: '', iconSize: [30, 40], iconAnchor: [15, 40] });
-    const marker = L.marker([center.lat, center.lng], { icon: pinIcon, draggable: true }).addTo(map);
-    markerRef.current = marker;
-
-    marker.on('dragend', async () => {
-      const pos = marker.getLatLng();
-      await checkDelivery(pos.lat, pos.lng);
+    // Draggable pin is now replaced by a fixed center pin in the UI overlay
+    // We will listen to the map's moveend event instead
+    map.on('moveend', async () => {
+      const center = map.getCenter();
+      await checkDelivery(center.lat, center.lng);
     });
 
-    map.on('click', async (e: any) => {
-      marker.setLatLng(e.latlng);
-      await checkDelivery(e.latlng.lat, e.latlng.lng);
+    // Allow user to tap/click anywhere on the map to center the pin there
+    map.on('click', (e: any) => {
+      map.setView(e.latlng);
     });
 
     mapInstanceRef.current = map;
+    setMapReady(true);
+    
+    // Initial check for default center
+    checkDelivery(center.lat, center.lng);
     setMapReady(true);
 
     // Try geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(pos => {
         const { latitude, longitude } = pos.coords;
-        marker.setLatLng([latitude, longitude]);
         map.setView([latitude, longitude], 15);
-        checkDelivery(latitude, longitude);
+        // moveend event will trigger checkDelivery
       }, () => {});
     }
   }
@@ -116,7 +131,26 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
         body: JSON.stringify({ lat, lng }),
       });
       const data = await res.json();
-      setResult({ ...data, lat, lng });
+      
+      // Perform Reverse Geocoding
+      let addressData = {};
+      try {
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+        const geoData = await geoRes.json();
+        if (geoData && geoData.address) {
+          const a = geoData.address;
+          addressData = {
+            line1: a.road || a.suburb || a.neighbourhood || '',
+            city: a.city || a.town || a.village || a.county || '',
+            state: a.state || '',
+            pincode: a.postcode || ''
+          };
+        }
+      } catch (e) {
+        console.error("Reverse geocoding failed", e);
+      }
+
+      setResult({ ...data, lat, lng, addressData });
     } finally {
       setChecking(false);
     }
@@ -126,43 +160,43 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(pos => {
       const { latitude, longitude } = pos.coords;
-      markerRef.current?.setLatLng([latitude, longitude]);
       mapInstanceRef.current?.setView([latitude, longitude], 16);
-      checkDelivery(latitude, longitude);
+      // moveend handles checkDelivery
     });
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl overflow-hidden shadow-2xl">
-        {/* Header */}
-        {/* Header */}
-        <div className="flex flex-col px-5 py-4 border-b border-gray-100 gap-3 relative z-[1001]">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-bold text-gray-900">Select Delivery Location</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Search your address or drag the pin</p>
-            </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
-          </div>
-          <div className="relative">
+    <div className="fixed inset-0 bg-white z-[9999] flex flex-col">
+      {/* Map Area taking remaining space */}
+      <div className="relative flex-1 bg-gray-100">
+        <div ref={mapRef} className="absolute inset-0" />
+        
+        {/* Floating Header over map */}
+        <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center gap-3">
+          <button 
+            onClick={onClose} 
+            className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-gray-700 hover:bg-gray-50 shrink-0"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          </button>
+          <div className="flex-1 relative">
             <input 
               type="text" 
-              placeholder="Search address, city, or zip code..." 
+              placeholder="Search a new address..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full bg-white h-11 rounded-full px-5 pr-10 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
             />
             {searchResults.length > 0 && (
-              <div className="absolute top-full mt-1.5 left-0 w-full bg-white border border-gray-100 shadow-xl rounded-xl max-h-48 overflow-y-auto z-50">
+              <div className="absolute top-full mt-2 left-0 w-full bg-white border border-gray-100 shadow-xl rounded-2xl max-h-56 overflow-y-auto">
                 {searchResults.map((r, i) => (
                   <button 
                     key={i} 
                     onClick={() => handleSelectResult(r)}
-                    className="w-full text-left px-4 py-2.5 text-xs text-gray-700 hover:bg-gray-50 border-b border-gray-50 last:border-0 truncate flex flex-col gap-0.5"
+                    className="w-full text-left px-5 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 last:border-0 flex flex-col gap-0.5"
                   >
-                    <span className="font-medium text-gray-900 truncate">{r.display_name.split(',')[0]}</span>
-                    <span className="text-gray-400 truncate">{r.display_name.split(',').slice(1).join(',')}</span>
+                    <span className="font-semibold text-gray-900 truncate">{r.display_name.split(',')[0]}</span>
+                    <span className="text-gray-500 text-xs truncate">{r.display_name.split(',').slice(1).join(',')}</span>
                   </button>
                 ))}
               </div>
@@ -170,54 +204,69 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
           </div>
         </div>
 
-        {/* Map */}
-        <div className="relative">
-          <div ref={mapRef} style={{ height: 320 }} />
-          {/* Use my location button */}
-          <button onClick={useMyLocation}
-            className="absolute bottom-3 right-3 z-[1000] bg-white shadow-lg border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50 flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            My Location
-          </button>
+        {/* Fixed Center Pin Overlay */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-[1000] pb-9">
+          <div className="animate-bounce" style={{ fontSize: '40px', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))' }}>📍</div>
         </div>
+        
+        {/* Use my location button */}
+        <button onClick={useMyLocation}
+          className="absolute bottom-6 right-4 z-[1000] bg-white shadow-xl border border-gray-100 rounded-full px-4 py-2.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          Locate Me
+        </button>
+      </div>
 
-        {/* Result */}
-        <div className="px-5 py-4">
-          {checking && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-              Checking delivery availability...
+      {/* Bottom Sheet Card */}
+      <div className="bg-white rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] relative z-[1001] flex flex-col px-6 pt-7 pb-6 shrink-0 mt-[-20px]">
+        {/* Drag handle pill */}
+        <div className="w-12 h-1.5 bg-gray-200 rounded-full absolute top-3 left-1/2 -translate-x-1/2"></div>
+        
+        <div className="min-h-[140px] flex flex-col justify-between">
+          {checking ? (
+            <div className="flex flex-col items-center justify-center flex-1 py-4">
+              <div className="w-8 h-8 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+              <p className="text-gray-500 font-medium text-sm animate-pulse">Locating you...</p>
             </div>
-          )}
-
-          {!checking && result && (
-            <div className={`rounded-xl p-3.5 flex items-start gap-3 ${result.serviceable ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}`}>
-              <span className="text-xl shrink-0">{result.serviceable ? '✅' : '❌'}</span>
-              <div className="flex-1">
-                <p className={`text-sm font-semibold ${result.serviceable ? 'text-emerald-800' : 'text-red-700'}`}>
-                  {result.serviceable ? result.message : 'Not Serviceable'}
-                </p>
-                {!result.serviceable && <p className="text-xs text-red-600 mt-0.5">{result.message}</p>}
+          ) : result ? (
+            <div className="flex flex-col h-full">
+              <div className="flex items-start gap-4 mb-4">
+                <div className={`mt-1 p-2 rounded-full ${result.serviceable ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                  {result.serviceable ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-gray-900 text-lg truncate">
+                    {result.addressData?.line1 || result.addressData?.city || 'Selected Location'}
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-snug mt-1 truncate">
+                    {result.addressData?.city && `${result.addressData.city}, `}
+                    {result.addressData?.state && `${result.addressData.state} `}
+                    {result.addressData?.pincode}
+                  </p>
+                  
+                  {/* Serviceability Message */}
+                  <div className={`mt-3 inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${result.serviceable ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                    {result.message || (result.serviceable ? 'Serviceable' : 'Not Serviceable')}
+                  </div>
+                </div>
               </div>
+              
+              <button
+                onClick={() => result && onConfirm(result)}
+                className={`w-full py-3.5 rounded-xl text-base font-bold text-white shadow-lg transition-all active:scale-[0.98] mt-auto ${result.serviceable ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-gray-800 hover:bg-gray-900 shadow-gray-300'}`}>
+                Confirm Location
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center flex-1 py-4 text-center">
+              <p className="text-gray-800 font-semibold mb-1">Where are you?</p>
+              <p className="text-gray-500 text-sm">Move the pin to set your exact delivery location.</p>
             </div>
           )}
-
-          {!checking && !result && mapReady && (
-            <p className="text-sm text-gray-400 text-center py-1">Tap the map or drag the pin to check delivery</p>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="px-5 pb-5 flex gap-3">
-          <button onClick={onClose} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm font-medium hover:bg-gray-50">
-            Cancel
-          </button>
-          <button
-            disabled={!result?.serviceable}
-            onClick={() => result?.serviceable && onConfirm(result)}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            Confirm Location
-          </button>
         </div>
       </div>
     </div>

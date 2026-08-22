@@ -5,6 +5,7 @@ import Header from '../../../components/Header';
 import Link from 'next/link';
 
 import API from '../../../lib/api';
+import { apiFetch } from '../../../lib/apiFetch';
 const token = () => localStorage.getItem('token');
 
 const empty = { name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
@@ -23,16 +24,15 @@ export default function AddressesPage() {
   }, []);
 
   async function load() {
-    const data = await fetch(`${API}/addresses`, { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
+    const data = await apiFetch('/addresses').then(r => r.json());
     setAddresses(Array.isArray(data) ? data : []);
   }
 
   async function save() {
     setSaving(true);
-    const url = editing ? `${API}/addresses/${editing}` : `${API}/addresses`;
-    const res = await fetch(url, {
+    const res = await apiFetch(editing ? `/addresses/${editing}` : '/addresses', {
       method: editing ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
     setSaving(false);
@@ -42,7 +42,7 @@ export default function AddressesPage() {
 
   async function del(id: string) {
     if (!confirm('Delete address?')) return;
-    await fetch(`${API}/addresses/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+    await apiFetch(`/addresses/${id}`, { method: 'DELETE' });
     load();
   }
 

@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Link from 'next/link';
 
-import API from '../../../lib/api';
+import { apiFetch } from '../../../lib/apiFetch';
 
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -12,18 +12,18 @@ const STATUS_COLOR: Record<string, string> = {
   packed: 'bg-indigo-100 text-indigo-700',
   shipped: 'bg-purple-100 text-purple-700',
   out_for_delivery: 'bg-orange-100 text-orange-700',
-  delivered: 'bg-green-100 text-green-700',
+  delivered: 'bg-emerald-100 text-emerald-700',
   cancelled: 'bg-red-100 text-red-700',
   returned: 'bg-gray-100 text-gray-700',
   refunded: 'bg-gray-100 text-gray-700',
 };
 
-const STEPS = ['pending', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
+const STEPS = ['pending', 'received', 'confirmed', 'accepted', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
 const fmt = (n: number) => n.toLocaleString('en-IN');
 
 export default function OrderDetailPage() {
   return (
-    <Suspense fallback={<><Header /><div className="flex items-center justify-center h-64 text-gray-400">Loading...</div></>}>
+    <Suspense fallback={<><Header /><div className="flex items-center justify-center h-[70vh] text-gray-400 font-medium">Loading details...</div></>}>
       <OrderDetail />
     </Suspense>
   );
@@ -34,9 +34,18 @@ function OrderDetail() {
   const params = useParams();
   const searchParams = useSearchParams();
   const isSuccess = searchParams.get('success') === '1';
+
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(isSuccess);
+
+  useEffect(() => {
+    if (showConfetti) {
+      const t = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [showConfetti]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -46,26 +55,31 @@ function OrderDetail() {
       return;
     }
 
-    fetch(`${API}/orders/${params.id}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(async (r) => {
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          setOrder({ error: data.error || 'Unable to load order.' });
-        } else {
-          setOrder(data);
-        }
-      })
-      .catch(() => setOrder({ error: 'Unable to load order.' }))
-      .finally(() => setLoading(false));
+    function fetchOrder() {
+      apiFetch(`/orders/${params.id}`)
+        .then(async (r) => {
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            setOrder((prev: any) => prev || { error: data.error || 'Unable to load order.' });
+          } else {
+            setOrder(data);
+          }
+        })
+        .catch(() => setOrder((prev: any) => prev || { error: 'Unable to load order.' }))
+        .finally(() => setLoading(false));
+    }
+
+    fetchOrder();
+    // Live tracking polling
+    const interval = setInterval(fetchOrder, 10000);
+    return () => clearInterval(interval);
   }, [params.id]);
 
   async function cancelOrder() {
     if (!confirm('Cancel this order?')) return;
     setCancelling(true);
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API}/orders/${order._id}/cancel`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
+    const res = await apiFetch(`/orders/${order._id}/cancel`, {
+      method: 'PUT'
     });
     if (res.ok) {
       const updated = await res.json();
@@ -74,11 +88,17 @@ function OrderDetail() {
     setCancelling(false);
   }
 
-  if (loading) return <><Header /><div className="flex items-center justify-center h-64 text-gray-400">Loading...</div></>;
-  if (!order || order.error) return <><Header /><div className="text-center py-20 text-gray-400">
-    <p className="mb-2">{order?.error || 'Order not found.'}</p>
-    <Link href="/orders" className="text-indigo-600 underline">Back to orders</Link>
-  </div></>;
+  if (loading) return <><Header /><div className="flex items-center justify-center h-[70vh] text-gray-400 font-medium">Loading tracking details...</div></>;
+  if (!order || order.error) return (
+    <>
+      <Header />
+      <div className="flex flex-col items-center justify-center py-32 text-center px-4">
+        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-3xl mb-4">🔍</div>
+        <p className="text-gray-500 font-medium mb-6">{order?.error || 'Order not found.'}</p>
+        <Link href="/orders" className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-colors">Back to orders</Link>
+      </div>
+    </>
+  );
 
   const stepIdx = STEPS.indexOf(order.status);
   const isCancelled = ['cancelled', 'returned', 'refunded'].includes(order.status);
@@ -86,142 +106,168 @@ function OrderDetail() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-5">
+      <main className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6 pb-24">
 
-        {isSuccess && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-2xl shrink-0">✅</div>
+        {/* Confetti / Success Hero */}
+        {showConfetti && (
+          <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl p-8 text-center text-white shadow-lg relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-4xl mx-auto mb-4 border border-white/30 shadow-inner">
+              ✨
+            </div>
+            <h1 className="text-3xl font-black mb-2 tracking-tight">Order Confirmed!</h1>
+            <p className="text-emerald-50 font-medium max-w-md mx-auto">Your order is being prepared. We'll keep you updated every step of the way.</p>
+          </div>
+        )}
+
+        {/* Header (Back button + Status) */}
+        {!showConfetti && (
+          <div className="flex items-center justify-between">
             <div>
-              <p className="font-bold text-emerald-800">Order placed successfully!</p>
-              <p className="text-sm text-emerald-600 mt-0.5">We'll send you updates via email.</p>
+              <Link href="/orders" className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1.5 mb-1.5">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                My Orders
+              </Link>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Order #{order.orderNumber}</h1>
+              <p className="text-xs font-medium text-gray-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+            <div className="text-right flex flex-col items-end">
+              <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
+                {order.status.replace(/_/g, ' ')}
+              </span>
+              <div className="flex items-center gap-1 mt-2 text-emerald-600 text-[10px] font-bold">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                LIVE TRACKING
+              </div>
             </div>
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Link href="/orders" className="text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">
-              ← My Orders
-            </Link>
-            <h1 className="text-xl font-bold text-gray-900">#{order.orderNumber}</h1>
-            <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          </div>
-          <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
-            {order.status.replace(/_/g, ' ')}
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        {!isCancelled && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <div className="flex items-center justify-between relative">
-              <div className="absolute left-0 right-0 top-4 h-0.5 bg-gray-100 z-0" />
-              <div className="absolute left-0 top-4 h-0.5 bg-indigo-500 z-0 transition-all"
-                style={{ width: stepIdx >= 0 ? `${(stepIdx / (STEPS.length - 1)) * 100}%` : '0%' }} />
-              {STEPS.map((s, i) => (
-                <div key={s} className="flex flex-col items-center gap-1.5 z-10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${i <= stepIdx ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-400'}`}>
-                    {i < stepIdx ? '✓' : i + 1}
-                  </div>
-                  <span className="text-[10px] text-gray-500 text-center capitalize hidden sm:block">{s.replace(/_/g, ' ')}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Status Timeline */}
-        {order.statusHistory?.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="font-semibold text-gray-800 mb-4">Order Timeline</h2>
-            <div className="space-y-0">
-              {[...order.statusHistory].reverse().map((h: any, i: number) => (
-                <div key={i} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full shrink-0 mt-0.5 ${i === 0 ? 'bg-indigo-600' : 'bg-gray-300'}`} />
-                    {i < order.statusHistory.length - 1 && <div className="w-0.5 flex-1 bg-gray-100 my-1" />}
-                  </div>
-                  <div className="pb-4">
-                    <p className={`text-sm font-semibold capitalize ${i === 0 ? 'text-indigo-700' : 'text-gray-600'}`}>
-                      {h.status.replace(/_/g, ' ')}
-                    </p>
-                    {h.note && <p className="text-xs text-gray-400 mt-0.5">{h.note}</p>}
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(h.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ETA */}
-        {order.estimatedDeliveryAt && !['delivered','cancelled','returned','refunded'].includes(order.status) && (
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-5 py-4 flex items-center gap-3">
-            <span className="text-2xl">🚀</span>
+        {/* Cancelled Banner */}
+        {isCancelled && (
+          <div className="bg-red-50 border border-red-100 rounded-3xl p-6 sm:p-8 flex items-start gap-4">
+            <div className="text-3xl">❌</div>
             <div>
-              <p className="text-sm font-semibold text-indigo-800">Estimated Delivery</p>
-              <p className="text-xs text-indigo-600 mt-0.5">
-                {new Date(order.estimatedDeliveryAt).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              <h2 className="text-xl font-bold text-red-900 tracking-tight">Order Cancelled</h2>
+              <p className="text-red-700/90 mt-1 font-medium">
+                {order.statusHistory?.slice().reverse().find((h: any) => h.status === 'cancelled')?.note || 'This order was cancelled and will not be delivered.'}
               </p>
             </div>
           </div>
         )}
 
-        {/* Items */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-800">Items ({order.items.length})</h2>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {order.items.map((item: any, i: number) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-4">
-                <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-                  {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">📦</div>}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 text-sm truncate">{item.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">SKU: {item.sku} · Qty: {item.qty}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-gray-900">₹{fmt(item.price * item.qty)}</p>
-                  <p className="text-xs text-gray-400">₹{fmt(item.price)} each</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Live Progress Bar */}
+        {!isCancelled && (
+          <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm">
+            <h2 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              Track Order
+            </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Delivery address */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="font-semibold text-gray-800 mb-3">Delivery Address</h2>
-            <p className="text-sm font-medium text-gray-800">{order.address?.name}</p>
-            <p className="text-sm text-gray-500 mt-0.5">{order.address?.phone}</p>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {order.address?.line1}{order.address?.line2 ? `, ${order.address.line2}` : ''}<br />
-              {order.address?.city}, {order.address?.state} - {order.address?.pincode}
-            </p>
+
+            {/* Current Status Note */}
+            {order.statusHistory?.length > 0 && (
+              <div className="mt-8 bg-indigo-50/50 rounded-2xl p-4 flex gap-3 items-start border border-indigo-100/50">
+                <div className="text-xl">🔔</div>
+                <div>
+                  <p className="text-sm font-bold text-indigo-900 capitalize">{order.statusHistory[order.statusHistory.length - 1].status.replace(/_/g, ' ')}</p>
+                  <p className="text-xs text-indigo-700/80 mt-0.5 font-medium">
+                    {order.statusHistory[order.statusHistory.length - 1].note || 'Your order status has been updated.'}
+                  </p>
+                  <p className="text-[10px] font-bold text-indigo-400 mt-1.5 uppercase tracking-wider">
+                    {new Date(order.statusHistory[order.statusHistory.length - 1].at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ETA Highlight */}
+        {order.estimatedDeliveryAt && !['delivered', 'cancelled', 'returned', 'refunded'].includes(order.status) && (
+          <div className="bg-indigo-600 text-white rounded-3xl p-6 flex items-center justify-between shadow-md shadow-indigo-600/20">
+            <div>
+              <p className="text-indigo-100 text-sm font-medium">Estimated Delivery</p>
+              <p className="text-xl font-black mt-0.5">
+                {new Date(order.estimatedDeliveryAt).toLocaleString('en-IN', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-3xl">
+              ⏱️
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Items */}
+          <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm flex flex-col">
+            <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="font-bold text-gray-900">Order Items</h2>
+            </div>
+            <div className="divide-y divide-gray-50 flex-1 overflow-y-auto">
+              {order.items.map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-4 px-6 py-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-2xl overflow-hidden shrink-0 border border-gray-200/50">
+                    {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">📦</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 text-sm leading-tight truncate">{item.name}</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1 bg-gray-100 inline-block px-2 py-0.5 rounded-md">Qty: {item.qty}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-black text-gray-900">₹{fmt(item.price * item.qty)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Price summary */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="font-semibold text-gray-800 mb-3">Price Details</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>₹{fmt(order.subtotal)}</span></div>
-              <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                <span className={order.shippingCharge === 0 ? 'text-green-600' : ''}>{order.shippingCharge === 0 ? 'Free' : `₹${order.shippingCharge}`}</span>
+          <div className="space-y-6">
+            {/* Delivery address */}
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Delivery Address
+              </h2>
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <p className="text-sm font-bold text-gray-900">{order.address?.name}</p>
+                <p className="text-xs text-gray-500 mt-1 mb-2 font-medium">{order.address?.phone}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {order.address?.line1}{order.address?.line2 ? `, ${order.address.line2}` : ''}<br />
+                  {order.address?.city}, {order.address?.state} - <span className="font-bold text-gray-800">{order.address?.pincode}</span>
+                </p>
               </div>
-              {order.discount > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{fmt(order.discount)}</span></div>}
-              <div className="flex justify-between font-bold text-gray-900 border-t border-gray-100 pt-2 mt-2">
-                <span>Total</span><span>₹{fmt(order.total)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 pt-1">
-                <span>Payment</span>
-                <span className="capitalize">{order.paymentMethod} · <span className={order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}>{order.paymentStatus}</span></span>
+            </div>
+
+            {/* Price summary */}
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+              <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Bill Details
+              </h2>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between text-gray-600 font-medium"><span>Item Total</span><span className="text-gray-900">₹{fmt(order.subtotal)}</span></div>
+                <div className="flex justify-between text-gray-600 font-medium">
+                  <span>Delivery Fee</span>
+                  <span className={order.shippingCharge === 0 ? 'text-emerald-600 font-bold' : 'text-gray-900'}>{order.shippingCharge === 0 ? 'FREE' : `₹${order.shippingCharge}`}</span>
+                </div>
+                {order.discount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>Coupon Discount</span><span>-₹{fmt(order.discount)}</span></div>}
+                <div className="flex justify-between font-black text-gray-900 border-t border-gray-100 pt-3 mt-1 text-lg">
+                  <span>Grand Total</span><span>₹{fmt(order.total)}</span>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3 mt-3 flex justify-between items-center border border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{order.paymentMethod === 'cod' ? '💵' : '💳'}</span>
+                    <div>
+                      <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Payment</span>
+                      <span className="block text-sm font-semibold capitalize text-gray-900">{order.paymentMethod}</span>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.paymentStatus}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -229,10 +275,12 @@ function OrderDetail() {
 
         {/* Cancel button */}
         {['pending', 'confirmed'].includes(order.status) && (
-          <button onClick={cancelOrder} disabled={cancelling}
-            className="w-full border border-red-200 text-red-500 hover:bg-red-50 py-3 rounded-2xl text-sm font-medium transition-colors disabled:opacity-50">
-            {cancelling ? 'Cancelling...' : 'Cancel Order'}
-          </button>
+          <div className="pt-4">
+            <button onClick={cancelOrder} disabled={cancelling}
+              className="w-full border-2 border-red-100 text-red-500 hover:bg-red-50 py-4 rounded-2xl text-sm font-bold transition-colors disabled:opacity-50">
+              {cancelling ? 'Cancelling...' : 'Cancel Order'}
+            </button>
+          </div>
         )}
       </main>
     </>

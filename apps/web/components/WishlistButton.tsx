@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import API from '../lib/api';
+import { apiFetch } from '../lib/apiFetch';
 
 export default function WishlistButton({ productId }: { productId: string }) {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function WishlistButton({ productId }: { productId: string }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    fetch(`${API}/wishlist/check/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`/wishlist/check/${productId}`)
       .then(r => r.json()).then(d => setInWishlist(d.inWishlist)).catch(() => {});
   }, [productId]);
 
@@ -21,10 +22,10 @@ export default function WishlistButton({ productId }: { productId: string }) {
     if (!token) { router.push('/login'); return; }
     setLoading(true);
     if (inWishlist) {
-      await fetch(`${API}/wishlist/${productId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      await apiFetch(`/wishlist/${productId}`, { method: 'DELETE' });
       setInWishlist(false);
     } else {
-      await fetch(`${API}/wishlist/${productId}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await apiFetch(`/wishlist/${productId}`, { method: 'POST' });
       setInWishlist(true);
     }
     setLoading(false);

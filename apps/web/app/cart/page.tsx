@@ -4,6 +4,8 @@ import Header from '../../components/Header';
 import Link from 'next/link';
 
 import API from '../../lib/api';
+import { apiFetch } from '../../lib/apiFetch';
+import { syncCartToServer } from '../../lib/cart-sync';
 interface CartItem { _id: string; name: string; price: number; image?: string; qty: number; }
 const fmt = (n: number) => n.toLocaleString('en-IN');
 
@@ -28,6 +30,7 @@ export default function CartPage() {
       : cart.map(i => i._id === id ? { ...i, qty } : i);
     setCart(updated);
     localStorage.setItem('cart', JSON.stringify(updated));
+    syncCartToServer(updated);
     window.dispatchEvent(new Event('cart-updated'));
   }
 
@@ -36,9 +39,9 @@ export default function CartPage() {
     setCouponLoading(true); setCouponError('');
     const token = localStorage.getItem('token');
     if (!token) { setCouponError('Please login to apply coupons'); setCouponLoading(false); return; }
-    const res = await fetch(`${API}/coupons/validate`, {
+    const res = await apiFetch('/coupons/validate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: couponCode, cartTotal: subtotal }),
     });
     const data = await res.json();
@@ -232,8 +235,8 @@ export default function CartPage() {
           </div>
         </div>
 
-        {/* ── Mobile sticky checkout bar ── */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-100 px-3 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
+        {/* ── Mobile sticky checkout bar (sits above MobileBottomNav) ── */}
+        <div className="fixed bottom-16 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-100 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
           <div className="shrink-0">
             <p className="text-[11px] text-gray-400">Total</p>
             <p className="text-base font-bold text-gray-900 leading-none">₹{fmt(total)}</p>

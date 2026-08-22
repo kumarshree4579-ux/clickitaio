@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [name, setName] = useState('');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -43,8 +45,14 @@ export default function LoginPage() {
       body: JSON.stringify({ email }),
     });
     setLoading(false);
-    if (res.ok) { setStep('otp'); setCountdown(30); }
-    else { const d = await res.json(); setError(d.error || 'Failed to send OTP'); }
+    const data = await res.json();
+    setLoading(false);
+    if (res.ok) { 
+      setStep('otp'); 
+      setCountdown(30); 
+      setIsNewUser(data.isNewUser); 
+    }
+    else { setError(data.error || 'Failed to send OTP'); }
   }
 
   async function verifyOtp(e: React.FormEvent) {
@@ -53,7 +61,7 @@ export default function LoginPage() {
     const res = await fetch(`${API}/auth/verify-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, otp }),
+      body: JSON.stringify({ email, otp, name: isNewUser ? name : undefined }),
     });
     const data = await res.json();
     setLoading(false);
@@ -185,7 +193,19 @@ export default function LoginPage() {
                           className="text-xs text-indigo-600 hover:underline font-medium">Resend code</button>}
                   </div>
                 </div>
-                <button type="submit" disabled={loading || otp.length < 6}
+
+                {isNewUser && (
+                  <div className="pt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Full Name</label>
+                    <input
+                      type="text" value={name} onChange={e => setName(e.target.value)} required={isNewUser}
+                      placeholder="e.g. John Doe"
+                      className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                    />
+                  </div>
+                )}
+
+                <button type="submit" disabled={loading || otp.length < 6 || (isNewUser && !name.trim())}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3.5 rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 text-sm">
                   {loading ? <><Spinner /> Verifying...</> : 'Verify & Sign In'}
                 </button>

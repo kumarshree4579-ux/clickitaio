@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { OTP } from '../models/otp';
 import { User } from '../models/user';
+import { Session } from '../models/session';
 import { sendOtpEmail } from '../utils/mailer';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, verifyAccessToken } from '../utils/jwt';
 import { sanitizeLog } from '../utils/sanitize';
@@ -23,12 +24,15 @@ router.post('/request-otp', otpLimiter, validate(OtpRequestSchema), async (req: 
   await OTP.create({ email: normalizedEmail, hashedOtp, expiresAt: new Date(Date.now() + OTP_TTL), used: false });
   await sendOtpEmail(normalizedEmail, otp);
   console.log(`OTP requested for: ${sanitizeLog(normalizedEmail)}`);
-  return res.json({ success: true });
+  
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  return res.json({ success: true, isNewUser: !existingUser });
 });
 
 // POST /auth/verify-otp
-router.post('/verify-otp', otpLimiter, validate(OtpVerifySchema), async (req: Request, res: Response) => {
-  const { email, otp } = req.body;
+router.post('/verify-otp', otpLimiter, async (req: Request, res: Response) => {
+  const { email, otp, name } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP required' });
   const normalizedEmail = email.toLowerCase().trim();
   const record = await OTP.findOne({ email: normalizedEmail, used: false, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
   if (!record) return res.status(400).json({ error: 'OTP expired or not found' });
@@ -37,10 +41,19 @@ router.post('/verify-otp', otpLimiter, validate(OtpVerifySchema), async (req: Re
   record.used = true;
   await record.save();
   let user = await User.findOne({ email: normalizedEmail });
-  if (!user) user = await User.create({ email: normalizedEmail });
+  if (!user) user = await User.create({ email: normalizedEmail, name: name?.trim() || undefined });
   const accessToken = signAccessToken({ sub: user._id.toString(), email: user.email });
   const refreshToken = signRefreshToken({ sub: user._id.toString() });
-  return res.json({ accessToken, refreshToken, user: { id: user._id, email: user.email, role: user.role } });
+  
+  await Session.create({
+    user: user._id,
+    refreshToken,
+    userAgent: req.headers['user-agent'] || 'Unknown Device',
+    ip: req.ip || req.connection.remoteAddress || 'Unknown IP',
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+  });
+
+  return res.json({ accessToken, refreshToken, user: { id: user._id, email: user.email, role: user.role, name: user.name, mobile: user.mobile } });
 });
 
 // POST /auth/login
@@ -53,7 +66,16 @@ router.post('/login', loginLimiter, validate(LoginSchema), async (req: Request, 
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
   const accessToken = signAccessToken({ sub: user._id.toString(), email: user.email });
   const refreshToken = signRefreshToken({ sub: user._id.toString() });
-  return res.json({ accessToken, refreshToken, user: { id: user._id, email: user.email, role: user.role, name: user.name } });
+
+  await Session.create({
+    user: user._id,
+    refreshToken,
+    userAgent: req.headers['user-agent'] || 'Unknown Device',
+    ip: req.ip || req.connection.remoteAddress || 'Unknown IP',
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  });
+
+  return res.json({ accessToken, refreshToken, user: { id: user._id, email: user.email, role: user.role, name: user.name, mobile: user.mobile } });
 });
 
 // POST /auth/refresh — exchange refresh token for new access token
@@ -62,8 +84,14 @@ router.post('/refresh', async (req: Request, res: Response) => {
   if (!refreshToken) return res.status(400).json({ error: 'Refresh token required' });
   try {
     const payload = verifyRefreshToken(refreshToken) as any;
+    const session = await Session.findOne({ refreshToken, user: payload.sub });
+    if (!session) return res.status(401).json({ error: 'Session expired or revoked' });
+
     const user = await User.findById(payload.sub).select('email role isActive');
     if (!user || !user.isActive) return res.status(401).json({ error: 'User not found or inactive' });
+    
+    await Session.updateOne({ _id: session._id }, { $set: { lastActive: new Date() } });
+
     const accessToken = signAccessToken({ sub: user._id.toString(), email: user.email });
     return res.json({ accessToken });
   } catch {
@@ -71,15 +99,61 @@ router.post('/refresh', async (req: Request, res: Response) => {
   }
 });
 
-// POST /auth/me — get current user from token
+// GET /auth/me — get current user from token
 router.get('/me', async (req: Request, res: Response) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
   try {
     const payload = verifyAccessToken(header.slice(7)) as any;
-    const user = await User.findById(payload.sub).select('name email role isActive');
+    const user = await User.findById(payload.sub).select('name email mobile role isActive');
     if (!user || !user.isActive) return res.status(401).json({ error: 'Unauthorized' });
-    return res.json({ id: user._id, name: user.name, email: user.email, role: user.role });
+    return res.json({ id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role });
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// PUT /auth/me — update current user profile
+router.put('/me', async (req: Request, res: Response) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const payload = verifyAccessToken(header.slice(7)) as any;
+    const { name, mobile } = req.body;
+    const user = await User.findByIdAndUpdate(payload.sub, {
+      $set: {
+        ...(name !== undefined && { name }),
+        ...(mobile !== undefined && { mobile }),
+      }
+    }, { new: true }).select('name email mobile role isActive');
+    if (!user || !user.isActive) return res.status(401).json({ error: 'Unauthorized' });
+    return res.json({ id: user._id, name: user.name, email: user.email, mobile: user.mobile, role: user.role });
+  } catch {
+    return res.status(401).json({ error: 'Invalid token or update failed' });
+  }
+});
+
+// GET /auth/sessions — list active sessions for current user
+router.get('/sessions', async (req: Request, res: Response) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const payload = verifyAccessToken(header.slice(7)) as any;
+    const sessions = await Session.find({ user: payload.sub }).sort({ lastActive: -1 }).select('userAgent ip lastActive createdAt');
+    return res.json(sessions);
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// DELETE /auth/sessions/:id — revoke a specific session
+router.delete('/sessions/:id', async (req: Request, res: Response) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const payload = verifyAccessToken(header.slice(7)) as any;
+    await Session.findOneAndDelete({ _id: req.params.id, user: payload.sub });
+    return res.json({ success: true });
   } catch {
     return res.status(401).json({ error: 'Invalid token' });
   }

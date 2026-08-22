@@ -3,6 +3,10 @@ import { Geist } from 'next/font/google';
 import './globals.css';
 import Footer from '../components/Footer';
 import NotificationBar from '../components/NotificationBar';
+import MobileBottomNav from '../components/MobileBottomNav';
+import { LocationProvider } from '../lib/LocationContext';
+import GlobalLocationPrompt from '../components/GlobalLocationPrompt';
+import RealtimeListener from '../components/RealtimeListener';
 
 const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 
@@ -30,7 +34,6 @@ export const metadata: Metadata = {
   },
 };
 
-import MobileBottomNav from '../components/MobileBottomNav';
 
 async function getSettings() {
   try {
@@ -61,10 +64,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${geist.variable} h-full`} style={themeStyles} data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col bg-gray-50 pb-16 sm:pb-0">
-        <NotificationBar />
-        {children}
-        <Footer />
-        <MobileBottomNav />
+        <LocationProvider>
+          <NotificationBar />
+          {children}
+          <Footer />
+          <MobileBottomNav />
+          <GlobalLocationPrompt />
+          <RealtimeListener />
+        </LocationProvider>
       </body>
     </html>
   );

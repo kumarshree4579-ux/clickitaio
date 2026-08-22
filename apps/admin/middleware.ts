@@ -5,16 +5,17 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname.startsWith('/dashboard')) {
-    // Check for token in cookie (set at login) or fall back to checking if it exists
     const hasToken = req.cookies.get('token')?.value;
-    if (!hasToken) {
+    const hasRefreshToken = req.cookies.get('refreshToken')?.value;
+    if (!hasToken && !hasRefreshToken) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
   }
 
   if (pathname === '/login') {
     const hasToken = req.cookies.get('token')?.value;
-    if (hasToken) {
+    const hasRefreshToken = req.cookies.get('refreshToken')?.value;
+    if (hasToken || hasRefreshToken) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
   }

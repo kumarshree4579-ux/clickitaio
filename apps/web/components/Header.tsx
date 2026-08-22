@@ -1,9 +1,10 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import API from '../lib/api';
 import MobileTopbar from './MobileTopbar';
+import { useLocation } from '../lib/LocationContext';
 
 const fmt = (n: number) => n.toLocaleString('en-IN');
 
@@ -17,6 +18,7 @@ export default function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState<{ name?: string; email: string } | null>(null);
   const [search, setSearch] = useState('');
+  const { addressString, isServiceable, serviceabilityMessage, openPrompt } = useLocation();
   const [suggestions, setSuggestions] = useState<SuggestGroup[]>([]);
   const [showSuggest, setShowSuggest] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -182,8 +184,22 @@ export default function Header() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
                 <span className="text-white font-bold text-sm">DB</span>
               </div>
-              <span className="font-bold text-base sm:text-lg text-gray-900 tracking-tight">Daily Basket</span>
+              <span className="font-bold text-base sm:text-lg text-gray-900 tracking-tight hidden lg:block">Daily Basket</span>
             </Link>
+
+            {/* Location Pill */}
+            <div className="shrink-0 sm:border-l sm:border-gray-200 sm:pl-3 block">
+              <button onClick={openPrompt} className="flex flex-col items-start hover:opacity-80 transition-opacity">
+                <div className="flex items-center gap-1.5 max-w-[200px]">
+                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide shrink-0">Delivering to</span>
+                   {isServiceable === false && <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide truncate" title={serviceabilityMessage || 'Unserviceable'}>{serviceabilityMessage || 'Unserviceable'}</span>}
+                </div>
+                <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mt-0.5">
+                  <span className="truncate max-w-[120px] lg:max-w-[160px]">{addressString || 'Select Location'}</span>
+                  <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </button>
+            </div>
 
             {/* Desktop search */}
             <div className="hidden sm:flex flex-1 relative" ref={searchRef}>
@@ -333,7 +349,9 @@ export default function Header() {
           )}
         </div>
       </header>
-      <MobileTopbar />
+      <Suspense fallback={<div className="h-14 sm:hidden bg-white border-b" />}>
+        <MobileTopbar />
+      </Suspense>
     </>
   );
 }

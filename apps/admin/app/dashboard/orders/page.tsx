@@ -1,9 +1,8 @@
 'use client';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import API from '../../../lib/api';
-
-const token = () => localStorage.getItem('token');
+import { apiFetch } from '../../../lib/apiFetch';
 
 const STATUSES = [
   'pending', 'received', 'confirmed', 'accepted', 'processing',
@@ -58,33 +57,72 @@ function OrdersContent() {
   
   // Tabs inside the slide-over
   const [slideOverTab, setSlideOverTab] = useState<'summary' | 'kot' | 'edit'>('summary');
+  const lastOrderIdRef = useRef<string | null>(null);
 
-  async function load() {
-    setLoading(true);
-    let url = `${API}/orders?page=${page}&limit=20`;
+  async function load(isPolling = false) {
+    if (!isPolling) setLoading(true);
+    let url = `/orders?page=${page}&limit=20`;
     if (currentStatus) {
       url += `&status=${currentStatus}`;
     }
     try {
-      const data = await fetch(url, { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
-      setOrders(data.items || []);
-      setTotal(data.total || 0);
+      const res = await apiFetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Check for new orders to trigger notification
+        if (page === 1 && (!currentStatus || currentStatus === 'pending') && data.items?.length > 0) {
+          const latestId = data.items[0]._id;
+          if (lastOrderIdRef.current && lastOrderIdRef.current !== latestId) {
+            // Play notification sound
+            try {
+              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+              audio.play().catch(e => console.log('Audio play blocked', e));
+            } catch(e) {}
+          }
+          lastOrderIdRef.current = latestId;
+        }
+        
+        setOrders(data.items || []);
+        setTotal(data.total || 0);
+      }
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (!isPolling) setLoading(false);
     }
   }
 
   useEffect(() => { load(); }, [page, currentStatus]);
   useEffect(() => { setPage(1); }, [currentStatus]);
 
-  async function updateStatus(statusToSet = newStatus) {
+  // Real-time EventSource reload
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) return;
+    
+    const es = new EventSource(`${API}/stream?token=${token}`);
+    
+    es.addEventListener('new_order', () => {
+      // Reload the orders when a new one arrives
+      if (page === 1) load(true);
+    });
+    
+    // Also fallback interval just in case
+    const interval = setInterval(() => load(true), 30000);
+    
+    return () => {
+      es.close();
+      clearInterval(interval);
+    };
+  }, [page, currentStatus]);
+
+  async function updateStatus(statusToSet = newStatus, note = '') {
     if (!selected || !statusToSet) return;
-    await fetch(`${API}/orders/${selected._id}/status`, {
+    await apiFetch(`/orders/${selected._id}/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-      body: JSON.stringify({ status: statusToSet }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: statusToSet, note }),
     });
     setSelected(null);
     setNewStatus('');
@@ -99,24 +137,6 @@ function OrdersContent() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800 capitalize">{activeLabel}</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and track your {activeLabel.toLowerCase()}</p>
-        </div>
-        
-        <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
-          <button
-            onClick={() => router.push('/dashboard/orders')}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-[13px] font-bold tracking-wide transition-colors ${!currentStatus ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
-          >
-            ALL ORDERS
-          </button>
-          {['received', 'processing', 'packed', 'out_for_delivery', 'completed'].map(s => (
-            <button
-              key={s}
-              onClick={() => router.push(`/dashboard/orders?status=${s}`)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-[13px] font-bold tracking-wide transition-colors ${currentStatus === s ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
-            >
-              {s.replace(/_/g, ' ').toUpperCase()}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -195,7 +215,7 @@ function OrdersContent() {
                 <a href={`${API}/invoices/${selected._id}`}
                   onClick={e => {
                     e.preventDefault();
-                    fetch(`${API}/invoices/${selected._id}`, { headers: { Authorization: `Bearer ${token()}` } })
+                    apiFetch(`/invoices/${selected._id}`)
                       .then(r => r.text()).then(html => {
                         const w = window.open('', '_blank');
                         w?.document.write(html);
@@ -318,7 +338,19 @@ function OrdersContent() {
 
             {/* Footer / Status Actions */}
             <div className="p-4 border-t border-gray-100 bg-white shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] flex flex-col gap-3">
-              {NEXT_STEP[selected.status] && (
+              {['pending', 'received', 'confirmed'].includes(selected.status) ? (
+                <div className="flex gap-3">
+                  <button onClick={() => updateStatus('accepted')} className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all shadow-sm">
+                    Accept Order
+                  </button>
+                  <button onClick={() => {
+                    const remark = window.prompt("Enter rejection remark for the customer (e.g., Out of stock):");
+                    if (remark !== null) updateStatus('cancelled', remark);
+                  }} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all shadow-sm">
+                    Reject Order
+                  </button>
+                </div>
+              ) : NEXT_STEP[selected.status] && (
                 <button 
                   onClick={() => updateStatus(NEXT_STEP[selected.status])} 
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2">

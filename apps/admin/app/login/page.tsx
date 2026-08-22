@@ -24,7 +24,8 @@ export default function LoginPage() {
       localStorage.setItem('token', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
-      document.cookie = `token=${data.accessToken}; path=/; SameSite=Strict; max-age=900`;
+      document.cookie = `token=${data.accessToken}; path=/; SameSite=Strict; max-age=604800`;
+      document.cookie = `refreshToken=${data.refreshToken}; path=/; SameSite=Strict; max-age=604800`;
       router.push('/dashboard');
     } catch {
       setError('Network error — is the API running?');

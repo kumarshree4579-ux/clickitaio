@@ -3,19 +3,31 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import Link from 'next/link';
-
-import API from '../../lib/api';
+import { apiFetch } from '../../lib/apiFetch';
+import { motion } from 'framer-motion';
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  packed: 'bg-indigo-100 text-indigo-700',
-  shipped: 'bg-purple-100 text-purple-700',
-  out_for_delivery: 'bg-orange-100 text-orange-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  returned: 'bg-gray-100 text-gray-700',
-  refunded: 'bg-gray-100 text-gray-700',
+  pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
+  packed: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  shipped: 'bg-purple-100 text-purple-700 border-purple-200',
+  out_for_delivery: 'bg-orange-100 text-orange-700 border-orange-200',
+  delivered: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  cancelled: 'bg-red-100 text-red-700 border-red-200',
+  returned: 'bg-gray-100 text-gray-700 border-gray-200',
+  refunded: 'bg-gray-100 text-gray-700 border-gray-200',
+};
+
+const STATUS_ICONS: Record<string, string> = {
+  pending: '⏳',
+  confirmed: '👍',
+  packed: '📦',
+  shipped: '🚚',
+  out_for_delivery: '🛵',
+  delivered: '✅',
+  cancelled: '❌',
+  returned: '🔄',
+  refunded: '💸',
 };
 
 export default function OrdersPage() {
@@ -26,54 +38,122 @@ export default function OrdersPage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/login'); return; }
-    fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch('/orders')
       .then(r => r.json()).then(d => setOrders(d.items || [])).finally(() => setLoading(false));
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50 pb-20">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">My Orders</h1>
+      
+      {/* Header Banner */}
+      <div className="bg-indigo-600 text-white pt-8 pb-16 px-4 rounded-b-3xl shadow-sm">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">My Orders</h1>
+          <p className="text-indigo-100">Manage and track all your orders in one place.</p>
+        </div>
+      </div>
+
+      <main className="max-w-3xl mx-auto px-4 -mt-10">
         {loading ? (
-          <div className="text-center py-20 text-gray-400">Loading...</div>
-        ) : orders.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-4xl mb-3">📦</p>
-            <p className="mb-4">No orders yet</p>
-            <Link href="/products" className="bg-blue-600 text-white px-6 py-2.5 rounded-full hover:bg-blue-700">Start Shopping</Link>
-          </div>
-        ) : (
           <div className="space-y-4">
-            {orders.map((order: any) => (
-              <Link key={order._id} href={`/orders/${order._id}`}
-                className="block bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-bold text-gray-800">#{order.orderNumber}</p>
-                    <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-2xl p-5 shadow-sm animate-pulse flex flex-col gap-4">
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                <div className="flex gap-3">
+                  <div className="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600'}`}>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-sm p-12 text-center"
+          >
+            <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+              🛍️
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">No orders yet</h2>
+            <p className="text-gray-500 mb-8">Looks like you haven't made your first purchase yet.</p>
+            <Link href="/products" className="inline-block bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+              Start Shopping
+            </Link>
+          </motion.div>
+        ) : (
+          <div className="space-y-5">
+            {orders.map((order: any, idx: number) => (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                key={order._id} 
+                className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 overflow-hidden group"
+              >
+                {/* Order Header */}
+                <div className="flex items-center justify-between p-5 border-b border-gray-50 bg-gray-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                      {STATUS_ICONS[order.status] || '📦'}
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 font-medium">Order #{order.orderNumber}</p>
+                      <p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'} capitalize flex items-center gap-1 shadow-sm`}>
                     {order.status.replace(/_/g, ' ')}
                   </span>
                 </div>
-                <div className="flex gap-2 mb-3 overflow-hidden">
-                  {order.items.slice(0, 3).map((item: any, i: number) => (
-                    <div key={i} className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                      {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-sm">📦</div>}
+
+                {/* Order Items */}
+                <div className="p-5">
+                  <div className="flex gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                    {order.items.map((item: any, i: number) => (
+                      <div key={i} className="flex flex-col items-center gap-1 min-w-[70px]">
+                        <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative group-hover:border-indigo-100 transition-colors">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl text-gray-300">📦</div>
+                          )}
+                          {item.qty > 1 && (
+                            <div className="absolute -top-1 -right-1 bg-gray-800 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white shadow-sm">
+                              {item.qty}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-gray-500 font-medium truncate w-16 text-center">{item.name}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Order Footer & Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total Amount</p>
+                      <p className="font-extrabold text-gray-900 text-lg">₹{order.total?.toLocaleString('en-IN')}</p>
                     </div>
-                  ))}
-                  {order.items.length > 3 && <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xs text-gray-500">+{order.items.length - 3}</div>}
+                    
+                    <Link 
+                      href={`/orders/${order._id}`}
+                      className="bg-gray-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-2"
+                    >
+                      <span>Track Order</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{order.items.reduce((s: number, i: any) => s + i.qty, 0)} items</span>
-                  <span className="font-bold text-gray-800">₹{order.total}</span>
-                </div>
-              </Link>
+              </motion.div>
             ))}
           </div>
         )}
       </main>
-    </>
+    </div>
   );
 }

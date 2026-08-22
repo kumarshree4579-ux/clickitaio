@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '../../lib/apiFetch';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -14,15 +15,14 @@ export default function DashboardPage() {
   const [recentCustomers, setRecentCustomers] = useState<any[]>([]);
 
   useEffect(() => {
-    const h = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
-      fetch(`${API}/reports/summary`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/orders?limit=5&status=received`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/orders?limit=5&status=running`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/orders?limit=5&status=completed`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/orders?limit=5&status=cancelled`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/reports/low-stock-products?limit=5`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/auth/customers?limit=5`, { headers: h }).then(r => r.json()),
+      apiFetch(`/reports/summary`).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=received`).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=running`).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=completed`).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=cancelled`).then(r => r.json()),
+      apiFetch(`/reports/low-stock-products?limit=5`).then(r => r.json()),
+      apiFetch(`/auth/customers?limit=5`).then(r => r.json()),
     ]).then(([s, no, ro, co, ca, ls, rc]) => {
       setSummary(s);
       setNewOrders(no.items || []);

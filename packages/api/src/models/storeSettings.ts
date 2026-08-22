@@ -37,7 +37,7 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
   },
   deliveryZones: [{
     name: { type: String, required: true },
-    coordinates: [[Number]], // array of [lng, lat]
+    coordinates: { type: Array, default: [] }, // array of [lng, lat]
     isActive: { type: Boolean, default: true },
   }],
   estimatedDeliveryMinutes: { type: Number, default: 45 },

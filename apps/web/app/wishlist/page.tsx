@@ -5,7 +5,8 @@ import Header from '../../components/Header';
 import Link from 'next/link';
 
 import API from '../../lib/api';
-const token = () => localStorage.getItem('token');
+import { apiFetch } from '../../lib/apiFetch';
+import { syncCartToServer } from '../../lib/cart-sync';
 
 const fmt = (n: number) => n.toLocaleString('en-IN');
 
@@ -20,13 +21,13 @@ export default function WishlistPage() {
   }, []);
 
   async function load() {
-    const data = await fetch(`${API}/wishlist`, { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
+    const data = await apiFetch('/wishlist').then(r => r.json());
     setItems(data);
     setLoading(false);
   }
 
   async function remove(productId: string) {
-    await fetch(`${API}/wishlist/${productId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+    await apiFetch(`/wishlist/${productId}`, { method: 'DELETE' });
     setItems(i => i.filter(x => x.product._id !== productId));
   }
 
@@ -36,6 +37,7 @@ export default function WishlistPage() {
     if (idx > -1) cart[idx].qty += 1;
     else cart.push({ _id: product._id, name: product.name, price: product.sellingPrice, image: product.images?.[0]?.url, qty: 1 });
     localStorage.setItem('cart', JSON.stringify(cart));
+    syncCartToServer(cart);
     window.dispatchEvent(new Event('cart-updated'));
   }
 

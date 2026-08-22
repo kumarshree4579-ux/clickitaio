@@ -7,10 +7,13 @@ export interface AuthedRequest extends Request {
 }
 
 export async function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  let token = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+  if (!token && req.query.token && typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
   try {
-    const payload = verifyAccessToken(header.slice(7)) as any;
+    const payload = verifyAccessToken(token) as any;
     const user = await User.findById(payload.sub).select('role isActive');
     if (!user || !user.isActive) return res.status(401).json({ error: 'Unauthorized' });
     req.user = { sub: payload.sub, email: payload.email, role: user.role };

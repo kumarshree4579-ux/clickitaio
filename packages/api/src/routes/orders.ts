@@ -6,10 +6,12 @@ import { Product } from '../models/product';
 import { StockMovement } from '../models/stockMovement';
 import { User } from '../models/user';
 import { Coupon } from '../models/coupon';
+import { Cart } from '../models/cart';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from '../utils/mailer';
 import { validate, OrderSchema } from '../utils/validation';
 import { StoreSettings } from '../models/storeSettings';
+import { sse } from '../services/sse';
 
 const router = Router();
 
@@ -63,8 +65,8 @@ router.post('/', requireAuth, validate(OrderSchema), async (req: AuthedRequest, 
       estimatedDeliveryMinutes: etaMinutes,
       estimatedDeliveryAt,
       subtotal, shippingCharge, discount, total, couponCode, paymentMethod,
-      paymentStatus: 'pending', status: 'pending', notes,
-      statusHistory: [{ status: 'pending', at: new Date() }],
+      paymentStatus: 'pending', status: paymentMethod === 'cod' ? 'received' : 'pending', notes,
+      statusHistory: [{ status: paymentMethod === 'cod' ? 'received' : 'pending', at: new Date() }],
     });
 
     // For COD: deduct stock immediately. For Razorpay: deduct only after payment verified.
@@ -80,8 +82,16 @@ router.post('/', requireAuth, validate(OrderSchema), async (req: AuthedRequest, 
       }
     }
 
+    // Clear the cart
+    await Cart.findOneAndDelete({ user: req.user!.sub });
+
     const user = await User.findById(req.user!.sub);
     if (user?.email) sendOrderConfirmationEmail(user.email, order).catch(() => {});
+
+    if (paymentMethod === 'cod') {
+      // Broadcast new order to admins
+      sse.broadcastToAdmins('new_order', order);
+    }
 
     if (paymentMethod === 'razorpay') {
       const rpOrder = await getRazorpay().orders.create({ amount: total * 100, currency: 'INR', receipt: order.orderNumber });
@@ -106,6 +116,9 @@ router.post('/verify-payment', requireAuth, async (req: AuthedRequest, res: Resp
       paymentStatus: 'paid', status: 'confirmed', razorpayPaymentId,
       $push: { statusHistory: { status: 'confirmed', at: new Date(), note: 'Payment received' } },
     }, { new: true }).populate('customer', 'email');
+
+    // Broadcast new order to admins now that payment is confirmed
+    sse.broadcastToAdmins('new_order', order);
     // Deduct stock now that payment is confirmed
     const pendingOrder = await Order.findById(orderId);
     if (pendingOrder) {
@@ -119,8 +132,6 @@ router.post('/verify-payment', requireAuth, async (req: AuthedRequest, res: Resp
         }
       }
     }
-    const customer = order?.customer as any;
-    if (customer?.email) sendOrderStatusEmail(customer.email, order!.orderNumber, 'confirmed').catch(() => {});
     return res.json({ success: true, order });
   } catch {
     return res.status(500).json({ error: 'Server error' });
@@ -167,7 +178,13 @@ router.put('/:id/status', requireAuth, requireRole('super_admin', 'order_manager
   }, { new: true }).populate('customer', 'email');
   if (!order) return res.status(404).json({ error: 'Not found' });
   const customer = order.customer as any;
-  if (customer?.email) sendOrderStatusEmail(customer.email, order.orderNumber, status).catch(() => {});
+  if (customer?.email && ['completed', 'cancelled'].includes(status)) {
+    sendOrderStatusEmail(customer.email, order.orderNumber, status).catch(() => {});
+  }
+
+  // Broadcast status update to the customer
+  sse.broadcastToCustomer((order.customer as any)?._id?.toString() || order.customer.toString(), 'order_status_update', order);
+
   return res.json(order);
 });
 

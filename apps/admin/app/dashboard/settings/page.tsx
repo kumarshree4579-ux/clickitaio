@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const token = () => localStorage.getItem('token');
+import { apiFetch } from '../../../lib/apiFetch';
 
 const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
 
@@ -30,9 +31,15 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [sessions, setSessions] = useState([]);
   const [activeZoneIdx, setActiveZoneIdx] = useState<number | null>(null);
   const [drawingZone, setDrawingZone] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
+  const [drawPointCount, setDrawPointCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [latInput, setLatInput] = useState('');
+  const [lngInput, setLngInput] = useState('');
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -40,11 +47,29 @@ export default function SettingsPage() {
   const drawingPointsRef = useRef<[number, number][]>([]);
   const drawingPolyRef = useRef<any>(null);
   const storeMarkerRef = useRef<any>(null);
+  const drawingZoneRef = useRef(false);
 
   useEffect(() => {
-    fetch(`${API}/settings`, { headers: { Authorization: `Bearer ${token()}` } })
+    drawingZoneRef.current = drawingZone;
+  }, [drawingZone]);
+
+  useEffect(() => {
+    apiFetch(`/settings`)
       .then(r => r.json()).then(setSettings);
+    apiFetch(`/auth/sessions`)
+      .then(r => r.json()).then(setSessions).catch(() => {});
   }, []);
+
+  async function revokeSession(id: string) {
+    if (!confirm('Log out this device?')) return;
+    const res = await apiFetch(`/auth/sessions/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setSessions((s: any) => s.filter((x: any) => x._id !== id));
+      if (id === 'current') {
+        window.location.reload();
+      }
+    }
+  }
 
   // Load Leaflet dynamically (no SSR issues)
   useEffect(() => {
@@ -63,6 +88,20 @@ export default function SettingsPage() {
       initMap();
     }
   }, [settings]);
+
+  useEffect(() => {
+    if (searchQuery.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    const delay = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(searchQuery)}`)
+        .then(r => r.json())
+        .then(data => setSearchResults(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }, 600);
+    return () => clearTimeout(delay);
+  }, [searchQuery]);
 
   function initMap() {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -89,9 +128,10 @@ export default function SettingsPage() {
 
     // Map click for drawing
     map.on('click', (e: any) => {
-      if (!drawingZone) return;
+      if (!drawingZoneRef.current) return;
       const { lat, lng } = e.latlng;
       drawingPointsRef.current.push([lng, lat]);
+      setDrawPointCount(drawingPointsRef.current.length);
       // Update preview polyline
       if (drawingPolyRef.current) map.removeLayer(drawingPolyRef.current);
       const pts = drawingPointsRef.current.map(([lo, la]) => [la, lo]);
@@ -124,6 +164,7 @@ export default function SettingsPage() {
     setSettings((s: any) => ({ ...s, deliveryZones: updated }));
     // Clear drawing state
     drawingPointsRef.current = [];
+    setDrawPointCount(0);
     if (drawingPolyRef.current) { mapInstanceRef.current?.removeLayer(drawingPolyRef.current); drawingPolyRef.current = null; }
     setDrawingZone(false);
     setNewZoneName('');
@@ -132,8 +173,47 @@ export default function SettingsPage() {
 
   function cancelDraw() {
     drawingPointsRef.current = [];
+    setDrawPointCount(0);
     if (drawingPolyRef.current) { mapInstanceRef.current?.removeLayer(drawingPolyRef.current); drawingPolyRef.current = null; }
     setDrawingZone(false);
+  }
+
+  function undoLastPoint() {
+    if (drawingPointsRef.current.length === 0) return;
+    drawingPointsRef.current.pop();
+    setDrawPointCount(drawingPointsRef.current.length);
+    const L = (window as any).L;
+    if (drawingPolyRef.current) mapInstanceRef.current?.removeLayer(drawingPolyRef.current);
+    const pts = drawingPointsRef.current.map(([lo, la]: [number, number]) => [la, lo]);
+    if (pts.length > 0) {
+      drawingPolyRef.current = L.polyline(pts, { color: '#6366f1', dashArray: '6' }).addTo(mapInstanceRef.current);
+    } else {
+      drawingPolyRef.current = null;
+    }
+  }
+
+  function handleSelectResult(r: any) {
+    const lat = parseFloat(r.lat);
+    const lng = parseFloat(r.lon);
+    mapInstanceRef.current?.setView([lat, lng], 16);
+    setSearchQuery(r.display_name);
+    setSearchResults([]);
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude, longitude } = pos.coords;
+      mapInstanceRef.current?.setView([latitude, longitude], 15);
+    });
+  }
+
+  function handleLatLngSubmit() {
+    const lat = parseFloat(latInput);
+    const lng = parseFloat(lngInput);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      mapInstanceRef.current?.setView([lat, lng], 15);
+    }
   }
 
   function removeZone(i: number) {
@@ -150,168 +230,201 @@ export default function SettingsPage() {
     renderZones(mapInstanceRef.current, updated);
   }
 
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    if (!settings) return;
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      return;
+    }
+    const t = setTimeout(() => {
+      save();
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [settings]);
+
   async function save() {
     setSaving(true);
-    await fetch(`${API}/settings`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-      body: JSON.stringify(settings),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      await apiFetch(`/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e: any) {
+      // Ignore Failed to fetch during Next.js Fast Refresh/HMR
+      if (!e.message?.includes('Failed to fetch')) {
+        console.error(e);
+      }
+    } finally {
+      setSaving(false);
+    }
   }
+
+  const [activeTab, setActiveTab] = useState('delivery');
 
 
   if (!settings) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full" /></div>;
 
   return (
     <div className="max-w-6xl mx-auto pb-12">
-      {/* Sticky Save Button (Floats on Top Right) */}
-      <div className="sticky top-6 z-50 w-full flex justify-end h-0 overflow-visible pointer-events-none pr-4 sm:pr-0">
-        <button onClick={save} disabled={saving}
-          className={`pointer-events-auto flex items-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border ${
-            saved 
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-              : 'bg-white text-gray-700 hover:text-indigo-600 hover:border-indigo-200 hover:shadow-indigo-100/50 border-gray-200/80'
-          } disabled:opacity-50 disabled:cursor-not-allowed group`}
-        >
-          {saving ? (
-            <>
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Saving...
-            </>
-          ) : saved ? (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-              Saved
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-              Save Changes
-            </>
-          )}
-        </button>
-      </div>
-
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 py-4 border-b border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 py-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Store Settings</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage delivery zones, appearance, and configurations</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">Store Settings</h1>
+            {/* Minimal Auto-Save Indicator */}
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold transition-colors ${
+              saving ? 'bg-amber-100 text-amber-700' : saved ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+            }`}>
+              {saving ? (
+                <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> Saving...</>
+              ) : saved ? (
+                <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> Saved</>
+              ) : (
+                <><svg className="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> Up to date</>
+              )}
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">Manage delivery zones, appearance, and configurations. Auto-saves as you type.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-        
-        {/* LEFT COLUMN (Main config, Map) */}
-        <div className="xl:col-span-2 space-y-6 lg:space-y-8">
-          
-          {/* Map */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-              <div>
-                <h2 className="font-semibold text-gray-800 text-sm">Service Area Map</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Drag 🏪 to set store location · Click map to draw zone polygon</p>
-              </div>
-              <div className="flex gap-2">
-                {!drawingZone ? (
-                  <button onClick={() => setDrawingZone(true)}
-                    className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-700 shadow-sm">
-                    + Draw Zone
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <input placeholder="Zone name" value={newZoneName} onChange={e => setNewZoneName(e.target.value)}
-                      className="border rounded-lg px-2 py-1.5 text-xs w-32 focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-                    <button onClick={finishZone} className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-700 shadow-sm">Finish</button>
-                    <button onClick={cancelDraw} className="border px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-gray-50">Cancel</button>
+      {/* Tabs */}
+      <div className="flex space-x-1 bg-gray-100/50 p-1 rounded-xl mb-8 w-fit border border-gray-200">
+        {[
+          { id: 'delivery', name: 'Delivery & Map', icon: '📍' },
+          { id: 'general', name: 'General Config', icon: '⚙️' },
+          { id: 'badges', name: 'Trust Badges', icon: '⭐' },
+          { id: 'security', name: 'Security', icon: '🔐' },
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === t.id ? 'bg-white text-indigo-600 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
+          >
+            <span>{t.icon}</span>
+            {t.name}
+          </button>
+        ))}
+      </div>
+
+      <div className="w-full">
+        <div className={activeTab === 'delivery' ? 'block' : 'hidden'}>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+            <div className="xl:col-span-2 space-y-6">
+              {/* Map */}
+              <div className={`bg-white rounded-2xl border transition-all duration-300 overflow-hidden ${drawingZone ? 'border-indigo-400 shadow-[0_0_0_4px_rgba(99,102,241,0.1)]' : 'border-gray-200 shadow-sm'}`}>
+                <div className={`px-6 py-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${drawingZone ? 'bg-indigo-50/50 border-indigo-100' : 'bg-gray-50/30 border-gray-100'}`}>
+                  <div>
+                    <h2 className="font-bold text-gray-900 text-base">{drawingZone ? 'Drawing Mode Active' : 'Service Area Map'}</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {drawingZone 
+                        ? 'Click on the map to add points for your delivery boundary. Minimum 3 points.' 
+                        : 'Manage the physical boundaries where you accept orders.'}
+                    </p>
                   </div>
-                )}
+                  
+                  <div className="flex gap-2 shrink-0">
+                    {!drawingZone ? (
+                      <button onClick={() => setDrawingZone(true)}
+                        className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm flex items-center gap-2 transition-transform active:scale-95">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
+                        Draw New Zone
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl border border-indigo-100 shadow-sm">
+                        <input placeholder="Name this zone..." value={newZoneName} onChange={e => setNewZoneName(e.target.value)}
+                          className="border-none bg-gray-50 rounded-lg px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium" autoFocus />
+                        <span className="text-xs font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-md">{drawPointCount} pts</span>
+                        
+                        <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                        
+                        <button onClick={undoLastPoint} className="text-gray-500 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Undo point">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                        </button>
+                        <button onClick={finishZone} className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-600 shadow-sm transition-transform active:scale-95">Save</button>
+                        <button onClick={cancelDraw} className="text-gray-500 font-medium px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm">Cancel</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Map Tools */}
+                <div className="px-6 py-3 border-b border-gray-100 bg-white flex flex-wrap items-center gap-4">
+                  <button onClick={useMyLocation} className="flex items-center gap-1.5 px-4 py-2 bg-gray-50 border border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-xl text-sm font-medium text-gray-700 transition-colors">
+                    📍 Find Me
+                  </button>
+                  
+                  <div className="relative flex-1 min-w-[200px]">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input 
+                      type="text" placeholder="Search address to jump..." 
+                      value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                    />
+                    {searchResults.length > 0 && (
+                      <div className="absolute top-full mt-2 left-0 w-full bg-white border border-gray-100 shadow-xl rounded-xl max-h-56 overflow-y-auto z-50 py-1">
+                        {searchResults.map((r, i) => (
+                          <button key={i} onClick={() => handleSelectResult(r)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50 truncate flex flex-col gap-0.5 last:border-0">
+                            <span className="font-semibold text-gray-900 truncate">{r.display_name.split(',')[0]}</span>
+                            <span className="text-gray-400 text-xs truncate">{r.display_name.split(',').slice(1).join(',')}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div ref={mapRef} style={{ height: 500 }} className="w-full bg-gray-100 relative z-0" />
               </div>
             </div>
-            {drawingZone && (
-              <div className="bg-amber-50 border-b border-amber-100 px-5 py-2 text-xs text-amber-700 font-medium">
-                🖊 Click on the map to add polygon points. Click "Finish" when done (min 3 points).
-              </div>
-            )}
-            <div ref={mapRef} style={{ height: 450 }} className="w-full bg-gray-100" />
+
+            <div className="xl:col-span-1 space-y-6">
+              {/* Zones list */}
+              <Card 
+                title="Active Zones" 
+                desc="Manage your drawn delivery areas"
+                extra={<span className="text-xs font-bold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full">{(settings.deliveryZones || []).length} zones</span>}
+              >
+                <div className="space-y-3 mt-4">
+                  {(settings.deliveryZones || []).map((z: any, i: number) => (
+                    <div key={i} className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${z.isActive ? 'border-indigo-100 bg-indigo-50/40 shadow-sm' : 'border-gray-100 bg-gray-50/50 opacity-75'}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-base font-bold truncate ${z.isActive ? 'text-indigo-900' : 'text-gray-500'}`}>{z.name}</p>
+                        <p className="text-xs font-medium text-gray-400 mt-0.5">{z.coordinates?.length || 0} polygon points</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => toggleZone(i)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${z.isActive ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
+                          {z.isActive ? 'ON' : 'OFF'}
+                        </button>
+                        <button onClick={() => removeZone(i)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete Zone">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {(settings.deliveryZones || []).length === 0 && (
+                    <div className="text-center py-10 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                      <div className="text-3xl mb-2">🗺️</div>
+                      <p className="font-medium text-gray-600">No zones defined yet</p>
+                      <p className="mt-1 text-xs">Draw on the map to define your delivery boundaries.</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
           </div>
-
-          {/* Zones list */}
-          <Card 
-            title="Delivery Zones" 
-            desc="Manage active delivery areas drawn on the map"
-            extra={<span className="text-xs font-medium bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full">{(settings.deliveryZones || []).length} zones</span>}
-          >
-            <div className="space-y-3">
-              {(settings.deliveryZones || []).map((z: any, i: number) => (
-                <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${z.isActive ? 'border-indigo-100 bg-indigo-50/30' : 'border-gray-100 bg-gray-50/50'}`}>
-                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${z.isActive ? 'bg-indigo-500 shadow-sm' : 'bg-gray-300'}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{z.name}</p>
-                    <p className="text-xs text-gray-400">{z.coordinates?.length || 0} polygon points</p>
-                  </div>
-                  <button onClick={() => toggleZone(i)} className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${z.isActive ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
-                    {z.isActive ? 'Active' : 'Disabled'}
-                  </button>
-                  <button onClick={() => removeZone(i)} className="text-red-400 hover:text-red-600 text-xs px-2 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors">✕</button>
-                </div>
-              ))}
-              {(settings.deliveryZones || []).length === 0 && (
-                <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
-                  No zones yet — draw on the map above to create one
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Trust Badges */}
-          <Card 
-            title="Trust Badges" 
-            desc="Shown below the hero banner on the homepage"
-            extra={
-              <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: [...(s.trustBadges || []), { icon: '⭐', title: 'New Badge', subtitle: 'Description', isActive: true }] }))}
-                className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors">+ Add Badge</button>
-            }
-          >
-            <div className="space-y-3">
-              {(settings.trustBadges || []).map((b: any, i: number) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
-                  <input value={b.icon} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], icon: e.target.value }; return { ...s, trustBadges: t }; })}
-                    className="w-12 h-12 border border-gray-200 rounded-lg text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm" placeholder="🚚" />
-                  <div className="flex-1 space-y-2">
-                    <input value={b.title} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], title: e.target.value }; return { ...s, trustBadges: t }; })}
-                      className={inp} placeholder="Badge Title" />
-                    <input value={b.subtitle} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], subtitle: e.target.value }; return { ...s, trustBadges: t }; })}
-                      className={inp} placeholder="Short Description" />
-                  </div>
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button onClick={() => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], isActive: !t[i].isActive }; return { ...s, trustBadges: t }; })}
-                      className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors text-center ${b.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
-                      {b.isActive ? 'On' : 'Off'}
-                    </button>
-                    <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: s.trustBadges.filter((_: any, idx: number) => idx !== i) }))}
-                      className="text-red-500 hover:text-red-700 text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors text-center">Remove</button>
-                  </div>
-                </div>
-              ))}
-              {!(settings.trustBadges?.length) && (
-                <p className="text-center text-sm text-gray-400 py-6 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">No trust badges configured</p>
-              )}
-            </div>
-          </Card>
-
         </div>
 
-        {/* RIGHT COLUMN (Settings) */}
-        <div className="space-y-6 lg:space-y-8">
-          
-          {/* General Configuration */}
-          <Card title="General Setup" desc="Core delivery rules and store info">
+        <div className={activeTab === 'general' ? 'block' : 'hidden'}>
+          <div className="max-w-3xl space-y-6">
+            <Card title="General Setup" desc="Core delivery rules and store info">
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-gray-700 mb-1 block">Store Name</label>
@@ -400,10 +513,96 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
-
-
         </div>
+        </div>
+
+        <div className={activeTab === 'badges' ? 'block' : 'hidden'}>
+          <div className="max-w-3xl">
+            <Card 
+              title="Trust Badges" 
+              desc="These display directly below the hero banner on the customer homepage to build trust."
+              extra={
+                <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: [...(s.trustBadges || []), { icon: '⭐', title: 'New Badge', subtitle: 'Short description', isActive: true }] }))}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
+                  Add Badge
+                </button>
+              }
+            >
+              <div className="space-y-4 mt-4">
+                {(settings.trustBadges || []).map((b: any, i: number) => (
+                  <div key={i} className={`flex items-start gap-4 p-5 rounded-2xl border-2 transition-all ${b.isActive ? 'border-gray-200 bg-white shadow-sm' : 'border-gray-100 bg-gray-50 opacity-75'}`}>
+                    <div className="flex flex-col items-center gap-2">
+                      <input value={b.icon} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], icon: e.target.value }; return { ...s, trustBadges: t }; })}
+                        className="w-16 h-16 border-2 border-gray-200 rounded-xl text-center text-2xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-gray-50 shadow-inner" placeholder="🚚" />
+                      <span className="text-[10px] uppercase font-bold text-gray-400">Icon</span>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block">Badge Title</label>
+                        <input value={b.title} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], title: e.target.value }; return { ...s, trustBadges: t }; })}
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 font-bold text-gray-900" placeholder="e.g. Free Delivery" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block">Short Description</label>
+                        <input value={b.subtitle} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], subtitle: e.target.value }; return { ...s, trustBadges: t }; })}
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-gray-600" placeholder="e.g. On orders above $50" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0 pt-6">
+                      <button onClick={() => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], isActive: !t[i].isActive }; return { ...s, trustBadges: t }; })}
+                        className={`w-24 text-xs px-4 py-2.5 rounded-xl font-bold transition-colors text-center ${b.isActive ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
+                        {b.isActive ? 'VISIBLE' : 'HIDDEN'}
+                      </button>
+                      <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: s.trustBadges.filter((_: any, idx: number) => idx !== i) }))}
+                        className="w-24 text-red-500 hover:text-red-700 text-xs px-4 py-2.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors text-center font-bold">Remove</button>
+                    </div>
+                  </div>
+                ))}
+                {!(settings.trustBadges?.length) && (
+                  <div className="text-center py-12 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                    <div className="text-3xl mb-3">🏅</div>
+                    <p className="font-semibold text-gray-600">No Trust Badges</p>
+                    <p className="mt-1">Add badges to build trust with your customers.</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+        
+        <div className={activeTab === 'security' ? 'block' : 'hidden'}>
+          <div className="max-w-3xl">
+            <Card title="Active Devices" desc="Manage devices currently logged into your admin account.">
+              <div className="space-y-4">
+                {sessions.map((s: any) => (
+                  <div key={s._id} className="border border-gray-200 rounded-xl p-4 flex items-center justify-between bg-white shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-xl shrink-0">
+                        {s.isCurrent ? '📱' : '💻'}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900">{s.ip}</p>
+                          {s.isCurrent && <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">CURRENT</span>}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate max-w-sm">{s.userAgent}</p>
+                        <p className="text-xs text-gray-400 mt-1">Started: {new Date(s.createdAt).toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => revokeSession(s.isCurrent ? 'current' : s._id)}
+                      className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors border border-red-100">
+                      Log out
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+
       </div>
+
     </div>
   );
 }

@@ -10,6 +10,7 @@ export interface ICustomerAddress extends Document {
   state: string;
   pincode: string;
   country: string;
+  location?: { lat: number; lng: number };
   isDefault: boolean;
 }
 
@@ -23,6 +24,10 @@ const CustomerAddressSchema = new Schema<ICustomerAddress>({
   state: { type: String, required: true },
   pincode: { type: String, required: true },
   country: { type: String, default: 'India' },
+  location: {
+    lat: { type: Number },
+    lng: { type: Number }
+  },
   isDefault: { type: Boolean, default: false },
 }, { timestamps: true });
 

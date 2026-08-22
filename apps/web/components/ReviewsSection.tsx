@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 
 import API from '../lib/api';
+import { apiFetch } from '../lib/apiFetch';
 
 function Stars({ n, size = 'sm' }: { n: number; size?: 'sm' | 'lg' }) {
   return (
@@ -47,9 +48,9 @@ export default function ReviewsSection({ productId }: { productId: string }) {
     const token = localStorage.getItem('token');
     if (!token) { setError('Please login to submit a review'); return; }
     setSubmitting(true); setError('');
-    const res = await fetch(`${API}/reviews`, {
+    const res = await apiFetch('/reviews', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ product: productId, ...form }),
     });
     setSubmitting(false);
