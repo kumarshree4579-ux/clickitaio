@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import API from '../lib/api';
+import MobileTopbar from './MobileTopbar';
 
 const fmt = (n: number) => n.toLocaleString('en-IN');
 
@@ -66,7 +67,7 @@ export default function Header() {
     fetch(`${API}/products/suggest?q=${encodeURIComponent(q.trim())}`)
       .then(r => r.json())
       .then(d => { setSuggestions(Array.isArray(d) ? d : []); setShowSuggest(true); setActiveIdx(-1); })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -221,6 +222,13 @@ export default function Header() {
                   : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
               </button>
 
+              <Link href="/support" title="Support"
+                className="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </Link>
+
               {/* Wishlist — hidden on xs, visible sm+ */}
               <Link href="/wishlist" title="Wishlist"
                 className="hidden sm:flex p-2.5 rounded-xl text-gray-500 hover:text-rose-500 hover:bg-rose-50 transition-colors">
@@ -295,13 +303,6 @@ export default function Header() {
                 </Link>
               )}
 
-              {/* Mobile hamburger — only when logged in (for nav links) */}
-              <button onClick={() => setMobileMenu(o => !o)}
-                className="sm:hidden p-2.5 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors ml-0.5">
-                {mobileMenu
-                  ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>}
-              </button>
             </div>
           </div>
 
@@ -332,61 +333,7 @@ export default function Header() {
           )}
         </div>
       </header>
-
-      {/* Mobile nav drawer */}
-      {mobileMenu && (
-        <div className="sm:hidden fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileMenu(false)} />
-          <div className="absolute top-14 left-0 right-0 bg-white shadow-xl border-b border-gray-100 z-50">
-            {user && (
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-indigo-50">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center text-white font-bold">
-                  {(user.name || user.email)[0].toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'Customer'}</p>
-                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                </div>
-              </div>
-            )}
-            <nav className="py-2">
-              {[
-                { href: '/', label: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-                { href: '/products', label: 'Products', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
-                { href: '/wishlist', label: 'Wishlist', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
-                ...(user ? [
-                  { href: '/orders', label: 'My Orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-                  { href: '/account', label: 'My Account', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-                ] : []),
-              ].map(item => (
-                <Link key={item.href} href={item.href} onClick={() => setMobileMenu(false)}
-                  className="flex items-center gap-3 px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                  </svg>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="px-5 py-4 border-t border-gray-100">
-              {user ? (
-                <button onClick={logout}
-                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-medium py-3 rounded-2xl text-sm hover:bg-red-100 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Logout
-                </button>
-              ) : (
-                <Link href="/login" onClick={() => setMobileMenu(false)}
-                  className="w-full flex items-center justify-center bg-indigo-600 text-white font-semibold py-3 rounded-2xl text-sm hover:bg-indigo-700 transition-colors">
-                  Sign In
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileTopbar />
     </>
   );
 }

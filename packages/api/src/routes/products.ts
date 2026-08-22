@@ -7,17 +7,18 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = '1', limit = '20', q, category, brand, status = 'active', featured, newArrival, bestSeller } = req.query as any;
+    const { page = '1', limit = '20', q, category, subCategory, brand, status = 'active', featured, newArrival, bestSeller } = req.query as any;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const filter: any = { status };
     if (q) filter.$text = { $search: q };
     if (category) filter.category = category;
+    if (subCategory) filter.subCategory = subCategory;
     if (brand) filter.brand = brand;
     if (featured === 'true') filter.isFeatured = true;
     if (newArrival === 'true') filter.isNewArrival = true;
     if (bestSeller === 'true') filter.isBestSeller = true;
     const [items, total] = await Promise.all([
-      Product.find(filter).populate('category', 'name slug').populate('brand', 'name').skip(skip).limit(parseInt(limit)).sort({ createdAt: -1 }),
+      Product.find(filter).populate('category', 'name slug').populate('subCategory', 'name slug').populate('brand', 'name').skip(skip).limit(parseInt(limit)).sort({ createdAt: -1 }),
       Product.countDocuments(filter),
     ]);
     return res.json({ items, total, page: parseInt(page), limit: parseInt(limit) });
@@ -115,7 +116,7 @@ router.get('/suggest', async (req: Request, res: Response) => {
 });
 
 router.get('/:id', async (req: Request, res: Response) => {
-  const product = await Product.findById(req.params.id).populate('category brand');
+  const product = await Product.findById(req.params.id).populate('category subCategory brand');
   if (!product) return res.status(404).json({ error: 'Not found' });
   return res.json(product);
 });

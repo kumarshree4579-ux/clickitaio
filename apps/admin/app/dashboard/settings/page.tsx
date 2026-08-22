@@ -12,6 +12,19 @@ function formatETA(minutes: number) {
   const m = minutes % 60;
   return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
 }
+const inp = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-colors';
+const Card = ({ title, desc, children, extra }: any) => (
+  <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+      <div>
+        <h2 className="font-semibold text-gray-800 text-sm">{title}</h2>
+        {desc && <p className="text-xs text-gray-500 mt-0.5">{desc}</p>}
+      </div>
+      {extra && <div>{extra}</div>}
+    </div>
+    <div className="p-5">{children}</div>
+  </div>
+);
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -149,176 +162,280 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2500);
   }
 
-  const inp = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300';
 
   if (!settings) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full" /></div>;
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Delivery Settings</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Set service area, delivery time and store location</p>
-        </div>
+    <div className="max-w-6xl mx-auto pb-12">
+      {/* Sticky Save Button (Floats on Top Right) */}
+      <div className="sticky top-6 z-50 w-full flex justify-end h-0 overflow-visible pointer-events-none pr-4 sm:pr-0">
         <button onClick={save} disabled={saving}
-          className={`px-5 py-2 rounded-xl text-sm font-medium transition-colors ${saved ? 'bg-emerald-600 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} disabled:opacity-50`}>
-          {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Settings'}
+          className={`pointer-events-auto flex items-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border ${
+            saved 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+              : 'bg-white text-gray-700 hover:text-indigo-600 hover:border-indigo-200 hover:shadow-indigo-100/50 border-gray-200/80'
+          } disabled:opacity-50 disabled:cursor-not-allowed group`}
+        >
+          {saving ? (
+            <>
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </>
+          ) : saved ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+              Saved
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              Save Changes
+            </>
+          )}
         </button>
       </div>
 
-      {/* Trust Badges */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-gray-800">Trust Badges</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Shown below the hero banner on homepage</p>
-          </div>
-          <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: [...(s.trustBadges || []), { icon: '⭐', title: 'New Badge', subtitle: 'Description', isActive: true }] }))}
-            className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-700">+ Add Badge</button>
-        </div>
-        <div className="space-y-3">
-          {(settings.trustBadges || []).map((b: any, i: number) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
-              <input value={b.icon} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], icon: e.target.value }; return { ...s, trustBadges: t }; })}
-                className="w-14 border border-gray-200 rounded-lg px-2 py-1.5 text-center text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="🚚" />
-              <div className="flex-1 grid grid-cols-2 gap-2">
-                <input value={b.title} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], title: e.target.value }; return { ...s, trustBadges: t }; })}
-                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="Title" />
-                <input value={b.subtitle} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], subtitle: e.target.value }; return { ...s, trustBadges: t }; })}
-                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" placeholder="Subtitle" />
-              </div>
-              <button onClick={() => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], isActive: !t[i].isActive }; return { ...s, trustBadges: t }; })}
-                className={`text-xs px-2 py-1 rounded-lg shrink-0 ${b.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
-                {b.isActive ? 'On' : 'Off'}
-              </button>
-              <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: s.trustBadges.filter((_: any, idx: number) => idx !== i) }))}
-                className="text-red-400 hover:text-red-600 text-sm shrink-0">✕</button>
-            </div>
-          ))}
-          {!(settings.trustBadges?.length) && (
-            <p className="text-center text-sm text-gray-400 py-4 border-2 border-dashed border-gray-200 rounded-xl">No badges yet — click + Add Badge</p>
-          )}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8 py-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Store Settings</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage delivery zones, appearance, and configurations</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* General */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-          <h2 className="font-semibold text-gray-800">General</h2>
-
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Store Name</label>
-            <input className={inp} value={settings.storeName || ''} onChange={e => setSettings((s: any) => ({ ...s, storeName: e.target.value }))} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Delivery Enabled</p>
-              <p className="text-xs text-gray-400">Turn off to pause all deliveries</p>
-            </div>
-            <button onClick={() => setSettings((s: any) => ({ ...s, isDeliveryEnabled: !s.isDeliveryEnabled }))}
-              className={`w-12 h-6 rounded-full transition-colors relative ${settings.isDeliveryEnabled ? 'bg-indigo-600' : 'bg-gray-300'}`}>
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.isDeliveryEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
-            </button>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Estimated Delivery Time (minutes)</label>
-            <input type="number" className={inp} min={1} value={settings.estimatedDeliveryMinutes || 45}
-              onChange={e => setSettings((s: any) => ({ ...s, estimatedDeliveryMinutes: Number(e.target.value) }))} />
-            <p className="text-xs text-indigo-500 mt-1">Shows as: <strong>{formatETA(settings.estimatedDeliveryMinutes || 45)}</strong></p>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Delivery Message (use {'{time}'} for ETA)</label>
-            <input className={inp} value={settings.deliveryMessage || ''} onChange={e => setSettings((s: any) => ({ ...s, deliveryMessage: e.target.value }))} />
-            <p className="text-xs text-gray-400 mt-1">Preview: {(settings.deliveryMessage || '').replace('{time}', formatETA(settings.estimatedDeliveryMinutes || 45))}</p>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Unserviceable Area Message</label>
-            <textarea className={inp} rows={2} value={settings.unserviceableMessage || ''}
-              onChange={e => setSettings((s: any) => ({ ...s, unserviceableMessage: e.target.value }))} />
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Delivery Charge (₹)</label>
-              <input type="number" className={inp} value={settings.deliveryCharge ?? 49}
-                onChange={e => setSettings((s: any) => ({ ...s, deliveryCharge: Number(e.target.value) }))} />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Free Above (₹)</label>
-              <input type="number" className={inp} value={settings.freeDeliveryAbove ?? 500}
-                onChange={e => setSettings((s: any) => ({ ...s, freeDeliveryAbove: Number(e.target.value) }))} />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Min Order (₹)</label>
-              <input type="number" className={inp} value={settings.minOrderAmount ?? 0}
-                onChange={e => setSettings((s: any) => ({ ...s, minOrderAmount: Number(e.target.value) }))} />
-            </div>
-          </div>
-        </div>
-
-        {/* Zones list */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-800">Delivery Zones</h2>
-            <span className="text-xs text-gray-400">{(settings.deliveryZones || []).length} zones</span>
-          </div>
-          <p className="text-xs text-gray-400">Draw zones on the map. If no zones set, entire area is serviceable.</p>
-
-          {(settings.deliveryZones || []).map((z: any, i: number) => (
-            <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border ${z.isActive ? 'border-indigo-100 bg-indigo-50/50' : 'border-gray-100 bg-gray-50'}`}>
-              <div className={`w-3 h-3 rounded-full shrink-0 ${z.isActive ? 'bg-indigo-500' : 'bg-gray-300'}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">{z.name}</p>
-                <p className="text-xs text-gray-400">{z.coordinates?.length || 0} points</p>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+        
+        {/* LEFT COLUMN (Main config, Map) */}
+        <div className="xl:col-span-2 space-y-6 lg:space-y-8">
+          
+          {/* Map */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+              <div>
+                <h2 className="font-semibold text-gray-800 text-sm">Service Area Map</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Drag 🏪 to set store location · Click map to draw zone polygon</p>
               </div>
-              <button onClick={() => toggleZone(i)} className={`text-xs px-2 py-1 rounded-lg ${z.isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'}`}>
-                {z.isActive ? 'Active' : 'Off'}
-              </button>
-              <button onClick={() => removeZone(i)} className="text-red-400 hover:text-red-600 text-xs px-1">✕</button>
+              <div className="flex gap-2">
+                {!drawingZone ? (
+                  <button onClick={() => setDrawingZone(true)}
+                    className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-700 shadow-sm">
+                    + Draw Zone
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input placeholder="Zone name" value={newZoneName} onChange={e => setNewZoneName(e.target.value)}
+                      className="border rounded-lg px-2 py-1.5 text-xs w-32 focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                    <button onClick={finishZone} className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-700 shadow-sm">Finish</button>
+                    <button onClick={cancelDraw} className="border px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-gray-50">Cancel</button>
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
-
-          {(settings.deliveryZones || []).length === 0 && (
-            <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
-              No zones yet — draw on the map below
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Map */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div>
-            <h2 className="font-semibold text-gray-800">Service Area Map</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Drag 🏪 to set store location · Click map to draw zone polygon</p>
-          </div>
-          <div className="flex gap-2">
-            {!drawingZone ? (
-              <button onClick={() => setDrawingZone(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">
-                + Draw Zone
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input placeholder="Zone name" value={newZoneName} onChange={e => setNewZoneName(e.target.value)}
-                  className="border rounded-xl px-3 py-2 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-                <button onClick={finishZone} className="bg-emerald-600 text-white px-3 py-2 rounded-xl text-sm hover:bg-emerald-700">Finish</button>
-                <button onClick={cancelDraw} className="border px-3 py-2 rounded-xl text-sm hover:bg-gray-50">Cancel</button>
+            {drawingZone && (
+              <div className="bg-amber-50 border-b border-amber-100 px-5 py-2 text-xs text-amber-700 font-medium">
+                🖊 Click on the map to add polygon points. Click "Finish" when done (min 3 points).
               </div>
             )}
+            <div ref={mapRef} style={{ height: 450 }} className="w-full bg-gray-100" />
           </div>
+
+          {/* Zones list */}
+          <Card 
+            title="Delivery Zones" 
+            desc="Manage active delivery areas drawn on the map"
+            extra={<span className="text-xs font-medium bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full">{(settings.deliveryZones || []).length} zones</span>}
+          >
+            <div className="space-y-3">
+              {(settings.deliveryZones || []).map((z: any, i: number) => (
+                <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${z.isActive ? 'border-indigo-100 bg-indigo-50/30' : 'border-gray-100 bg-gray-50/50'}`}>
+                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${z.isActive ? 'bg-indigo-500 shadow-sm' : 'bg-gray-300'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{z.name}</p>
+                    <p className="text-xs text-gray-400">{z.coordinates?.length || 0} polygon points</p>
+                  </div>
+                  <button onClick={() => toggleZone(i)} className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${z.isActive ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
+                    {z.isActive ? 'Active' : 'Disabled'}
+                  </button>
+                  <button onClick={() => removeZone(i)} className="text-red-400 hover:text-red-600 text-xs px-2 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors">✕</button>
+                </div>
+              ))}
+              {(settings.deliveryZones || []).length === 0 && (
+                <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
+                  No zones yet — draw on the map above to create one
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Trust Badges */}
+          <Card 
+            title="Trust Badges" 
+            desc="Shown below the hero banner on the homepage"
+            extra={
+              <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: [...(s.trustBadges || []), { icon: '⭐', title: 'New Badge', subtitle: 'Description', isActive: true }] }))}
+                className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors">+ Add Badge</button>
+            }
+          >
+            <div className="space-y-3">
+              {(settings.trustBadges || []).map((b: any, i: number) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                  <input value={b.icon} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], icon: e.target.value }; return { ...s, trustBadges: t }; })}
+                    className="w-12 h-12 border border-gray-200 rounded-lg text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white shadow-sm" placeholder="🚚" />
+                  <div className="flex-1 space-y-2">
+                    <input value={b.title} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], title: e.target.value }; return { ...s, trustBadges: t }; })}
+                      className={inp} placeholder="Badge Title" />
+                    <input value={b.subtitle} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], subtitle: e.target.value }; return { ...s, trustBadges: t }; })}
+                      className={inp} placeholder="Short Description" />
+                  </div>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <button onClick={() => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], isActive: !t[i].isActive }; return { ...s, trustBadges: t }; })}
+                      className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors text-center ${b.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                      {b.isActive ? 'On' : 'Off'}
+                    </button>
+                    <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: s.trustBadges.filter((_: any, idx: number) => idx !== i) }))}
+                      className="text-red-500 hover:text-red-700 text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors text-center">Remove</button>
+                  </div>
+                </div>
+              ))}
+              {!(settings.trustBadges?.length) && (
+                <p className="text-center text-sm text-gray-400 py-6 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">No trust badges configured</p>
+              )}
+            </div>
+          </Card>
+
         </div>
-        {drawingZone && (
-          <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 text-xs text-amber-700 font-medium">
-            🖊 Click on the map to add polygon points. Click "Finish" when done (min 3 points).
-          </div>
-        )}
-        <div ref={mapRef} style={{ height: 420 }} />
+
+        {/* RIGHT COLUMN (Settings) */}
+        <div className="space-y-6 lg:space-y-8">
+          
+          {/* General Configuration */}
+          <Card title="General Setup" desc="Core delivery rules and store info">
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Store Name</label>
+                <input className={inp} value={settings.storeName || ''} onChange={e => setSettings((s: any) => ({ ...s, storeName: e.target.value }))} />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">Accept Deliveries</p>
+                  <p className="text-xs text-gray-500">Toggle to pause ordering globally</p>
+                </div>
+                <button onClick={() => setSettings((s: any) => ({ ...s, isDeliveryEnabled: !s.isDeliveryEnabled }))}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${settings.isDeliveryEnabled ? 'bg-emerald-500' : 'bg-gray-200'}`}>
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.isDeliveryEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Estimated ETA (minutes)</label>
+                <input type="number" className={inp} min={1} value={settings.estimatedDeliveryMinutes || 45}
+                  onChange={e => setSettings((s: any) => ({ ...s, estimatedDeliveryMinutes: Number(e.target.value) }))} />
+                <p className="text-xs text-gray-500 mt-1.5">Displayed as: <span className="font-semibold text-indigo-600">{formatETA(settings.estimatedDeliveryMinutes || 45)}</span></p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Delivery Fee (₹)</label>
+                  <input type="number" className={inp} value={settings.deliveryCharge ?? 49}
+                    onChange={e => setSettings((s: any) => ({ ...s, deliveryCharge: Number(e.target.value) }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Free Above (₹)</label>
+                  <input type="number" className={inp} value={settings.freeDeliveryAbove ?? 500}
+                    onChange={e => setSettings((s: any) => ({ ...s, freeDeliveryAbove: Number(e.target.value) }))} />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Minimum Order Amount (₹)</label>
+                  <input type="number" className={inp} value={settings.minOrderAmount ?? 0}
+                    onChange={e => setSettings((s: any) => ({ ...s, minOrderAmount: Number(e.target.value) }))} />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Messaging */}
+          <Card title="Customer Messaging" desc="Custom alerts shown to users">
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Delivery Message <span className="text-gray-400 font-normal">(use {'{time}'} for ETA)</span></label>
+                <textarea className={inp} rows={2} value={settings.deliveryMessage || ''} onChange={e => setSettings((s: any) => ({ ...s, deliveryMessage: e.target.value }))} />
+                <p className="text-xs text-gray-500 mt-1.5 bg-gray-50 p-2 rounded border border-gray-100">
+                  Preview: {(settings.deliveryMessage || '').replace('{time}', formatETA(settings.estimatedDeliveryMinutes || 45))}
+                </p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1 block">Unserviceable Area Error</label>
+                <textarea className={inp} rows={2} value={settings.unserviceableMessage || ''}
+                  onChange={e => setSettings((s: any) => ({ ...s, unserviceableMessage: e.target.value }))} />
+              </div>
+            </div>
+          </Card>
+
+          {/* App Theme */}
+          <Card title="App Theme" desc="Customize web app branding">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Primary Color</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" className="w-8 h-8 rounded cursor-pointer border-0 p-0" value={settings.appTheme?.primaryColor || '#4f46e5'} onChange={e => setSettings((s: any) => ({ ...s, appTheme: { ...s.appTheme, primaryColor: e.target.value } }))} />
+                    <span className="text-xs text-gray-500 uppercase">{settings.appTheme?.primaryColor || '#4f46e5'}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 mb-1 block">Secondary Color</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" className="w-8 h-8 rounded cursor-pointer border-0 p-0" value={settings.appTheme?.secondaryColor || '#7c3aed'} onChange={e => setSettings((s: any) => ({ ...s, appTheme: { ...s.appTheme, secondaryColor: e.target.value } }))} />
+                    <span className="text-xs text-gray-500 uppercase">{settings.appTheme?.secondaryColor || '#7c3aed'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-gray-100">
+                 <label className="text-xs font-medium text-gray-700 mb-1 block">Active Theme Name</label>
+                 <input className={inp} value={settings.appTheme?.activeThemeName || 'default'} onChange={e => setSettings((s: any) => ({ ...s, appTheme: { ...s.appTheme, activeThemeName: e.target.value } }))} placeholder="e.g. Festival, Rainy, Default" />
+                 <p className="text-xs text-gray-400 mt-1">Useful for seasonal themes.</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Topbar Tabs */}
+          <Card 
+            title="Mobile Topbar Tabs" 
+            desc="Zomato-style scrollable tabs"
+            extra={
+              <button onClick={() => setSettings((s: any) => ({ ...s, topbarTabs: [...(s.topbarTabs || []), { label: 'New Tab', categorySlug: '', isActive: true }] }))}
+                className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors">+ Add Tab</button>
+            }
+          >
+            <div className="space-y-3">
+              {(settings.topbarTabs || []).map((t: any, i: number) => (
+                <div key={i} className="space-y-2 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                  <div className="flex gap-2">
+                    <input value={t.label} onChange={e => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], label: e.target.value }; return { ...s, topbarTabs: tabs }; })}
+                      className={inp} placeholder="Tab Label (e.g. Food)" />
+                    <input value={t.categorySlug} onChange={e => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], categorySlug: e.target.value }; return { ...s, topbarTabs: tabs }; })}
+                      className={inp} placeholder="Category Slug" />
+                  </div>
+                  <div className="flex gap-2 justify-between items-center pt-1">
+                    <button onClick={() => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], isActive: !tabs[i].isActive }; return { ...s, topbarTabs: tabs }; })}
+                      className={`text-xs px-3 py-1 rounded-md font-medium transition-colors ${t.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                      {t.isActive ? 'Active' : 'Disabled'}
+                    </button>
+                    <button onClick={() => setSettings((s: any) => ({ ...s, topbarTabs: s.topbarTabs.filter((_: any, idx: number) => idx !== i) }))}
+                      className="text-red-500 hover:text-red-700 text-xs px-2 py-1 font-medium">Remove</button>
+                  </div>
+                </div>
+              ))}
+              {!(settings.topbarTabs?.length) && (
+                <p className="text-center text-sm text-gray-400 py-4 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">No tabs configured</p>
+              )}
+            </div>
+          </Card>
+
+        </div>
       </div>
     </div>
   );

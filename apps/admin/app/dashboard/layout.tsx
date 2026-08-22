@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
 
       {/* Mobile backdrop */}
       {sidebarOpen && (
@@ -14,14 +14,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-30 w-60 transform transition-transform duration-200 lg:relative lg:translate-x-0 lg:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-200 lg:static lg:translate-x-0 h-full flex-shrink-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Topbar */}
-        <header className="h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 shrink-0 gap-3">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 shrink-0 gap-3 z-10">
           {/* Hamburger */}
           <button onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">{children}</main>
       </div>
     </div>
   );

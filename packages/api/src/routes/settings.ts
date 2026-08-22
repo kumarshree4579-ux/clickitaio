@@ -44,6 +44,8 @@ router.get('/public', async (_req: Request, res: Response) => {
     deliveryCharge: s.deliveryCharge,
     hasZones: s.deliveryZones.filter(z => z.isActive).length > 0,
     trustBadges: s.trustBadges,
+    topbarTabs: s.topbarTabs,
+    appTheme: s.appTheme,
   });
 });
 

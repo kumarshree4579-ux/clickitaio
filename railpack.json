@@ -1,0 +1,9 @@
+{
+  "build": {
+    "install": "npm install",
+    "build": "npm run build:api"
+  },
+  "deploy": {
+    "start": "npm run start:api"
+  }
+}

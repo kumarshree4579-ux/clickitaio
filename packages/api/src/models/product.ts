@@ -16,6 +16,7 @@ export interface IProduct extends Document {
   barcode?: string;
   brand?: Types.ObjectId;
   category?: Types.ObjectId;
+  subCategory?: Types.ObjectId;
   description?: string;
   shortDescription?: string;
   mrp: number;
@@ -46,6 +47,7 @@ const ProductSchema = new Schema<IProduct>({
   barcode: { type: String },
   brand: { type: Schema.Types.ObjectId, ref: 'Brand' },
   category: { type: Schema.Types.ObjectId, ref: 'Category' },
+  subCategory: { type: Schema.Types.ObjectId, ref: 'Category' },
   description: { type: String },
   shortDescription: { type: String },
   mrp: { type: Number, required: true },

@@ -26,6 +26,7 @@ export const ProductSchema = z.object({
   stock: z.number().int().min(0).default(0),
   minStock: z.number().int().min(0).default(0),
   category: z.string().optional(),
+  subCategory: z.string().optional(),
   brand: z.string().optional(),
   description: z.string().max(5000).optional(),
   shortDescription: z.string().max(500).optional(),

@@ -16,6 +16,32 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
   const [result, setResult] = useState<any>(null);
   const [storeSettings, setStoreSettings] = useState<any>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (searchQuery.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    const delay = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(searchQuery)}`)
+        .then(r => r.json())
+        .then(data => setSearchResults(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }, 600);
+    return () => clearTimeout(delay);
+  }, [searchQuery]);
+
+  function handleSelectResult(r: any) {
+    const lat = parseFloat(r.lat);
+    const lon = parseFloat(r.lon);
+    markerRef.current?.setLatLng([lat, lon]);
+    mapInstanceRef.current?.setView([lat, lon], 16);
+    checkDelivery(lat, lon);
+    setSearchQuery(r.display_name);
+    setSearchResults([]);
+  }
 
   useEffect(() => {
     fetch(`${API}/settings/public`).then(r => r.json()).then(setStoreSettings).catch(() => {});
@@ -110,12 +136,38 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div>
-            <h2 className="font-bold text-gray-900">Select Delivery Location</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Drag the pin or tap on the map</p>
+        {/* Header */}
+        <div className="flex flex-col px-5 py-4 border-b border-gray-100 gap-3 relative z-[1001]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-bold text-gray-900">Select Delivery Location</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Search your address or drag the pin</p>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Search address, city, or zip code..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute top-full mt-1.5 left-0 w-full bg-white border border-gray-100 shadow-xl rounded-xl max-h-48 overflow-y-auto z-50">
+                {searchResults.map((r, i) => (
+                  <button 
+                    key={i} 
+                    onClick={() => handleSelectResult(r)}
+                    className="w-full text-left px-4 py-2.5 text-xs text-gray-700 hover:bg-gray-50 border-b border-gray-50 last:border-0 truncate flex flex-col gap-0.5"
+                  >
+                    <span className="font-medium text-gray-900 truncate">{r.display_name.split(',')[0]}</span>
+                    <span className="text-gray-400 truncate">{r.display_name.split(',').slice(1).join(',')}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Map */}

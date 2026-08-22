@@ -17,7 +17,10 @@ export default function NotificationBar() {
 
   useEffect(() => {
     fetch(`${API}/notifications`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('API down');
+        return r.json();
+      })
       .then(d => setNotifications(Array.isArray(d) ? d : []))
       .catch(() => {});
   }, []);

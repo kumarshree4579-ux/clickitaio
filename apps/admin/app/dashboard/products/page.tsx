@@ -4,13 +4,81 @@ import { useEffect, useState, useRef } from 'react';
 import API from '../../../lib/api';
 const token = () => localStorage.getItem('token');
 
-interface Product { _id: string; name: string; sku: string; sellingPrice: number; mrp: number; stock: number; status: string; category?: { name: string }; brand?: { name: string }; images?: { url: string }[]; }
-interface Category { _id: string; name: string; }
+interface Product { _id: string; name: string; sku: string; sellingPrice: number; mrp: number; stock: number; status: string; category?: { name: string }; subCategory?: { name: string }; brand?: { name: string }; images?: { url: string }[]; }
+interface Category { _id: string; name: string; parent?: string | { _id: string }; }
 interface Brand { _id: string; name: string; }
+
+const F = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+    {children}
+  </div>
+);
+
+const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300";
+
+function CreatableSelect({ options, value, onChange, placeholder, onAdd, disabled }: any) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o: any) => o._id === value);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const filtered = options.filter((o: any) => o.name.toLowerCase().includes(search.toLowerCase()));
+  const showAdd = search && !options.find((o: any) => o.name.toLowerCase() === search.toLowerCase());
+
+  return (
+    <div className="relative" ref={ref}>
+      <div 
+        className={`w-full border border-gray-200 rounded-lg px-3 py-2 text-sm cursor-pointer flex justify-between items-center ${disabled ? 'bg-gray-50 opacity-60 pointer-events-none' : 'bg-white'}`}
+        onClick={() => !disabled && setOpen(!open)}
+      >
+        <span className={selected ? 'text-gray-900' : 'text-gray-500'}>{selected ? selected.name : placeholder}</span>
+        <span className="text-gray-400 text-xs">▼</span>
+      </div>
+      {open && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 flex flex-col">
+          <div className="p-2 shrink-0 bg-white border-b border-gray-100">
+            <input 
+              autoFocus
+              className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none"
+              placeholder="Search or type to add..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="overflow-y-auto">
+            {filtered.map((o: any) => (
+              <div key={o._id} className="px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
+                onClick={() => { onChange(o._id); setOpen(false); setSearch(''); }}>
+                {o.name}
+              </div>
+            ))}
+            {showAdd && (
+              <div className="px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 cursor-pointer font-medium"
+                onClick={async () => {
+                  const newCat = await onAdd(search);
+                  if (newCat) { onChange(newCat._id); setOpen(false); setSearch(''); }
+                }}>
+                + Add "{search}"
+              </div>
+            )}
+            {filtered.length === 0 && !showAdd && <div className="px-3 py-2 text-sm text-gray-400">No options</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const emptyForm = {
   name: '', sku: '', slug: '', mrp: '', sellingPrice: '', costPrice: '', gst: '0',
-  stock: '0', minStock: '0', category: '', brand: '', description: '', shortDescription: '',
+  stock: '0', minStock: '0', category: '', subCategory: '', brand: '', description: '', shortDescription: '',
   status: 'active', isFeatured: false, isNewArrival: false, isBestSeller: false, isTrending: false,
   tags: '', weight: '', warranty: '', returnPolicy: '', metaTitle: '', metaDescription: '',
   images: [] as { url: string; alt?: string }[],
@@ -46,6 +114,30 @@ export default function ProductsPage() {
 
   function autoSlug(name: string) {
     return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+
+  async function createCategory(name: string, parentId?: string) {
+    const res = await fetch(`${API}/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      body: JSON.stringify({ name, slug: autoSlug(name), parent: parentId || null })
+    });
+    if (!res.ok) { alert('Failed to create category'); return null; }
+    const newCat = await res.json();
+    setCats(prev => [...prev, newCat]);
+    return newCat;
+  }
+
+  async function createBrand(name: string) {
+    const res = await fetch(`${API}/brands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      body: JSON.stringify({ name, slug: autoSlug(name) })
+    });
+    if (!res.ok) { alert('Failed to create brand'); return null; }
+    const newBrand = await res.json();
+    setBrands(prev => [...prev, newBrand]);
+    return newBrand;
   }
 
   async function uploadFiles(files: FileList) {
@@ -84,6 +176,7 @@ export default function ProductsPage() {
       costPrice: String(full.costPrice || ''), gst: String(full.gst || '0'),
       stock: String(full.stock || '0'), minStock: String(full.minStock || '0'),
       category: full.category?._id || full.category || '',
+      subCategory: full.subCategory?._id || full.subCategory || '',
       brand: full.brand?._id || full.brand || '',
       description: full.description || '', shortDescription: full.shortDescription || '',
       status: full.status || 'active',
@@ -109,7 +202,7 @@ export default function ProductsPage() {
         costPrice: form.costPrice ? Number(form.costPrice) : undefined,
         gst: Number(form.gst), stock: Number(form.stock), minStock: Number(form.minStock),
         weight: form.weight ? Number(form.weight) : undefined,
-        category: form.category || undefined, brand: form.brand || undefined,
+        category: form.category || undefined, subCategory: form.subCategory || undefined, brand: form.brand || undefined,
         tags: form.tags ? form.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
       };
       const res = await fetch(url, {
@@ -117,7 +210,16 @@ export default function ProductsPage() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
         body: JSON.stringify(body),
       });
-      if (!res.ok) { const e = await res.json(); alert(e.error); return; }
+      if (!res.ok) { 
+        const e = await res.json(); 
+        if (e.details && Array.isArray(e.details)) {
+          const msgs = e.details.map((d: any) => `• ${d.field}: ${d.message}`).join('\n');
+          alert(`Please fix the following errors:\n\n${msgs}`);
+        } else {
+          alert(e.error || 'Failed to save product');
+        }
+        return; 
+      }
       setForm(emptyForm); setEditing(null); setShowForm(false); load();
     } finally {
       setSaving(false);
@@ -130,14 +232,6 @@ export default function ProductsPage() {
     load();
   }
 
-  const F = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
-      {children}
-    </div>
-  );
-
-  const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300";
 
   return (
     <div>
@@ -151,14 +245,16 @@ export default function ProductsPage() {
         className="mb-4 border rounded-lg px-3 py-2 text-sm w-full max-w-sm" />
 
       {showForm && (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 max-w-4xl">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-gray-800 text-lg">{editing ? 'Edit' : 'New'} Product</h2>
-            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
-          </div>
-
-          {/* Images */}
-          <div className="mb-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-800 text-lg">{editing ? 'Edit' : 'New'} Product</h2>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              {/* Images */}
+              <div className="mb-5">
             <label className="block text-xs font-medium text-gray-500 mb-2">Product Images</label>
             <div className="flex flex-wrap gap-3 mb-3">
               {form.images.map((img: any, i: number) => (
@@ -188,82 +284,123 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <F label="Product Name *">
-              <input className={inp} value={form.name}
-                onChange={e => setForm((f: any) => ({ ...f, name: e.target.value, slug: autoSlug(e.target.value) }))} />
-            </F>
-            <F label="Slug *">
-              <input className={inp} value={form.slug} onChange={e => setForm((f: any) => ({ ...f, slug: e.target.value }))} />
-            </F>
-            <F label="SKU *">
-              <input className={inp} value={form.sku} onChange={e => setForm((f: any) => ({ ...f, sku: e.target.value }))} />
-            </F>
-            <F label="Status">
-              <select className={inp} value={form.status} onChange={e => setForm((f: any) => ({ ...f, status: e.target.value }))}>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="draft">Draft</option>
-              </select>
-            </F>
-            <F label="MRP (₹) *">
-              <input type="number" className={inp} value={form.mrp} onChange={e => setForm((f: any) => ({ ...f, mrp: e.target.value }))} />
-            </F>
-            <F label="Selling Price (₹) *">
-              <input type="number" className={inp} value={form.sellingPrice} onChange={e => setForm((f: any) => ({ ...f, sellingPrice: e.target.value }))} />
-            </F>
-            <F label="Cost Price (₹)">
-              <input type="number" className={inp} value={form.costPrice} onChange={e => setForm((f: any) => ({ ...f, costPrice: e.target.value }))} />
-            </F>
-            <F label="GST (%)">
-              <input type="number" className={inp} value={form.gst} onChange={e => setForm((f: any) => ({ ...f, gst: e.target.value }))} />
-            </F>
-            <F label="Stock">
-              <input type="number" className={inp} value={form.stock} onChange={e => setForm((f: any) => ({ ...f, stock: e.target.value }))} />
-            </F>
-            <F label="Min Stock Alert">
-              <input type="number" className={inp} value={form.minStock} onChange={e => setForm((f: any) => ({ ...f, minStock: e.target.value }))} />
-            </F>
-            <F label="Category">
-              <select className={inp} value={form.category} onChange={e => setForm((f: any) => ({ ...f, category: e.target.value }))}>
-                <option value="">Select Category</option>
-                {cats.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-              </select>
-            </F>
-            <F label="Brand">
-              <select className={inp} value={form.brand} onChange={e => setForm((f: any) => ({ ...f, brand: e.target.value }))}>
-                <option value="">Select Brand</option>
-                {brands.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
-              </select>
-            </F>
-            <F label="Weight (grams)">
-              <input type="number" className={inp} value={form.weight} onChange={e => setForm((f: any) => ({ ...f, weight: e.target.value }))} />
-            </F>
-            <F label="Tags (comma separated)">
-              <input className={inp} value={form.tags} onChange={e => setForm((f: any) => ({ ...f, tags: e.target.value }))} placeholder="tag1, tag2, tag3" />
-            </F>
-            <F label="Warranty">
-              <input className={inp} value={form.warranty} onChange={e => setForm((f: any) => ({ ...f, warranty: e.target.value }))} placeholder="e.g. 1 Year Manufacturer Warranty" />
-            </F>
-            <F label="Return Policy">
-              <input className={inp} value={form.returnPolicy} onChange={e => setForm((f: any) => ({ ...f, returnPolicy: e.target.value }))} placeholder="e.g. 7-day easy returns" />
-            </F>
-            <div className="col-span-2">
-              <F label="Short Description">
-                <textarea className={inp} rows={2} value={form.shortDescription} onChange={e => setForm((f: any) => ({ ...f, shortDescription: e.target.value }))} />
+          {/* Basic Information */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b border-gray-100 pb-2">Basic Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <F label="Product Name *">
+                <input className={inp} value={form.name}
+                  onChange={e => setForm((f: any) => ({ ...f, name: e.target.value, slug: autoSlug(e.target.value) }))} />
+              </F>
+              <F label="Slug *">
+                <input className={inp} value={form.slug} onChange={e => setForm((f: any) => ({ ...f, slug: e.target.value }))} />
+              </F>
+              <F label="SKU *">
+                <input className={inp} value={form.sku} onChange={e => setForm((f: any) => ({ ...f, sku: e.target.value }))} />
+              </F>
+              <F label="Status">
+                <select className={inp} value={form.status} onChange={e => setForm((f: any) => ({ ...f, status: e.target.value }))}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </F>
+              <F label="Category">
+                <CreatableSelect 
+                  options={cats.filter(c => !c.parent)} 
+                  value={form.category} 
+                  onChange={(val: string) => setForm((f: any) => ({ ...f, category: val, subCategory: '' }))} 
+                  placeholder="Select or type..." 
+                  onAdd={(name: string) => createCategory(name)} 
+                />
+              </F>
+              <F label="Sub Category">
+                <CreatableSelect 
+                  options={cats.filter(c => c.parent === form.category || (c.parent as any)?._id === form.category)} 
+                  value={form.subCategory} 
+                  onChange={(val: string) => setForm((f: any) => ({ ...f, subCategory: val }))} 
+                  placeholder="Select or type..." 
+                  disabled={!form.category}
+                  onAdd={(name: string) => createCategory(name, form.category)} 
+                />
+              </F>
+              <F label="Brand">
+                <CreatableSelect 
+                  options={brands} 
+                  value={form.brand} 
+                  onChange={(val: string) => setForm((f: any) => ({ ...f, brand: val }))} 
+                  placeholder="Select or type..." 
+                  onAdd={(name: string) => createBrand(name)} 
+                />
               </F>
             </div>
-            <div className="col-span-2">
-              <F label="Description">
-                <textarea className={inp} rows={4} value={form.description} onChange={e => setForm((f: any) => ({ ...f, description: e.target.value }))} />
+          </div>
+
+          {/* Pricing & Inventory */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b border-gray-100 pb-2">Pricing & Inventory</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <F label="MRP (₹) *">
+                <input type="number" className={inp} value={form.mrp} onChange={e => setForm((f: any) => ({ ...f, mrp: e.target.value }))} />
+              </F>
+              <F label="Selling Price (₹) *">
+                <input type="number" className={inp} value={form.sellingPrice} onChange={e => setForm((f: any) => ({ ...f, sellingPrice: e.target.value }))} />
+              </F>
+              <F label="Cost Price (₹)">
+                <input type="number" className={inp} value={form.costPrice} onChange={e => setForm((f: any) => ({ ...f, costPrice: e.target.value }))} />
+              </F>
+              <F label="GST (%)">
+                <input type="number" className={inp} value={form.gst} onChange={e => setForm((f: any) => ({ ...f, gst: e.target.value }))} />
+              </F>
+              <F label="Stock">
+                <input type="number" className={inp} value={form.stock} onChange={e => setForm((f: any) => ({ ...f, stock: e.target.value }))} />
+              </F>
+              <F label="Min Stock Alert">
+                <input type="number" className={inp} value={form.minStock} onChange={e => setForm((f: any) => ({ ...f, minStock: e.target.value }))} />
               </F>
             </div>
-            <F label="Meta Title">
-              <input className={inp} value={form.metaTitle} onChange={e => setForm((f: any) => ({ ...f, metaTitle: e.target.value }))} />
-            </F>
-            <F label="Meta Description">
-              <input className={inp} value={form.metaDescription} onChange={e => setForm((f: any) => ({ ...f, metaDescription: e.target.value }))} />
-            </F>
+          </div>
+
+          {/* Details & Specs */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b border-gray-100 pb-2">Details & Specs</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <F label="Weight (grams)">
+                <input type="number" className={inp} value={form.weight} onChange={e => setForm((f: any) => ({ ...f, weight: e.target.value }))} />
+              </F>
+              <F label="Tags (comma separated)">
+                <input className={inp} value={form.tags} onChange={e => setForm((f: any) => ({ ...f, tags: e.target.value }))} placeholder="tag1, tag2, tag3" />
+              </F>
+              <F label="Warranty">
+                <input className={inp} value={form.warranty} onChange={e => setForm((f: any) => ({ ...f, warranty: e.target.value }))} placeholder="e.g. 1 Year Manufacturer Warranty" />
+              </F>
+              <F label="Return Policy">
+                <input className={inp} value={form.returnPolicy} onChange={e => setForm((f: any) => ({ ...f, returnPolicy: e.target.value }))} placeholder="e.g. 7-day easy returns" />
+              </F>
+              <div className="col-span-1 sm:col-span-2">
+                <F label="Short Description">
+                  <textarea className={inp} rows={2} value={form.shortDescription} onChange={e => setForm((f: any) => ({ ...f, shortDescription: e.target.value }))} />
+                </F>
+              </div>
+              <div className="col-span-1 sm:col-span-2">
+                <F label="Description">
+                  <textarea className={inp} rows={4} value={form.description} onChange={e => setForm((f: any) => ({ ...f, description: e.target.value }))} />
+                </F>
+              </div>
+            </div>
+          </div>
+
+          {/* SEO */}
+          <div className="mb-2">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 border-b border-gray-100 pb-2">SEO Meta</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <F label="Meta Title">
+                <input className={inp} value={form.metaTitle} onChange={e => setForm((f: any) => ({ ...f, metaTitle: e.target.value }))} />
+              </F>
+              <F label="Meta Description">
+                <input className={inp} value={form.metaDescription} onChange={e => setForm((f: any) => ({ ...f, metaDescription: e.target.value }))} />
+              </F>
+            </div>
           </div>
 
           {/* Flags */}
@@ -277,33 +414,37 @@ export default function ProductsPage() {
             ))}
           </div>
 
-          <div className="flex gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={save} disabled={saving}
-              className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50">
-              {saving ? 'Saving...' : 'Save Product'}
-            </button>
-            <button onClick={() => setShowForm(false)} className="border px-5 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+            </div>
+            
+            <div className="flex gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200 shrink-0">
+              <button onClick={save} disabled={saving}
+                className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                {saving ? 'Saving...' : 'Save Product'}
+              </button>
+              <button onClick={() => setShowForm(false)} className="border border-gray-300 bg-white px-6 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+            </div>
           </div>
         </div>
       )}
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
-            <tr>
-              <th className="px-4 py-3 text-left">Image</th>
-              <th className="px-4 py-3 text-left">Name</th>
-              <th className="px-4 py-3 text-left">SKU</th>
-              <th className="px-4 py-3 text-left">Category</th>
-              <th className="px-4 py-3 text-left">MRP</th>
-              <th className="px-4 py-3 text-left">Price</th>
-              <th className="px-4 py-3 text-left">Stock</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {products.map(p => (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600 whitespace-nowrap">
+              <tr>
+                <th className="px-4 py-3 text-left">Image</th>
+                <th className="px-4 py-3 text-left">Name</th>
+                <th className="px-4 py-3 text-left">SKU</th>
+                <th className="px-4 py-3 text-left">Category</th>
+                <th className="px-4 py-3 text-left">MRP</th>
+                <th className="px-4 py-3 text-left">Price</th>
+                <th className="px-4 py-3 text-left">Stock</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y whitespace-nowrap">
+              {products.map(p => (
               <tr key={p._id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   {p.images?.[0]?.url
@@ -312,7 +453,10 @@ export default function ProductsPage() {
                 </td>
                 <td className="px-4 py-3 font-medium">{p.name}</td>
                 <td className="px-4 py-3 text-gray-500">{p.sku}</td>
-                <td className="px-4 py-3 text-gray-500">{p.category?.name || '—'}</td>
+                <td className="px-4 py-3 text-gray-500">
+                  {p.category?.name || '—'}
+                  {p.subCategory?.name && <span className="text-gray-400 ml-1">/ {p.subCategory.name}</span>}
+                </td>
                 <td className="px-4 py-3">₹{p.mrp}</td>
                 <td className="px-4 py-3 text-green-600 font-medium">₹{p.sellingPrice}</td>
                 <td className="px-4 py-3">
@@ -329,9 +473,10 @@ export default function ProductsPage() {
                 </td>
               </tr>
             ))}
-            {products.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">No products yet</td></tr>}
-          </tbody>
-        </table>
+              {products.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No products yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
         {total > 20 && (
           <div className="flex justify-between items-center px-4 py-3 border-t text-sm text-gray-600">
             <span>{total} total</span>

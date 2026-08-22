@@ -25,6 +25,8 @@ export interface IStoreSettings extends Document {
   freeDeliveryAbove: number;
   deliveryCharge: number;
   trustBadges: ITrustBadge[];
+  topbarTabs?: { label: string; categorySlug: string; isActive: boolean }[];
+  appTheme?: { primaryColor: string; secondaryColor: string; activeThemeName: string };
 }
 
 const StoreSettingsSchema = new Schema<IStoreSettings>({
@@ -51,6 +53,16 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
     subtitle: { type: String, default: '' },
     isActive: { type: Boolean, default: true },
   }],
+  topbarTabs: [{
+    label: String,
+    categorySlug: String,
+    isActive: { type: Boolean, default: true },
+  }],
+  appTheme: {
+    primaryColor: { type: String, default: '#4f46e5' },
+    secondaryColor: { type: String, default: '#7c3aed' },
+    activeThemeName: { type: String, default: 'default' },
+  },
 }, { timestamps: true });
 
 export const StoreSettings = model<IStoreSettings>('StoreSettings', StoreSettingsSchema);
