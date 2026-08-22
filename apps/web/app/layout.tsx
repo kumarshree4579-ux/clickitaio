@@ -35,8 +35,11 @@ import MobileBottomNav from '../components/MobileBottomNav';
 async function getSettings() {
   try {
     // using absolute URL for server-side fetch
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-    const res = await fetch(`${apiUrl}/settings/public`, { next: { revalidate: 60 } });
+    const apiUrl = process.env.API_URL || 'http://127.0.0.1:4000';
+    const res = await fetch(`${apiUrl}/settings/public`, { 
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(3000)
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -53,7 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } as React.CSSProperties : {
     '--color-primary': '#4f46e5',
     '--color-secondary': '#7c3aed',
-  };
+  } as React.CSSProperties;
 
   return (
     <html lang="en" className={`${geist.variable} h-full`} style={themeStyles} data-scroll-behavior="smooth">

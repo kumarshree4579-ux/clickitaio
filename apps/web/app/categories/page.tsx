@@ -4,7 +4,10 @@ import API from '../../lib/api';
 
 async function getCategories() {
   try {
-    const res = await fetch(`${API}/categories`, { cache: 'no-store' });
+    const res = await fetch(`${API}/categories`, { 
+      cache: 'no-store',
+      signal: AbortSignal.timeout(3000)
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch {

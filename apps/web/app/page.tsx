@@ -8,19 +8,20 @@ import API from '../lib/api';
 
 async function getData() {
   try {
+    const signal = AbortSignal.timeout(3000);
     const [featuredRes, newRes, bestRes, catsRes, settingsRes] = await Promise.all([
-      fetch(`${API}/products?limit=8&status=active&featured=true`, { cache: 'no-store' }),
-      fetch(`${API}/products?limit=8&status=active&newArrival=true`, { cache: 'no-store' }),
-      fetch(`${API}/products?limit=4&status=active&bestSeller=true`, { cache: 'no-store' }),
-      fetch(`${API}/categories`, { cache: 'no-store' }),
-      fetch(`${API}/settings/public`, { next: { revalidate: 300 } }),
+      fetch(`${API}/products?limit=8&status=active&featured=true`, { cache: 'no-store', signal }),
+      fetch(`${API}/products?limit=8&status=active&newArrival=true`, { cache: 'no-store', signal }),
+      fetch(`${API}/products?limit=4&status=active&bestSeller=true`, { cache: 'no-store', signal }),
+      fetch(`${API}/categories`, { cache: 'no-store', signal }),
+      fetch(`${API}/settings/public`, { next: { revalidate: 300 }, signal }),
     ]);
     const [featured, newArrivals, bestSellers, categories, settings] = await Promise.all([
       featuredRes.json(), newRes.json(), bestRes.json(), catsRes.json(), settingsRes.json(),
     ]);
     let featuredItems = featured.items || [];
     if (!featuredItems.length) {
-      const fallback = await fetch(`${API}/products?limit=8&status=active`, { cache: 'no-store' }).then(r => r.json());
+      const fallback = await fetch(`${API}/products?limit=8&status=active`, { cache: 'no-store', signal }).then(r => r.json());
       featuredItems = fallback.items || [];
     }
     return {
