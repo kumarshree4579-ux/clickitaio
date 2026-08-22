@@ -401,39 +401,6 @@ export default function SettingsPage() {
             </div>
           </Card>
 
-          {/* Topbar Tabs */}
-          <Card 
-            title="Mobile Topbar Tabs" 
-            desc="Zomato-style scrollable tabs"
-            extra={
-              <button onClick={() => setSettings((s: any) => ({ ...s, topbarTabs: [...(s.topbarTabs || []), { label: 'New Tab', categorySlug: '', isActive: true }] }))}
-                className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors">+ Add Tab</button>
-            }
-          >
-            <div className="space-y-3">
-              {(settings.topbarTabs || []).map((t: any, i: number) => (
-                <div key={i} className="space-y-2 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
-                  <div className="flex gap-2">
-                    <input value={t.label} onChange={e => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], label: e.target.value }; return { ...s, topbarTabs: tabs }; })}
-                      className={inp} placeholder="Tab Label (e.g. Food)" />
-                    <input value={t.categorySlug} onChange={e => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], categorySlug: e.target.value }; return { ...s, topbarTabs: tabs }; })}
-                      className={inp} placeholder="Category Slug" />
-                  </div>
-                  <div className="flex gap-2 justify-between items-center pt-1">
-                    <button onClick={() => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], isActive: !tabs[i].isActive }; return { ...s, topbarTabs: tabs }; })}
-                      className={`text-xs px-3 py-1 rounded-md font-medium transition-colors ${t.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
-                      {t.isActive ? 'Active' : 'Disabled'}
-                    </button>
-                    <button onClick={() => setSettings((s: any) => ({ ...s, topbarTabs: s.topbarTabs.filter((_: any, idx: number) => idx !== i) }))}
-                      className="text-red-500 hover:text-red-700 text-xs px-2 py-1 font-medium">Remove</button>
-                  </div>
-                </div>
-              ))}
-              {!(settings.topbarTabs?.length) && (
-                <p className="text-center text-sm text-gray-400 py-4 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">No tabs configured</p>
-              )}
-            </div>
-          </Card>
 
         </div>
       </div>

@@ -12,20 +12,20 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ecom Store',
-    template: '%s | Ecom Store',
+    default: 'Daily Basket',
+    template: '%s | Daily Basket',
   },
   description: 'Your one-stop shop for everything you need',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Ecom Store',
+    title: 'Daily Basket',
   },
   openGraph: {
     type: 'website',
-    siteName: 'Ecom Store',
-    title: 'Ecom Store',
+    siteName: 'Daily Basket',
+    title: 'Daily Basket',
     description: 'Your one-stop shop for everything you need',
   },
 };
@@ -35,7 +35,7 @@ import MobileBottomNav from '../components/MobileBottomNav';
 async function getSettings() {
   try {
     // using absolute URL for server-side fetch
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
     const res = await fetch(`${apiUrl}/settings/public`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     return await res.json();

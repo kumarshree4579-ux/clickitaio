@@ -40,9 +40,17 @@ export default function CheckoutPage() {
     if (saved) setCoupon(JSON.parse(saved));
     fetch(`${API}/addresses`, { headers: { Authorization: `Bearer ${token()}` } })
       .then(r => r.json()).then(data => {
-        setAddresses(data);
-        if (data.length) setSelectedAddr(data.find((a: any) => a.isDefault) || data[0]);
-        else setShowNewAddr(true);
+        if (Array.isArray(data)) {
+          setAddresses(data);
+          if (data.length) setSelectedAddr(data.find((a: any) => a.isDefault) || data[0]);
+          else setShowNewAddr(true);
+        } else {
+          setAddresses([]);
+          setShowNewAddr(true);
+        }
+      }).catch(() => {
+        setAddresses([]);
+        setShowNewAddr(true);
       });
     fetch(`${API}/settings/public`).then(r => r.json()).then(setStoreSettings).catch(() => {});
   }, []);
@@ -197,34 +205,57 @@ export default function CheckoutPage() {
             </div>
 
             {/* Delivery Address */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 className="font-bold text-gray-800 mb-4">Delivery Address</h2>
-              <div className="space-y-2 mb-4">
-                {addresses.map((a: any) => (
-                  <label key={a._id} className={`flex gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${selectedAddr?._id === a._id ? 'border-indigo-400 bg-indigo-50' : 'hover:bg-gray-50'}`}>
-                    <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => setSelectedAddr(a)} className="mt-1 accent-indigo-600" />
-                    <div className="text-sm">
-                      <p className="font-medium text-gray-800">{a.name} · {a.phone}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">{a.line1}{a.line2 ? `, ${a.line2}` : ''}, {a.city}, {a.state} - {a.pincode}</p>
-                    </div>
-                  </label>
-                ))}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-bold text-gray-800 flex items-center gap-2">
+                  <span className="bg-indigo-50 text-indigo-600 p-1.5 rounded-lg">📍</span> Delivery Address
+                </h2>
+                {addresses.length > 0 && !showNewAddr && (
+                  <button onClick={() => setShowNewAddr(true)} className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
+                    + Add New
+                  </button>
+                )}
               </div>
-              {!showNewAddr ? (
-                <button onClick={() => setShowNewAddr(true)} className="text-sm text-indigo-600 hover:underline">+ Add new address</button>
-              ) : (
-                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700">New Address</h3>
-                  <div className="grid grid-cols-2 gap-3">
+              
+              {!showNewAddr && (
+                <div className="space-y-3 mb-2">
+                  {addresses.map((a: any) => (
+                    <label key={a._id} className={`flex items-start gap-4 p-4 border rounded-2xl cursor-pointer transition-all ${selectedAddr?._id === a._id ? 'border-indigo-500 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-500 ring-opacity-20' : 'hover:border-gray-300 hover:bg-gray-50'}`}>
+                      <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => setSelectedAddr(a)} className="mt-1 w-4 h-4 accent-indigo-600 cursor-pointer" />
+                      <div className="text-sm flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-gray-800">{a.name} <span className="text-gray-400 font-normal mx-1">•</span> {a.phone}</p>
+                          {a.isDefault && <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">DEFAULT</span>}
+                        </div>
+                        <p className="text-gray-500 text-xs mt-1.5 leading-relaxed">{a.line1}{a.line2 ? `, ${a.line2}` : ''} <br/> {a.city}, {a.state} - <span className="font-medium text-gray-700">{a.pincode}</span></p>
+                      </div>
+                    </label>
+                  ))}
+                  {addresses.length === 0 && <p className="text-sm text-gray-500 italic">No addresses saved yet.</p>}
+                </div>
+              )}
+
+              {showNewAddr && (
+                <div className="border border-indigo-100 bg-indigo-50/30 rounded-2xl p-5 space-y-4">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <span className="text-indigo-500">+</span> Enter New Address
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
                     {(['name', 'phone', 'line1', 'line2', 'city', 'state', 'pincode'] as const).map(f => (
                       <input key={f} placeholder={f.charAt(0).toUpperCase() + f.slice(1)} value={newAddr[f] || ''}
                         onChange={e => setNewAddr(a => ({ ...a, [f]: e.target.value }))}
-                        className={`border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 ${f === 'line1' ? 'col-span-2' : ''}`} />
+                        className={`border-gray-200 border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white shadow-sm transition-shadow ${f === 'line1' ? 'col-span-2' : ''}`} />
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={saveNewAddress} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">Save</button>
-                    <button onClick={() => setShowNewAddr(false)} className="border px-4 py-2 rounded-xl text-sm">Cancel</button>
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={saveNewAddress} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm transition-colors w-full sm:w-auto">
+                      Save Address
+                    </button>
+                    {addresses.length > 0 && (
+                      <button onClick={() => setShowNewAddr(false)} className="bg-white border border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto">
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

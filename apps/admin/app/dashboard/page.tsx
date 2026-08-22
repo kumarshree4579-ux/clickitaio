@@ -6,20 +6,32 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<any>(null);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [newOrders, setNewOrders] = useState<any[]>([]);
+  const [runningOrders, setRunningOrders] = useState<any[]>([]);
+  const [completedOrders, setCompletedOrders] = useState<any[]>([]);
+  const [cancelledOrders, setCancelledOrders] = useState<any[]>([]);
+  const [lowStock, setLowStock] = useState<any[]>([]);
+  const [recentCustomers, setRecentCustomers] = useState<any[]>([]);
 
   useEffect(() => {
     const h = { Authorization: `Bearer ${localStorage.getItem('token')}` };
     Promise.all([
       fetch(`${API}/reports/summary`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/reports/top-products?limit=5`, { headers: h }).then(r => r.json()),
-      fetch(`${API}/orders?limit=5`, { headers: h }).then(r => r.json()),
-    ]).then(([s, tp, o]) => {
+      fetch(`${API}/orders?limit=5&status=received`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/orders?limit=5&status=running`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/orders?limit=5&status=completed`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/orders?limit=5&status=cancelled`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/reports/low-stock-products?limit=5`, { headers: h }).then(r => r.json()),
+      fetch(`${API}/auth/customers?limit=5`, { headers: h }).then(r => r.json()),
+    ]).then(([s, no, ro, co, ca, ls, rc]) => {
       setSummary(s);
-      setTopProducts(tp);
-      setRecentOrders(o.items || []);
-    }).catch(() => {});
+      setNewOrders(no.items || []);
+      setRunningOrders(ro.items || []);
+      setCompletedOrders(co.items || []);
+      setCancelledOrders(ca.items || []);
+      setLowStock(ls || []);
+      setRecentCustomers(rc.items || []);
+    }).catch(() => { });
   }, []);
 
   if (!summary) return (
@@ -69,15 +81,15 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b">
-            <h2 className="font-bold text-gray-800">Recent Orders</h2>
-            <Link href="/dashboard/orders" className="text-xs text-blue-600 hover:underline">View all</Link>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* New Orders */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col max-h-96">
+          <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+            <h2 className="font-bold text-gray-800">New Orders</h2>
+            <Link href="/dashboard/orders?status=received" className="text-xs text-blue-600 hover:underline">View all</Link>
           </div>
-          <div className="divide-y">
-            {recentOrders.map((o: any) => (
+          <div className="divide-y overflow-y-auto flex-1">
+            {newOrders.map((o: any) => (
               <div key={o._id} className="flex items-center justify-between px-5 py-3">
                 <div>
                   <p className="text-sm font-medium text-gray-800">#{o.orderNumber}</p>
@@ -91,28 +103,137 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {recentOrders.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No orders yet</p>}
+            {newOrders.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No new orders yet</p>}
           </div>
         </div>
 
-        {/* Top Products */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b">
-            <h2 className="font-bold text-gray-800">Top Products</h2>
-            <Link href="/dashboard/reports" className="text-xs text-blue-600 hover:underline">Full report</Link>
+        {/* Running Orders */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col max-h-96">
+          <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+            <h2 className="font-bold text-gray-800">Running Orders</h2>
+            <Link href="/dashboard/orders" className="text-xs text-blue-600 hover:underline">View all</Link>
           </div>
-          <div className="divide-y">
-            {topProducts.map((p: any, i: number) => (
-              <div key={p._id} className="flex items-center gap-3 px-5 py-3">
-                <span className="text-sm font-bold text-gray-400 w-5">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
-                  <p className="text-xs text-gray-500">{p.totalQty} units sold</p>
+          <div className="divide-y overflow-y-auto flex-1">
+            {runningOrders.map((o: any) => (
+              <div key={o._id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">#{o.orderNumber}</p>
+                  <p className="text-xs text-gray-500">{o.customer?.email}</p>
                 </div>
-                <p className="text-sm font-bold text-emerald-600">₹{p.totalRevenue?.toLocaleString()}</p>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-800">₹{o.total?.toLocaleString('en-IN')}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {o.status?.replace(/_/g, ' ')}
+                  </span>
+                </div>
               </div>
             ))}
-            {topProducts.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No sales data yet</p>}
+            {runningOrders.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No running orders</p>}
+          </div>
+        </div>
+        {/* Low Stock Alerts */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-red-100 flex flex-col max-h-96">
+          <div className="flex items-center justify-between px-5 py-4 border-b bg-red-50/30 shrink-0">
+            <h2 className="font-bold text-gray-800 flex items-center gap-2">
+              <span className="text-red-500 text-lg leading-none">⚠️</span> Low Stock
+            </h2>
+            <Link href="/dashboard/inventory" className="text-xs text-blue-600 hover:underline">Manage</Link>
+          </div>
+          <div className="divide-y overflow-y-auto flex-1">
+            {lowStock.map((p: any) => (
+              <div key={p._id} className="flex items-center gap-3 px-5 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
+                  <p className="text-xs text-gray-500">Min required: {p.minStock || 0}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold text-red-600">{p.stock} left</p>
+                </div>
+              </div>
+            ))}
+            {lowStock.length === 0 && (
+              <div className="text-center py-8 text-gray-400 text-sm flex flex-col items-center">
+                <span className="text-emerald-500 text-2xl mb-1">✓</span>
+                All stocks are healthy
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Completed Orders */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col max-h-96">
+          <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+            <h2 className="font-bold text-gray-800">Completed Orders</h2>
+            <Link href="/dashboard/orders?status=completed" className="text-xs text-blue-600 hover:underline">View all</Link>
+          </div>
+          <div className="divide-y overflow-y-auto flex-1">
+            {completedOrders.map((o: any) => (
+              <div key={o._id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">#{o.orderNumber}</p>
+                  <p className="text-xs text-gray-500">{o.customer?.email}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-800">₹{o.total?.toLocaleString('en-IN')}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {o.status?.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {completedOrders.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No completed orders yet</p>}
+          </div>
+        </div>
+
+        {/* Cancelled Orders */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col max-h-96">
+          <div className="flex items-center justify-between px-5 py-4 border-b bg-red-50/50 shrink-0">
+            <h2 className="font-bold text-gray-800">Cancelled Orders</h2>
+            <Link href="/dashboard/orders?status=cancelled" className="text-xs text-blue-600 hover:underline">View all</Link>
+          </div>
+          <div className="divide-y overflow-y-auto flex-1">
+            {cancelledOrders.map((o: any) => (
+              <div key={o._id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">#{o.orderNumber}</p>
+                  <p className="text-xs text-gray-500">{o.customer?.email}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-800">₹{o.total?.toLocaleString('en-IN')}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[o.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {o.status?.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {cancelledOrders.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No cancelled orders yet</p>}
+          </div>
+        </div>
+
+
+
+        {/* Recent Customers */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col max-h-96">
+          <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+            <h2 className="font-bold text-gray-800">Recent Customers</h2>
+            <Link href="/dashboard/customers" className="text-xs text-blue-600 hover:underline">View all</Link>
+          </div>
+          <div className="divide-y overflow-y-auto flex-1">
+            {recentCustomers.map((c: any) => (
+              <div key={c._id} className="flex items-center gap-3 px-5 py-3">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0">
+                  {c.name ? c.name.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{c.name || 'Unknown'}</p>
+                  <p className="text-xs text-gray-500">{c.email}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-[10px] font-bold text-gray-400">{new Date(c.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</span>
+                </div>
+              </div>
+            ))}
+            {recentCustomers.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">No customers yet</p>}
           </div>
         </div>
       </div>

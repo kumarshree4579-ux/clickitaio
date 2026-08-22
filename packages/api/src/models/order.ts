@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type OrderStatus = 'pending' | 'confirmed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'returned' | 'refunded';
+export type OrderStatus = 'pending' | 'received' | 'confirmed' | 'accepted' | 'processing' | 'packing' | 'packed' | 'assigned_delivery' | 'shipped' | 'out_for_delivery' | 'delivered' | 'completed' | 'cancelled' | 'returned' | 'refunded' | 'abandoned';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'razorpay' | 'cod' | 'wallet';
 
@@ -69,7 +69,7 @@ const OrderSchema = new Schema<IOrder>({
   shippingCharge: { type: Number, default: 0 },
   total: { type: Number, required: true },
   couponCode: { type: String },
-  status: { type: String, enum: ['pending','confirmed','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'], default: 'pending' },
+  status: { type: String, enum: ['pending','received','confirmed','accepted','processing','packing','packed','assigned_delivery','shipped','out_for_delivery','delivered','completed','cancelled','returned','refunded','abandoned'], default: 'pending' },
   paymentMethod: { type: String, enum: ['razorpay','cod','wallet'], required: true },
   paymentStatus: { type: String, enum: ['pending','paid','failed','refunded'], default: 'pending' },
   razorpayOrderId: { type: String },

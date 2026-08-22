@@ -24,3 +24,7 @@ body {
 
 :focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
 a, button { transition: all 0.15s ease; }
+
+/* Fix for Leaflet dragging */
+.leaflet-container { touch-action: none; }
+.leaflet-marker-icon { touch-action: none; }

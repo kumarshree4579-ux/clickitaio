@@ -128,10 +128,19 @@ router.post('/verify-payment', requireAuth, async (req: AuthedRequest, res: Resp
 });
 
 router.get('/', requireAuth, async (req: AuthedRequest, res: Response) => {
-  const { page = '1', limit = '10' } = req.query as any;
+  const { page = '1', limit = '10', status } = req.query as any;
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const filter: any = {};
   if (!['super_admin', 'order_manager'].includes(req.user!.role)) filter.customer = req.user!.sub;
+  if (status) {
+    if (status === 'running') {
+      filter.status = { $nin: ['completed', 'cancelled', 'refunded', 'abandoned', 'delivered'] };
+    } else if (status.includes(',')) {
+      filter.status = { $in: status.split(',') };
+    } else {
+      filter.status = status;
+    }
+  }
   const [items, total] = await Promise.all([
     Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).populate('customer', 'name email'),
     Order.countDocuments(filter),
@@ -151,7 +160,7 @@ router.get('/:id', requireAuth, async (req: AuthedRequest, res: Response) => {
 
 router.put('/:id/status', requireAuth, requireRole('super_admin', 'order_manager'), async (req: AuthedRequest, res: Response) => {
   const { status, note } = req.body;
-  const validStatuses = ['pending','confirmed','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'];
+  const validStatuses = ['pending','received','confirmed','accepted','processing','packing','packed','assigned_delivery','shipped','out_for_delivery','delivered','completed','cancelled','returned','refunded','abandoned'];
   if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
   const order = await Order.findByIdAndUpdate(req.params.id, {
     status, $push: { statusHistory: { status, at: new Date(), note } },

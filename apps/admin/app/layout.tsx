@@ -5,8 +5,8 @@ import './globals.css';
 const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Ecom Admin',
-  description: 'Admin panel for Ecom',
+  title: 'Daily Basket Admin',
+  description: 'Admin panel for Daily Basket',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

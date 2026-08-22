@@ -75,4 +75,20 @@ router.get('/top-products', requireAuth, requireRole('super_admin', 'order_manag
   return res.json(data);
 });
 
+// GET /reports/low-stock-products?limit=10
+router.get('/low-stock-products', requireAuth, requireRole('super_admin', 'order_manager'), async (req, res: Response) => {
+  const limit = parseInt((req.query.limit as string) || '10');
+
+  const data = await Product.find({
+    $expr: {
+      $and: [
+        { $gt: ['$minStock', 0] },
+        { $lte: ['$stock', '$minStock'] }
+      ]
+    }
+  }).sort({ stock: 1 }).limit(limit).select('name stock minStock image sku');
+
+  return res.json(data);
+});
+
 export default router;

@@ -45,3 +45,7 @@ a, button { transition: all 0.15s ease; }
 /* Hide scrollbar but keep scroll */
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Fix for Leaflet dragging */
+.leaflet-container { touch-action: none; }
+.leaflet-marker-icon { touch-action: none; }

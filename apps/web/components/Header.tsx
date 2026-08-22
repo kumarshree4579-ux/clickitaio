@@ -180,9 +180,9 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">E</span>
+                <span className="text-white font-bold text-sm">DB</span>
               </div>
-              <span className="font-bold text-base sm:text-lg text-gray-900 tracking-tight">Ecom</span>
+              <span className="font-bold text-base sm:text-lg text-gray-900 tracking-tight">Daily Basket</span>
             </Link>
 
             {/* Desktop search */}
