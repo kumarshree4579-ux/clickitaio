@@ -23,14 +23,14 @@ export default function RealtimeListener() {
         const statusStr = order.status.replace(/_/g, ' ');
         const title = 'Order Update';
         const msg = `Your order #${order.orderNumber} is now ${statusStr}!`;
-        
+
         if ('Notification' in window && Notification.permission === 'granted') {
           new Notification(title, { body: msg });
         }
-        
+
         setToast({ title, message: msg, show: true });
         setTimeout(() => setToast(prev => (prev ? { ...prev, show: false } : null)), 6000);
-      } catch (err) {}
+      } catch (err) { }
     });
 
     es.addEventListener('marketing', (e) => {
@@ -41,7 +41,7 @@ export default function RealtimeListener() {
         }
         setToast({ title: data.title, message: data.message, show: true });
         setTimeout(() => setToast(prev => (prev ? { ...prev, show: false } : null)), 8000);
-      } catch (err) {}
+      } catch (err) { }
     });
 
     return () => es.close();

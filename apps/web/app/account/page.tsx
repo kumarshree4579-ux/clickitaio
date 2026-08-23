@@ -182,36 +182,6 @@ export default function AccountPage() {
           </div>
         </div>
       </main>
-
-      {/* Fixed Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] pb-[env(safe-area-inset-bottom)]">
-        <div className="max-w-2xl mx-auto h-16 flex items-center justify-around px-2">
-          {/* Home Icon */}
-          <Link href="/" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-black transition-colors">
-            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            <span className="text-[10px] font-black tracking-wide">HOME</span>
-          </Link>
-
-          {/* Cart Icon */}
-          <Link href="/cart" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-black transition-colors relative">
-            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            <span className="absolute top-2 right-[25%] sm:right-[35%] w-2 h-2 bg-black rounded-full border-2 border-white"></span>
-            <span className="text-[10px] font-black tracking-wide">CART</span>
-          </Link>
-
-          {/* Account Icon (Active State) */}
-          <Link href="/account" className="flex flex-col items-center justify-center w-full h-full text-black">
-            <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-            <span className="text-[10px] font-black tracking-wide">ACCOUNT</span>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }
