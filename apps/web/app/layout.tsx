@@ -73,7 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } as React.CSSProperties;
 
   return (
-    <html lang="en" className={`${geist.variable} h-full`} style={themeStyles} data-scroll-behavior="smooth">
+    <html lang="en" className={`${geist.variable} h-full`} style={themeStyles}>
       <body className="min-h-full flex flex-col bg-gray-50">
         <LocationProvider>
           <SplashLoader />
