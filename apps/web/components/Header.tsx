@@ -251,36 +251,28 @@ export default function Header() {
           Row 2: Search Bar + Tabs (h ~= 90px)
           Total fixed height ≈ 146px
           ═══════════════════════════════════════════ */}
-      <div className="sm:hidden fixed top-0 pt-5 left-0 right-0 z-50 bg-white shadow-sm">
+      <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 24px)' }}>
         {/* Row 1 — Logo + Location */}
         <div className="border-b border-gray-100 px-4">
           <div className="flex items-center justify-between h-14">
-            <Link href="/" className="flex items-center gap-2 shrink-0">
-              <img src="/logo192.png" alt="Daily Basket" className="w-8 h-8 rounded-xl object-contain" />
-              <span className="text-[15px] font-extrabold tracking-tight">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+              <img src="/logo192.png" alt="Daily Basket" className="w-10 h-10 rounded-xl object-contain" />
+              <span className="text-[17px] font-extrabold tracking-tight">
                 <span className="text-indigo-600">Daily</span>
                 <span className="text-gray-900"> Basket</span>
               </span>
             </Link>
 
             <div className="flex items-center gap-3">
-              {/* Cart */}
-              <Link href="/cart" className="relative p-1.5 text-gray-500">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center font-bold leading-none">{cartCount > 9 ? '9+' : cartCount}</span>
-                )}
-              </Link>
-
               {/* Location */}
               <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
                 <div className="flex items-center gap-0.5 mt-0.5">
-                  <svg className="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-[12px] font-bold text-gray-900 max-w-[90px] truncate">{addressString || 'Select'}</span>
+                  <span className="text-[13px] font-bold text-gray-900 max-w-[100px] truncate">{addressString || 'Select'}</span>
                   <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                 </div>
                 {isServiceable === false && (
