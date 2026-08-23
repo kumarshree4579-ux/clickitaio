@@ -106,7 +106,7 @@ function OrderDetail() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-2.5 sm:px-4 py-4 md:py-10 space-y-4 sm:space-y-6 pb-20">
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 py-4 md:py-10 space-y-4 sm:space-y-6 pb-20">
 
         {/* Confetti / Success Hero */}
         {showConfetti && (

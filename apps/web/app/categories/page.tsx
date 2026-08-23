@@ -23,7 +23,7 @@ export default async function CategoriesPage() {
   return (
     <>
       <Header />
-      <main className="w-full px-2.5 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-4xl mx-auto">
+      <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-4xl mx-auto">
         <h1 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 px-0.5 sm:px-1">Shop by Category</h1>
         
         {mainCategories.length > 0 ? (

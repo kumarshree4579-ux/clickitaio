@@ -44,8 +44,8 @@ export default function WishlistPage() {
   return (
     <>
       <Header />
-      <main className="max-w-5xl mx-auto px-2.5 sm:px-4 py-5 sm:py-8">
-        <h1 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Wishlist</h1>
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+        <h1 className="text-[17px] sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Wishlist</h1>
         {loading ? (
           <div className="text-center py-20 text-gray-400">Loading...</div>
         ) : items.length === 0 ? (

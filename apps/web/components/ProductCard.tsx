@@ -111,11 +111,11 @@ export default function ProductCard({ product }: Props) {
         {product.brand && (
           <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide mb-0.5 truncate">{product.brand.name}</p>
         )}
-        <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 flex-1 leading-snug">{product.name}</p>
+        <p className="text-[13px] sm:text-sm font-medium text-gray-800 line-clamp-2 flex-1 leading-snug">{product.name}</p>
 
         <div className="mt-1.5 flex items-baseline gap-1.5">
-          <span className="text-sm sm:text-base font-bold text-gray-900">₹{fmt(product.sellingPrice)}</span>
-          {discount > 0 && <span className="text-[10px] sm:text-xs text-gray-400 line-through">₹{fmt(product.mrp)}</span>}
+          <span className="text-[15px] sm:text-base font-bold text-gray-900">₹{fmt(product.sellingPrice)}</span>
+          <span className="text-[10px] sm:text-xs text-gray-400 line-through">{discount > 0 ? `₹${fmt(product.mrp)}` : ''}</span>
         </div>
         {isServiceable === false ? (
           <button disabled className="mt-2 w-full text-xs sm:text-sm font-medium py-1.5 sm:py-2 rounded-xl bg-red-50 text-red-400 cursor-not-allowed">

@@ -30,7 +30,7 @@ export default function MobileTopbar() {
   if (activeTabs.length === 0) return null;
 
   return (
-    <div className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-[48px] sm:top-[73px] z-30 overflow-x-auto no-scrollbar shadow-sm">
+    <div className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-[96px] sm:top-[64px] z-30 overflow-x-auto no-scrollbar shadow-sm">
       <div className="flex px-3 sm:px-8 gap-4 sm:gap-6 items-center w-max mx-auto sm:mx-0">
         {activeTabs.map((tab, i) => {
           const isActive = currentCat === tab.categorySlug;

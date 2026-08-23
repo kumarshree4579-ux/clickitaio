@@ -73,7 +73,34 @@ export default function AccountPage() {
     }
   }
 
-  if (!user) return null;
+  if (!user) return (
+    <>
+      <Header />
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 space-y-3 sm:space-y-4">
+        {/* Skeleton profile card — matches final layout dimensions */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm animate-pulse">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-2xl shrink-0" />
+            <div className="flex-1 space-y-3 pt-1">
+              <div className="h-5 bg-gray-200 rounded w-36" />
+              <div className="h-4 bg-gray-100 rounded w-48" />
+              <div className="h-4 bg-gray-100 rounded w-28" />
+            </div>
+          </div>
+        </div>
+        {/* Skeleton menu items */}
+        {[1,2,3].map(i => (
+          <div key={i} className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-4 flex items-center gap-3 animate-pulse">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gray-100 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-24" />
+              <div className="h-3 bg-gray-100 rounded w-40" />
+            </div>
+          </div>
+        ))}
+      </main>
+    </>
+  );
 
   const menuItems = [
     { href: '/orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'My Orders', sub: 'Track and manage your orders', color: 'bg-indigo-50 text-indigo-600' },

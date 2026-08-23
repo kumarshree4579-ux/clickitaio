@@ -87,7 +87,7 @@ export default function MobileBottomNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[9px] font-medium leading-none">{item.label}</span>
+              <span className="text-[10px] font-medium leading-none">{item.label}</span>
             </Link>
           );
         })}

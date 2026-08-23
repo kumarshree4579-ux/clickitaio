@@ -54,7 +54,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-2.5 sm:px-4 -mt-8 sm:-mt-10">
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 -mt-8 sm:-mt-10">
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (

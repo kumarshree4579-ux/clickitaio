@@ -51,7 +51,7 @@ export default function AddressesPage() {
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-2.5 sm:px-4 py-5 sm:py-8 space-y-3 sm:space-y-4">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 sm:py-8 space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <Link href="/account" className="text-xs sm:text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">← Account</Link>

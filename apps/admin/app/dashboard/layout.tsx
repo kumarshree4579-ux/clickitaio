@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Sidebar from '../../components/Sidebar';
+import ImageGuidePanel from '../../components/ImageGuide';
 import { apiFetch } from '../../lib/apiFetch';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -304,6 +305,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
 
           <div className="flex-1" />
+
+          {/* Image Guide Helper */}
+          <ImageGuidePanel />
 
           {/* Admin badge */}
           <div className="flex items-center gap-2.5">
