@@ -251,7 +251,7 @@ export default function Header() {
           Row 2: Search Bar + Tabs (h ~= 90px)
           Total fixed height ≈ 146px
           ═══════════════════════════════════════════ */}
-      <div className="sm:hidden fixed top-0 px-15 left-0 right-0 z-50 bg-white shadow-sm">
+      <div className="sm:hidden fixed top-0 pt-4 left-0 right-0 z-50 bg-white shadow-sm">
         {/* Row 1 — Logo + Location */}
         <div className="border-b border-gray-100 px-4">
           <div className="flex items-center justify-between h-14">
