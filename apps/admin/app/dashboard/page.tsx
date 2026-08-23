@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '../../lib/apiFetch';
 
@@ -13,16 +13,23 @@ export default function DashboardPage() {
   const [cancelledOrders, setCancelledOrders] = useState<any[]>([]);
   const [lowStock, setLowStock] = useState<any[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<any[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchDashboardData = useCallback(() => {
+    // Cancel previous fetch batch
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const signal = controller.signal;
+
     Promise.all([
-      apiFetch(`/reports/summary`).then(r => r.json()),
-      apiFetch(`/orders?limit=5&status=pending,received,confirmed`).then(r => r.json()),
-      apiFetch(`/orders?limit=5&status=running`).then(r => r.json()),
-      apiFetch(`/orders?limit=5&status=completed`).then(r => r.json()),
-      apiFetch(`/orders?limit=5&status=cancelled`).then(r => r.json()),
-      apiFetch(`/reports/low-stock-products?limit=5`).then(r => r.json()),
-      apiFetch(`/auth/customers?limit=5`).then(r => r.json()),
+      apiFetch(`/reports/summary`, { signal }).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=pending,received,confirmed`, { signal }).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=running`, { signal }).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=completed`, { signal }).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=cancelled`, { signal }).then(r => r.json()),
+      apiFetch(`/reports/low-stock-products?limit=5`, { signal }).then(r => r.json()),
+      apiFetch(`/auth/customers?limit=5`, { signal }).then(r => r.json()),
     ]).then(([s, no, ro, co, ca, ls, rc]) => {
       setSummary(s);
       setNewOrders(no.items || []);
@@ -31,7 +38,9 @@ export default function DashboardPage() {
       setCancelledOrders(ca.items || []);
       setLowStock(ls || []);
       setRecentCustomers(rc.items || []);
-    }).catch(() => { });
+    }).catch((err) => {
+      if (err.name === 'AbortError') return; // Ignore aborted
+    });
   }, []);
 
   // Initial fetch
@@ -50,6 +59,7 @@ export default function DashboardPage() {
     return () => {
       window.removeEventListener('admin:new_order', handleNewOrder);
       window.removeEventListener('admin:order_status_update', handleStatusUpdate);
+      if (abortRef.current) abortRef.current.abort();
     };
   }, [fetchDashboardData]);
 

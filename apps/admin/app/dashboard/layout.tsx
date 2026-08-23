@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Sidebar from '../../components/Sidebar';
+import PageLoader from '../../components/PageLoader';
 import ImageGuidePanel from '../../components/ImageGuide';
 import { apiFetch } from '../../lib/apiFetch';
 
@@ -169,6 +170,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 relative">
 
+      {/* Route change progress bar */}
+      <PageLoader />
+
       {/* New Order Accept Modal */}
       {currentOrder && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -323,7 +327,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
+          <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+            {children}
+          </Suspense>
+        </main>
       </div>
     </div>
   );

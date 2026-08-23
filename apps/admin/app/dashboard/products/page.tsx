@@ -96,14 +96,33 @@ export default function ProductsPage() {
   const [q, setQ] = useState('');
   const [uploadingCount, setUploadingCount] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   async function load() {
-    const params = new URLSearchParams({ page: String(page), limit: '20' });
-    if (q) params.set('q', q);
-    const data = await fetch(`${API}/products?${params}`, { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.json());
-    setProducts(data.items || []);
-    setTotal(data.total || 0);
+    // Cancel previous request
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (q) params.set('q', q);
+      const res = await fetch(`${API}/products?${params}`, { 
+        headers: { Authorization: `Bearer ${token()}` },
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setProducts(data.items || []);
+      setTotal(data.total || 0);
+    } catch (err: any) {
+      if (err.name === 'AbortError') return; // Silently ignore aborted
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, [page, q]);
@@ -431,7 +450,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className={`bg-white rounded-xl shadow overflow-hidden transition-opacity duration-200 ${loading && products.length > 0 ? 'opacity-60' : ''}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600 whitespace-nowrap">
