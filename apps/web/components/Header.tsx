@@ -163,8 +163,6 @@ export default function Header() {
       </div>
     );
   };
-    );
-  };
 
   return (
     <>
@@ -299,10 +297,10 @@ export default function Header() {
       <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 24px)' }}>
         {/* Row 1 — Logo + Location */}
         <div className="border-b border-gray-100 px-4">
-          <div className="flex items-center justify-between h-14">
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <img src="/logo192.png" alt="Daily Basket" className="w-10 h-10 rounded-xl object-contain" />
-              <span className="text-[17px] font-extrabold tracking-tight">
+          <div className="flex items-center justify-between h-[60px]">
+            <Link href="/" className="flex items-center gap-3 shrink-0">
+              <img src="/logo192.png" alt="Daily Basket" className="w-11 h-11 rounded-xl object-contain" />
+              <span className="text-[19px] font-extrabold tracking-tight">
                 <span className="text-indigo-600">Daily</span>
                 <span className="text-gray-900"> Basket</span>
               </span>
@@ -311,17 +309,17 @@ export default function Header() {
             <div className="flex items-center gap-3">
               {/* Location */}
               <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
-                <div className="flex items-center gap-0.5 mt-0.5">
-                  <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-[13px] font-bold text-gray-900 max-w-[100px] truncate">{addressString || 'Select'}</span>
-                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  <span className="text-[14px] font-bold text-gray-900 max-w-[100px] truncate">{addressString || 'Select'}</span>
+                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                 </div>
                 {isServiceable === false && (
-                  <span className="text-[8px] bg-red-100 text-red-600 px-1 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Not serviceable'}</span>
+                  <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Not serviceable'}</span>
                 )}
               </button>
             </div>
@@ -342,7 +340,7 @@ export default function Header() {
                   onFocus={() => suggestions.length > 0 && setShowSuggest(true)}
                   placeholder="Search for products..."
                   autoComplete="off"
-                  className="w-full bg-gray-100 border-0 rounded-xl pl-10 pr-10 py-2.5 text-[14px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
+                  className="w-full bg-gray-100 border-0 rounded-xl pl-10 pr-10 py-3 text-[15px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
                 />
                 {search ? (
                   <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
