@@ -224,7 +224,7 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
       </div>
 
       {/* ─── Bottom sheet ─── */}
-      <div className="bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] relative z-[1001] px-5 pt-5 pb-5 shrink-0 -mt-3">
+      <div className="bg-white rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] relative z-[1001] px-5 pt-5 pb-5 shrink-0 -mt-3" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
         {/* Handle */}
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
 

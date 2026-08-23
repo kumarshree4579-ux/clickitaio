@@ -62,10 +62,11 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
         </div>
 
         {/* Content */}
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-8 pb-20 sm:py-12 sm:pb-12">
           <div className="max-w-3xl">
             <article
               className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10
+                [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl
                 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-900 [&_h1]:mt-6 [&_h1]:mb-3
                 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:pb-2 [&_h2]:border-b [&_h2]:border-gray-100
                 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-gray-800 [&_h3]:mt-5 [&_h3]:mb-2

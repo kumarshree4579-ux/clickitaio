@@ -128,7 +128,7 @@ export default function OrdersPage() {
                             </div>
                           )}
                         </div>
-                        <span className="text-[9px] sm:text-[10px] text-gray-500 font-medium truncate w-12 sm:w-16 text-center">{item.name}</span>
+                        <span className="text-[10px] sm:text-[10px] text-gray-500 font-medium truncate w-12 sm:w-16 text-center">{item.name}</span>
                       </div>
                     ))}
                   </div>

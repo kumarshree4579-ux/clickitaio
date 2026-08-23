@@ -57,7 +57,7 @@ export default async function CategoryDetailPage({
           <div className="py-1 sm:py-2">
             <Link 
               href={`/categories/${mainCategoryId}`}
-              className={`block px-2 sm:px-5 py-2.5 sm:py-4 text-[10px] sm:text-sm font-medium border-l-3 sm:border-l-4 transition-colors ${
+              className={`block px-2 sm:px-5 py-2.5 sm:py-4 text-[10px] sm:text-sm font-medium border-l-[3px] sm:border-l-4 transition-colors ${
                 !activeSubId 
                   ? 'border-[var(--color-primary)] bg-indigo-50/50 text-[var(--color-primary)]' 
                   : 'border-transparent text-gray-600 hover:bg-gray-50'
@@ -71,7 +71,7 @@ export default async function CategoryDetailPage({
                 <Link 
                   key={sub._id}
                   href={`/categories/${mainCategoryId}?sub=${sub._id}`}
-                  className={`block px-2 sm:px-5 py-2.5 sm:py-4 text-[10px] sm:text-sm font-medium border-l-3 sm:border-l-4 transition-colors ${
+                  className={`block px-2 sm:px-5 py-2.5 sm:py-4 text-[10px] sm:text-sm font-medium border-l-[3px] sm:border-l-4 transition-colors ${
                     isActive 
                       ? 'border-[var(--color-primary)] bg-indigo-50/50 text-[var(--color-primary)]' 
                       : 'border-transparent text-gray-600 hover:bg-gray-50'
@@ -91,7 +91,7 @@ export default async function CategoryDetailPage({
 
         {/* Right Pane */}
         <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 96px)' }}>
-           <div className="p-2.5 sm:p-6">
+           <div className="p-2.5 sm:p-6 pb-20 sm:pb-6">
              <div className="mb-3 sm:mb-4 flex items-center justify-between">
                 <h2 className="text-sm sm:text-lg font-bold text-gray-800">
                   {!activeSubId ? 'All Products' : subCategories.find((c: any) => c._id === activeSubId)?.name}

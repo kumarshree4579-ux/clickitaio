@@ -111,7 +111,7 @@ export default function AccountPage() {
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 space-y-3 sm:space-y-4">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 pb-20 sm:py-10 sm:pb-10 space-y-3 sm:space-y-4">
         {/* Profile card */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm relative overflow-hidden">
           {/* Decorative background blob */}
@@ -223,7 +223,7 @@ export default function AccountPage() {
                       <p className="text-xs text-gray-500 mt-0.5">IP: {s.ip} • Last active: {new Date(s.lastActive).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <button onClick={() => revokeSession(s._id)} className="text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">
+                  <button onClick={() => revokeSession(s._id)} className="text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors min-h-[32px]">
                     Log out
                   </button>
                 </div>

@@ -124,9 +124,9 @@ export default function ProductCard({ product }: Props) {
         ) : qtyInCart > 0 ? (
           <div className="flex gap-1.5 mt-2 w-full items-center">
             <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg px-1.5 py-1 flex-1">
-              <button onClick={(e) => updateCart(e, -1)} className="w-6 h-6 flex items-center justify-center bg-white rounded text-indigo-600 font-bold shadow-sm active:scale-95 transition-transform">-</button>
+              <button onClick={(e) => updateCart(e, -1)} className="w-7 h-7 flex items-center justify-center bg-white rounded text-indigo-600 font-bold shadow-sm active:scale-95 transition-transform">-</button>
               <span className="text-xs font-bold text-indigo-900">{qtyInCart}</span>
-              <button onClick={(e) => updateCart(e, 1)} disabled={qtyInCart >= (product.stock || 1)} className="w-6 h-6 flex items-center justify-center bg-indigo-600 rounded text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform">+</button>
+              <button onClick={(e) => updateCart(e, 1)} disabled={qtyInCart >= (product.stock || 1)} className="w-7 h-7 flex items-center justify-center bg-indigo-600 rounded text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform">+</button>
             </div>
             <button onClick={(e) => { e.preventDefault(); router.push('/cart'); }} className="bg-emerald-500 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold hover:bg-emerald-600 flex items-center justify-center shadow-sm active:scale-95 transition-transform">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>

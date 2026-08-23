@@ -48,7 +48,7 @@ export default async function HomePage() {
   const badges = trustBadges.length ? trustBadges : defaultBadges;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-6 sm:pb-0">
       <Header />
       <main className="flex-1">
 

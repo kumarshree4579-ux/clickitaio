@@ -51,7 +51,7 @@ export default function AddressesPage() {
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 sm:py-8 space-y-3 sm:space-y-4">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 pb-20 sm:py-8 sm:pb-8 space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <Link href="/account" className="text-xs sm:text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">← Account</Link>
@@ -100,8 +100,8 @@ export default function AddressesPage() {
               </div>
               <div className="flex gap-2 sm:gap-3 shrink-0">
                 <button onClick={() => { setForm({ ...a }); setEditing(a._id); setShowForm(true); }}
-                  className="text-indigo-600 hover:underline text-[11px] sm:text-xs">Edit</button>
-                <button onClick={() => del(a._id)} className="text-red-500 hover:underline text-[11px] sm:text-xs">Delete</button>
+                  className="text-indigo-600 hover:underline text-xs px-2 py-1.5 min-h-[32px] flex items-center">Edit</button>
+                <button onClick={() => del(a._id)} className="text-red-500 hover:underline text-xs px-2 py-1.5 min-h-[32px] flex items-center">Delete</button>
               </div>
             </div>
           ))}
