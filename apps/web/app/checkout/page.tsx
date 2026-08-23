@@ -8,7 +8,7 @@ import API from '../../lib/api';
 import { apiFetch } from '../../lib/apiFetch';
 
 interface CartItem { _id: string; name: string; price: number; image?: string; qty: number; }
-interface Address { _id?: string; name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string; country: string; location?: { lat: number; lng: number } }
+interface Address { _id?: string; name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string; country: string; location?: { lat: number; lng: number }; isDefault?: boolean }
 
 const emptyAddress: Address = { name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India' };
 const fmt = (n: number) => n.toLocaleString('en-IN');
