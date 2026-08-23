@@ -23,7 +23,7 @@ const fmt = (n: number) => n.toLocaleString('en-IN');
 
 export default function OrderDetailPage() {
   return (
-    <Suspense fallback={<><Header /><div className="flex items-center justify-center h-[70vh] text-gray-400 font-medium">Loading details...</div></>}>
+    <Suspense fallback={<><div className="flex items-center justify-center h-[70vh] text-gray-400 font-medium">Loading details...</div></>}>
       <OrderDetail />
     </Suspense>
   );
@@ -88,11 +88,10 @@ function OrderDetail() {
     setCancelling(false);
   }
 
-  if (loading) return <><Header /><div className="flex items-center justify-center h-[70vh] text-gray-400 font-medium">Loading tracking details...</div></>;
+  if (loading) return <><div className="flex items-center justify-center h-[70vh] text-gray-400 font-medium">Loading tracking details...</div></>;
   if (!order || order.error) return (
     <>
-      <Header />
-      <div className="flex flex-col items-center justify-center py-32 text-center px-4">
+      <div className="flex flex-col items-center justify-center h-[70vh] space-y-3 text-center px-4">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-3xl mb-4">🔍</div>
         <p className="text-gray-500 font-medium mb-6">{order?.error || 'Order not found.'}</p>
         <Link href="/orders" className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-colors">Back to orders</Link>
@@ -105,8 +104,7 @@ function OrderDetail() {
 
   return (
     <>
-      <Header />
-      <main className="max-w-3xl mx-auto px-3 sm:px-4 py-4 md:py-10 space-y-4 sm:space-y-6 pb-20">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 sm:py-8 pb-20 sm:pb-8 space-y-4 sm:space-y-6">
 
         {/* Confetti / Success Hero */}
         {showConfetti && (

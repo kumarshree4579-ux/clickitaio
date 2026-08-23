@@ -23,6 +23,8 @@ export default async function CategoriesPage() {
   return (
     <>
       <Header />
+      {/* Spacer: mobile ~146px (tabs not shown on /categories), desktop 64px */}
+      <div className="h-[56px] sm:h-16 shrink-0" />
       <main className="w-full px-3 sm:px-6 lg:px-8 py-4 pb-20 sm:py-6 sm:pb-6 max-w-4xl mx-auto">
         <h1 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 px-0.5 sm:px-1">Shop by Category</h1>
         

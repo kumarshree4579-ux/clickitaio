@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '../../../components/Header';
 import Link from 'next/link';
 
 import API from '../../../lib/api';
@@ -50,16 +49,18 @@ export default function AddressesPage() {
 
   return (
     <>
-      <Header />
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 pb-20 sm:py-8 sm:pb-8 space-y-3 sm:space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <Link href="/account" className="text-xs sm:text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">← Account</Link>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Saved Addresses</h1>
-          </div>
-          <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
-            className="bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm hover:bg-indigo-700">+ Add</button>
+      {/* Sticky Back Bar */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <Link href="/account" className="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          </Link>
+          <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">My Addresses</h1>
         </div>
+        <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
+          className="bg-indigo-600 text-white px-3 py-2 rounded-xl text-xs sm:text-sm hover:bg-indigo-700 font-bold flex items-center gap-1">+ Add New</button>
+      </div>
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:py-8 sm:pb-12 space-y-3 sm:space-y-4">
 
         {showForm && (
           <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 space-y-3">

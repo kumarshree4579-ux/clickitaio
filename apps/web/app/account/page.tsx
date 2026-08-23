@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Header from '../../components/Header';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { apiFetch } from '../../lib/apiFetch';
 
 export default function AccountPage() {
@@ -13,22 +12,18 @@ export default function AccountPage() {
   const [mobile, setMobile] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [sessions, setSessions] = useState<any[]>([]);
 
   useEffect(() => {
-    const u = localStorage.getItem('user');
-    if (!u) { router.push('/login'); return; }
-    const parsed = JSON.parse(u);
+    const data = localStorage.getItem('user');
+    if (!data) {
+      router.push('/login');
+      return;
+    }
+    const parsed = JSON.parse(data);
     setUser(parsed);
     setName(parsed.name || '');
     setMobile(parsed.mobile || '');
-    
-    // Fetch active sessions
-    apiFetch('/auth/sessions')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => Array.isArray(data) ? setSessions(data) : null)
-      .catch(() => {});
-  }, []);
+  }, [router]);
 
   async function saveProfile() {
     setSaving(true);
@@ -36,16 +31,12 @@ export default function AccountPage() {
     try {
       const res = await apiFetch('/auth/me', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, mobile })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, mobile }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to update profile');
-      }
-      
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
       setEditing(false);
@@ -58,189 +49,169 @@ export default function AccountPage() {
 
   function logout() {
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('cart');
-    localStorage.removeItem('coupon');
-    router.push('/');
+    router.push('/login');
   }
 
-  async function revokeSession(id: string) {
-    if (!confirm('Log out this device?')) return;
-    const res = await apiFetch(`/auth/sessions/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      setSessions(s => s.filter(x => x._id !== id));
+  function deleteAccount() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      // In a real app, call API to delete account
+      logout();
     }
   }
 
   if (!user) return (
-    <>
-      <Header />
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 space-y-3 sm:space-y-4">
-        {/* Skeleton profile card — matches final layout dimensions */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm animate-pulse">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-2xl shrink-0" />
-            <div className="flex-1 space-y-3 pt-1">
-              <div className="h-5 bg-gray-200 rounded w-36" />
-              <div className="h-4 bg-gray-100 rounded w-48" />
-              <div className="h-4 bg-gray-100 rounded w-28" />
-            </div>
-          </div>
+    <div className="bg-gray-50 min-h-screen">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div className="h-14 bg-gray-200 rounded-xl animate-pulse mb-6" />
+        <div className="h-24 bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="space-y-3 pt-4">
+          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-14 bg-gray-200 rounded-xl animate-pulse" />)}
         </div>
-        {/* Skeleton menu items */}
-        {[1,2,3].map(i => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-4 flex items-center gap-3 animate-pulse">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gray-100 rounded-xl shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-24" />
-              <div className="h-3 bg-gray-100 rounded w-40" />
-            </div>
-          </div>
-        ))}
       </main>
-    </>
+    </div>
   );
 
   const menuItems = [
-    { href: '/orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'My Orders', sub: 'Track and manage your orders', color: 'bg-indigo-50 text-indigo-600' },
-    { href: '/wishlist', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', label: 'Wishlist', sub: 'Products you saved for later', color: 'bg-rose-50 text-rose-500' },
-    { href: '/account/addresses', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z', label: 'Addresses', sub: 'Manage your delivery addresses', color: 'bg-emerald-50 text-emerald-600' },
+    { href: '/orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'My Orders' },
+    { href: '/wishlist', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', label: 'Wishlist' },
+    { href: '/account/addresses', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z', label: 'My Address' },
+    { href: '/about', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'About' },
+    { href: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', label: 'Contact Us' },
+    { href: '/terms', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', label: 'Terms' },
+    { href: '/privacy', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', label: 'Privacy Policy' },
+    { href: '/refund', icon: 'M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z', label: 'Refund Policy' },
+    { href: '/support', icon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Support' },
   ];
 
   return (
-    <>
-      <Header />
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 pb-20 sm:py-10 sm:pb-10 space-y-3 sm:space-y-4">
-        {/* Profile card */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm relative overflow-hidden">
-          {/* Decorative background blob */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-50 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 relative">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg shrink-0">
-              {(user.name || user.email)[0].toUpperCase()}
-            </div>
-            
-            <div className="flex-1">
-              {!editing ? (
-                <>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <p className="font-bold text-gray-900 text-xl sm:text-2xl">{user.name || 'Customer'}</p>
-                      <p className="text-gray-500">{user.email}</p>
-                      {user.mobile && (
-                        <p className="text-gray-500 text-sm mt-1 flex items-center gap-1.5">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                          {user.mobile}
-                        </p>
-                      )}
-                      <span className="inline-block mt-3 text-xs bg-indigo-50 text-indigo-600 font-bold px-3 py-1 rounded-full capitalize tracking-wide">{user.role || 'customer'}</span>
-                    </div>
-                    
-                    <button onClick={() => setEditing(true)}
-                      className="bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors sm:w-auto w-full">
-                      Edit Profile
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-4">Edit Profile</h3>
-                  
-                  {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm border border-red-100">{error}</div>
-                  )}
+    <div className="bg-gray-50 min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main className="max-w-2xl mx-auto">
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Full Name</label>
-                      <input type="text" value={name} onChange={e => setName(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Mobile Number</label>
-                      <input type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="+91 9876543210"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Email Address (Read-only)</label>
-                      <input type="email" value={user.email} disabled
-                        className="w-full border border-gray-100 bg-gray-50 text-gray-500 rounded-xl px-4 py-2.5 text-sm cursor-not-allowed" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-2">
-                    <button onClick={saveProfile} disabled={saving}
-                      className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm">
-                      {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button onClick={() => { setEditing(false); setName(user.name || ''); setMobile(user.mobile || ''); setError(''); }}
-                      className="bg-white text-gray-600 border border-gray-200 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Sticky Top Bar */}
+        <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <h1 className="text-[17px] font-black text-black tracking-tight">Account</h1>
           </div>
+          {!editing && (
+            <button onClick={() => setEditing(true)} className="text-xs text-black bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors font-bold">
+              Edit Profile
+            </button>
+          )}
         </div>
 
-        {/* Menu */}
-        <div className="space-y-1.5 sm:space-y-2">
-          {menuItems.map(item => (
-            <Link key={item.href} href={item.href}
-              className="flex items-center gap-3 sm:gap-4 bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 hover:border-indigo-200 hover:shadow-sm transition-all group">
-              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${item.color}`}>
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
+        <div className="p-3 sm:p-4">
+          {/* Profile Card Area */}
+          {!editing ? (
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center text-white text-2xl font-black shrink-0">
+                {(user.name || user.email || 'C')[0].toUpperCase()}
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{item.sub}</p>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-[16px] font-black text-black truncate">{user.name || 'Customer'}</h2>
+                <p className="text-gray-600 text-[13px] font-medium truncate mt-0.5">{user.email}</p>
+                {user.mobile && <p className="text-black text-[12px] mt-1.5 font-bold bg-gray-50 inline-block px-2 py-0.5 rounded-md border border-gray-100">{user.mobile}</p>}
               </div>
-              <svg className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          ))}
-        </div>
-
-        {/* Active Devices */}
-        {sessions.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">Active Devices</h3>
-            <div className="space-y-4">
-              {sessions.map((s) => (
-                <div key={s._id} className="flex items-center justify-between border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{s.userAgent.split(' ')[0] || 'Unknown Device'}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">IP: {s.ip} • Last active: {new Date(s.lastActive).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => revokeSession(s._id)} className="text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors min-h-[32px]">
-                    Log out
-                  </button>
-                </div>
-              ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+              <h3 className="font-black text-black text-[15px]">Edit Profile</h3>
+              {error && <div className="text-black text-xs font-bold bg-gray-100 border border-gray-300 p-2 rounded-lg">{error}</div>}
 
-        {/* Logout */}
-        <button onClick={logout}
-          className="w-full flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 py-3.5 rounded-2xl font-medium text-sm transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Sign Out
-        </button>
+              <div className="space-y-2.5">
+                <input
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-medium text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
+                />
+                <input
+                  placeholder="Mobile Number"
+                  value={mobile}
+                  onChange={e => setMobile(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-medium text-black focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button onClick={saveProfile} disabled={saving} className="flex-1 bg-black text-white py-2.5 rounded-xl text-sm font-bold hover:bg-gray-900 active:scale-95 transition-all disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button onClick={() => setEditing(false)} className="flex-1 bg-gray-100 text-black py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 active:scale-95 transition-all border border-gray-200">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Menu List */}
+          <div className="mt-4 space-y-2">
+            <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-wider px-1 mb-2">Preferences & Info</h4>
+
+            {menuItems.map(item => (
+              <Link key={item.label} href={item.href} className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-black transition-colors group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 bg-gray-50 border border-gray-100 text-black rounded-lg flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} /></svg>
+                  </div>
+                  <span className="font-bold text-black text-[14px]">{item.label}</span>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </Link>
+            ))}
+
+            <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-wider px-1 mt-6 mb-2">Account Actions</h4>
+
+            <button onClick={logout} className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-black transition-colors group">
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 bg-gray-50 border border-gray-100 text-black rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                </div>
+                <span className="font-bold text-black text-[14px]">Logout</span>
+              </div>
+            </button>
+
+            <button onClick={deleteAccount} className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:bg-black hover:border-black transition-colors group mt-2">
+              <div className="flex items-center gap-3.5">
+                <div className="w-8 h-8 bg-gray-50 border border-gray-100 text-black rounded-lg flex items-center justify-center group-hover:bg-gray-800 group-hover:border-gray-800 group-hover:text-white transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </div>
+                <span className="font-bold text-black group-hover:text-white text-[14px] transition-colors">Delete Account</span>
+              </div>
+            </button>
+          </div>
+        </div>
       </main>
-    </>
+
+      {/* Fixed Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] pb-[env(safe-area-inset-bottom)]">
+        <div className="max-w-2xl mx-auto h-16 flex items-center justify-around px-2">
+          {/* Home Icon */}
+          <Link href="/" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-black transition-colors">
+            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span className="text-[10px] font-black tracking-wide">HOME</span>
+          </Link>
+
+          {/* Cart Icon */}
+          <Link href="/cart" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-black transition-colors relative">
+            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span className="absolute top-2 right-[25%] sm:right-[35%] w-2 h-2 bg-black rounded-full border-2 border-white"></span>
+            <span className="text-[10px] font-black tracking-wide">CART</span>
+          </Link>
+
+          {/* Account Icon (Active State) */}
+          <Link href="/account" className="flex flex-col items-center justify-center w-full h-full text-black">
+            <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+            <span className="text-[10px] font-black tracking-wide">ACCOUNT</span>
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -51,7 +51,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <Header />
-      <main className="w-full px-3 sm:px-6 lg:px-8 py-3 pb-20 sm:py-6 sm:pb-6">
+      {/* Spacer: mobile 146px (logo 56 + search 50 + tabs ~40), desktop 64px */}
+      <div className="h-[146px] sm:h-16 shrink-0" />
+      <main className="w-full px-3 sm:px-6 lg:px-8 py-3 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:py-6 sm:pb-6">
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 overflow-x-auto scrollbar-hide whitespace-nowrap">

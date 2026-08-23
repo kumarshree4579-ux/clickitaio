@@ -46,7 +46,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <Header />
+
 
       <main className="bg-gray-50 min-h-screen pb-24 md:pb-8">
 

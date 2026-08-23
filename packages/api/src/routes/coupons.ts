@@ -30,6 +30,15 @@ router.post('/validate', requireAuth, async (req: AuthedRequest, res: Response) 
   return res.json({ valid: true, coupon: { code: coupon.code, type: coupon.type, value: coupon.value, description: coupon.description }, discount });
 });
 
+// GET /coupons/available — get active coupons for customers
+router.get('/available', requireAuth, async (req: AuthedRequest, res: Response) => {
+  const coupons = await Coupon.find({ 
+    isActive: true, 
+    $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }] 
+  }).sort({ createdAt: -1 });
+  return res.json(coupons);
+});
+
 // Admin CRUD
 router.get('/', requireAuth, requireRole('super_admin'), async (_req, res: Response) => {
   const coupons = await Coupon.find().sort({ createdAt: -1 });

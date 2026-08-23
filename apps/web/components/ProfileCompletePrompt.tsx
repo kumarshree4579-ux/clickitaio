@@ -8,7 +8,13 @@ export default function ProfileCompletePrompt() {
   const [mobile, setMobile] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const [needsName, setNeedsName] = useState(false);
+  const [needsMobile, setNeedsMobile] = useState(false);
+
   useEffect(() => {
+    // Check if skipped this session
+    if (sessionStorage.getItem('profilePromptSkipped')) return;
+
     // Check if user is logged in and has missing profile data
     const user = localStorage.getItem('user');
     if (!user) return;
@@ -17,12 +23,15 @@ export default function ProfileCompletePrompt() {
       const parsed = JSON.parse(user);
       // Show prompt if name or mobile is missing
       if (!parsed.name || !parsed.mobile) {
+        setNeedsName(!parsed.name);
+        setNeedsMobile(!parsed.mobile);
         setName(parsed.name || '');
         setMobile(parsed.mobile || '');
         // Small delay so it doesn't flash on page load
-        setTimeout(() => setShow(true), 500);
+        const timer = setTimeout(() => setShow(true), 500);
+        return () => clearTimeout(timer);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   async function handleSave() {
@@ -37,7 +46,7 @@ export default function ProfileCompletePrompt() {
         const data = await res.json();
         localStorage.setItem('user', JSON.stringify(data));
       }
-    } catch {}
+    } catch { }
     setSaving(false);
     setShow(false);
   }
@@ -47,11 +56,6 @@ export default function ProfileCompletePrompt() {
     sessionStorage.setItem('profilePromptSkipped', '1');
     setShow(false);
   }
-
-  // Don't show if already skipped this session
-  useEffect(() => {
-    if (sessionStorage.getItem('profilePromptSkipped')) setShow(false);
-  }, []);
 
   if (!show) return null;
 
@@ -71,7 +75,7 @@ export default function ProfileCompletePrompt() {
 
         {/* Form */}
         <div className="px-5 py-4 space-y-3">
-          {!name && (
+          {needsName && (
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Your Name</label>
               <input
@@ -84,7 +88,7 @@ export default function ProfileCompletePrompt() {
               />
             </div>
           )}
-          {!mobile && (
+          {needsMobile && (
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Mobile Number</label>
               <input

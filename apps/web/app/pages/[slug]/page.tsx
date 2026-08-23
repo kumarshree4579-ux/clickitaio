@@ -31,7 +31,7 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
 
   return (
     <>
-      <Header />
+
       <main className="min-h-screen bg-gray-50">
 
         {/* Hero banner */}

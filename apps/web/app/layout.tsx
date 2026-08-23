@@ -74,7 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" className={`${geist.variable} h-full`} style={themeStyles} data-scroll-behavior="smooth">
-      <body className="min-h-full flex flex-col bg-gray-50 pb-14 sm:pb-0">
+      <body className="min-h-full flex flex-col bg-gray-50">
         <LocationProvider>
           <SplashLoader />
           <ProfileCompletePrompt />

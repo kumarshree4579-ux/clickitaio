@@ -1,7 +1,5 @@
 'use client';
 import { useState } from 'react';
-
-import Header from '../../components/Header';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SupportPage() {
@@ -18,9 +16,8 @@ export default function SupportPage() {
   const filteredFaqs = faqs.filter(f => f.q.toLowerCase().includes(searchQuery.toLowerCase()) || f.a.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <Header />
-      
+    <div className="min-h-screen bg-gray-50 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-12">
+
       {/* Hero Banner */}
       <div className="bg-indigo-600 text-white pt-8 sm:pt-10 pb-16 sm:pb-20 px-3 sm:px-4 rounded-b-[32px] sm:rounded-b-[40px] shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-5"></div>

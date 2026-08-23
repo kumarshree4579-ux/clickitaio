@@ -6,8 +6,6 @@ import API from '../lib/api';
 import MobileTopbar from './MobileTopbar';
 import { useLocation } from '../lib/LocationContext';
 
-const fmt = (n: number) => n.toLocaleString('en-IN');
-
 interface SuggestGroup {
   categoryName: string;
   items: { _id: string; name: string; image: string | null; sellingPrice: number; mrp: number }[];
@@ -78,115 +76,59 @@ export default function Header() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!showSuggest || !flatItems.length) return;
+    if (!showSuggest || flatItems.length === 0) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, flatItems.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)); }
-    else if (e.key === 'Escape') { setShowSuggest(false); setActiveIdx(-1); }
-  }
-
-  function selectItem(id: string) {
-    router.push(`/products/${id}`);
-    setShowSuggest(false);
-    setSearch('');
+    if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)); }
+    if (e.key === 'Escape') { setShowSuggest(false); setActiveIdx(-1); }
   }
 
   function logout() {
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('cart');
-    localStorage.removeItem('coupon');
     setUser(null);
-    setMenuOpen(false);
-    router.push('/');
+    router.push('/login');
   }
 
   const SuggestDropdown = () => {
-    let runningIdx = 0;
-    if (!showSuggest || (suggestions.length === 0 && search.trim().length < 2)) return null;
+    if (!showSuggest || suggestions.length === 0) return null;
     return (
-      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
-        {suggestions.length > 0 ? (
-          <>
-            {suggestions.map(group => (
-              <div key={group.categoryName}>
-                <div className="px-4 pt-3 pb-1 flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">{group.categoryName}</span>
-                  <div className="flex-1 h-px bg-gray-100" />
-                </div>
-                {group.items.map(item => {
-                  const idx = runningIdx++;
-                  const isActive = idx === activeIdx;
-                  const discount = item.mrp > item.sellingPrice
-                    ? Math.round(((item.mrp - item.sellingPrice) / item.mrp) * 100) : 0;
-                  return (
-                    <button key={item._id} type="button"
-                      onClick={() => selectItem(item._id)}
-                      onMouseEnter={() => setActiveIdx(idx)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${isActive ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}>
-                      <div className="w-9 h-9 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                        {item.image
-                          ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center text-gray-300 text-base">📦</div>}
-                      </div>
-                      <p className="flex-1 text-sm text-gray-800 truncate">{item.name}</p>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-gray-900">₹{fmt(item.sellingPrice)}</p>
-                        {discount > 0 && <p className="text-[10px] text-rose-500 font-medium">{discount}% off</p>}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-            <div className="border-t border-gray-100 px-4 py-2.5">
-              <button type="button"
-                onClick={() => { router.push(`/products?q=${encodeURIComponent(search.trim())}`); setShowSuggest(false); setSearch(''); }}
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                See all results for &ldquo;{search}&rdquo;
-              </button>
+      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] max-h-80 overflow-y-auto">
+        {suggestions.map((group, gi) => (
+          <div key={gi}>
+            <div className="px-4 pt-3 pb-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">{group.categoryName}</p>
             </div>
-          </>
-        ) : (
-          <div className="px-4 py-5 text-sm text-gray-400 text-center">No products found for &ldquo;{search}&rdquo;</div>
-        )}
+            {group.items.map((item, ii) => {
+              const globalIdx = suggestions.slice(0, gi).reduce((s, g) => s + g.items.length, 0) + ii;
+              const isActive = globalIdx === activeIdx;
+              return (
+                <button key={item._id}
+                  onMouseDown={() => { router.push(`/products/${item._id}`); setShowSuggest(false); setSearch(''); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 transition-colors text-left ${isActive ? 'bg-indigo-50' : ''}`}>
+                  <div className="w-9 h-9 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                    {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <span className="text-gray-300 text-lg">📦</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
+                    <p className="text-xs text-indigo-600 font-bold">₹{item.sellingPrice.toLocaleString('en-IN')}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
     );
   };
 
   return (
     <>
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="w-full px-3 sm:px-6 lg:px-8">
-
-          {/* ─── Mobile top row: Logo left, Location right ─── */}
-          <div className="flex items-center justify-between h-14 sm:hidden">
-            {/* Logo — big, with bi-color brand name */}
-            <Link href="/" className="flex items-center gap-2 shrink-0">
-              <img src="/logo192.png" alt="Daily Basket" className="w-9 h-9 rounded-xl object-contain" />
-              <span className="text-[15px] font-extrabold tracking-tight">
-                <span className="text-indigo-600">Daily</span>
-                <span className="text-gray-900"> Basket</span>
-              </span>
-            </Link>
-
-            {/* Location — right side, clean text */}
-            <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity ml-2">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
-              <div className="flex items-center gap-1 mt-0.5">
-                <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                <span className="text-[13px] font-bold text-gray-900 max-w-[120px] truncate">{addressString || 'Select'}</span>
-                <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-              </div>
-              {isServiceable === false && (
-                <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Unserviceable'}</span>
-              )}
-            </button>
-          </div>
-
-          {/* ─── Desktop top row ─── */}
-          <div className="hidden sm:flex items-center h-16 gap-3">
+      {/* ═══════════════════════════════════════════
+          DESKTOP — Fixed at top, full-width bar
+          ═══════════════════════════════════════════ */}
+      <header className="hidden sm:block fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div className="w-full px-6 lg:px-8 max-w-[1400px] mx-auto">
+          <div className="flex items-center h-16 gap-4">
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
@@ -198,13 +140,18 @@ export default function Header() {
             </Link>
 
             {/* Location Pill */}
-            <div className="shrink-0 border-l border-gray-200 pl-3">
+            <div className="shrink-0 border-l border-gray-200 pl-4">
               <button onClick={openPrompt} className="flex flex-col items-start hover:opacity-80 transition-opacity">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Delivering to</span>
                 <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mt-0.5">
-                  <svg className="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <span className="truncate max-w-[160px]">{addressString || 'Select Location'}</span>
-                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  <svg className="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="truncate max-w-[180px]">{addressString || 'Select Location'}</span>
+                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
                 {isServiceable === false && (
                   <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Unserviceable'}</span>
@@ -212,7 +159,12 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Desktop search */}
+            {/* Category Tabs — desktop inline */}
+            <Suspense fallback={null}>
+              <MobileTopbar />
+            </Suspense>
+
+            {/* Search Bar */}
             <div className="flex flex-1 relative" ref={searchRef}>
               <form onSubmit={handleSearch} className="w-full">
                 <div className="relative">
@@ -235,7 +187,7 @@ export default function Header() {
               <SuggestDropdown />
             </div>
 
-            {/* Right actions — desktop */}
+            {/* Right actions */}
             <div className="flex items-center gap-1 shrink-0">
               <Link href="/support" title="Support" className="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -250,28 +202,28 @@ export default function Header() {
                 )}
               </Link>
 
-              {/* User */}
               {user ? (
                 <div className="relative" ref={menuRef}>
-                  <button onClick={() => setMenuOpen(o => !o)} className="flex items-center gap-1.5 pl-1.5 pr-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors">
+                  <button onClick={() => setMenuOpen(o => !o)} className="flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-xl hover:bg-gray-100 transition-colors">
                     <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
                       {(user.name || user.email)[0].toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-gray-700 hidden md:block max-w-[80px] truncate">{user.name || user.email.split('@')[0]}</span>
+                    <span className="text-sm font-semibold text-gray-700 max-w-[90px] truncate hidden md:block">{user.name || user.email.split('@')[0]}</span>
                     <svg className="w-3 h-3 text-gray-400 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
                   {menuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 mb-1">
-                        <p className="text-xs font-semibold text-gray-900 truncate">{user.name || 'Customer'}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50">
+                      <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
+                        <p className="text-xs font-bold text-gray-900 truncate">{user.name || 'Customer'}</p>
+                        <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
                       </div>
                       {[
                         { href: '/account', label: 'My Account', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
                         { href: '/orders', label: 'My Orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
                         { href: '/wishlist', label: 'Wishlist', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
                       ].map(item => (
-                        <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                        <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} /></svg>
                           {item.label}
                         </Link>
@@ -286,13 +238,62 @@ export default function Header() {
                   )}
                 </div>
               ) : (
-                <Link href="/login" className="ml-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm whitespace-nowrap">Login</Link>
+                <Link href="/login" className="ml-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap">Login</Link>
               )}
             </div>
           </div>
+        </div>
+      </header>
 
-          {/* ─── Mobile search bar — always visible ─── */}
-          <div className="sm:hidden pb-2.5 relative" ref={searchRef}>
+      {/* ═══════════════════════════════════════════
+          MOBILE — Fixed at top, two-row layout
+          Row 1: Logo + Location (h-14 = 56px)
+          Row 2: Search Bar + Tabs (h ~= 90px)
+          Total fixed height ≈ 146px
+          ═══════════════════════════════════════════ */}
+      <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+        {/* Row 1 — Logo + Location */}
+        <div className="border-b border-gray-100 px-4">
+          <div className="flex items-center justify-between h-14">
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <img src="/logo192.png" alt="Daily Basket" className="w-8 h-8 rounded-xl object-contain" />
+              <span className="text-[15px] font-extrabold tracking-tight">
+                <span className="text-indigo-600">Daily</span>
+                <span className="text-gray-900"> Basket</span>
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-3">
+              {/* Cart */}
+              <Link href="/cart" className="relative p-1.5 text-gray-500">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center font-bold leading-none">{cartCount > 9 ? '9+' : cartCount}</span>
+                )}
+              </Link>
+
+              {/* Location */}
+              <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
+                <div className="flex items-center gap-0.5 mt-0.5">
+                  <svg className="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-[12px] font-bold text-gray-900 max-w-[90px] truncate">{addressString || 'Select'}</span>
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+                {isServiceable === false && (
+                  <span className="text-[8px] bg-red-100 text-red-600 px-1 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Not serviceable'}</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2 — Search + Tabs */}
+        <div className="border-b border-gray-100 bg-white">
+          <div className="px-3 pt-2 pb-1.5 relative" ref={searchRef}>
             <form onSubmit={handleSearch}>
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,21 +305,25 @@ export default function Header() {
                   onFocus={() => suggestions.length > 0 && setShowSuggest(true)}
                   placeholder="Search for products..."
                   autoComplete="off"
-                  className="w-full bg-gray-100 border-0 rounded-xl pl-10 pr-8 py-2.5 text-[14px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
+                  className="w-full bg-gray-100 border-0 rounded-xl pl-10 pr-10 py-2.5 text-[14px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
                 />
-                {search && (
+                {search ? (
                   <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl leading-none">&times;</button>
+                ) : (
+                  <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  </button>
                 )}
               </div>
             </form>
             <SuggestDropdown />
           </div>
+          <Suspense fallback={<div className="h-9 bg-white" />}>
+            <MobileTopbar />
+          </Suspense>
         </div>
-      </header>
-      <Suspense fallback={<div className="h-10 sm:hidden bg-white border-b" />}>
-        <MobileTopbar />
-      </Suspense>
+      </div>
     </>
   );
 }

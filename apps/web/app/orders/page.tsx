@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '../../components/Header';
 import Link from 'next/link';
 import { apiFetch } from '../../lib/apiFetch';
 import { motion } from 'framer-motion';
@@ -43,18 +42,19 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <Header />
-      
-      {/* Header Banner */}
-      <div className="bg-indigo-600 text-white pt-6 sm:pt-8 pb-12 sm:pb-16 px-3 sm:px-4 rounded-b-3xl shadow-sm">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1 sm:mb-2">My Orders</h1>
-          <p className="text-indigo-100 text-sm">Manage and track all your orders in one place.</p>
-        </div>
+    <div className="min-h-screen bg-gray-50 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-12">
+
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 h-14 px-4 sm:px-6 flex items-center gap-6 shadow-sm">
+
+        {/* <div className="sticky top-0 z-40 bg-indigo-600 text-white px-4 sm:px-6 py-4 flex items-center gap-3 shadow-sm"> */}
+        <h1 className="text-[17px] font-bold tracking-tight">My Orders</h1>
+        {!loading && orders.length > 0 && (
+          <span className="text-indigo-200 text-sm font-medium">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
+        )}
       </div>
 
-      <main className="max-w-3xl mx-auto px-3 sm:px-4 -mt-8 sm:-mt-10">
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6">
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
@@ -71,7 +71,7 @@ export default function OrdersPage() {
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-sm p-12 text-center"
@@ -88,11 +88,11 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-3 sm:space-y-5">
             {orders.map((order: any, idx: number) => (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                key={order._id} 
+                key={order._id}
                 className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 overflow-hidden group"
               >
                 {/* Order Header */}
@@ -139,8 +139,8 @@ export default function OrdersPage() {
                       <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-semibold">Total</p>
                       <p className="font-extrabold text-gray-900 text-base sm:text-lg">₹{order.total?.toLocaleString('en-IN')}</p>
                     </div>
-                    
-                    <Link 
+
+                    <Link
                       href={`/orders/${order._id}`}
                       className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-1.5 sm:gap-2"
                     >

@@ -7,7 +7,7 @@ import API from '../lib/api';
 export default function MobileTopbar() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const [tabs, setTabs] = useState<{ label: string, categorySlug: string, isActive: boolean }[]>([]);
+  const [tabs, setTabs] = useState<{ label: string; categorySlug: string; isActive: boolean }[]>([]);
 
   useEffect(() => {
     fetch(`${API}/settings/public`)
@@ -20,47 +20,60 @@ export default function MobileTopbar() {
       })
       .catch(err => console.error('Failed to load topbar tabs:', err));
   }, []);
-  
-  // Only show on the homepage or products page, adjust as needed
+
+  // Show on homepage and products page only
   if (pathname !== '/' && pathname !== '/products') return null;
 
   const currentCat = searchParams?.get('category') || '';
-
   const activeTabs = tabs?.filter(t => t.isActive) || [];
   if (activeTabs.length === 0) return null;
 
   return (
-    <div className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-[96px] sm:top-[64px] z-30 overflow-x-auto no-scrollbar scroll-smooth">
-      <div className="flex px-3 sm:px-8 gap-1 sm:gap-6 items-center w-max mx-auto sm:mx-0">
+    <>
+      {/* ── Mobile: full-width scroll row ── */}
+      <div className="sm:hidden overflow-x-auto scrollbar-hide">
+        <div className="flex px-3 gap-0 items-center w-max">
+          {activeTabs.map((tab, i) => {
+            const isActive = currentCat === tab.categorySlug;
+            return (
+              <Link
+                key={i}
+                href={tab.categorySlug ? `/products?category=${tab.categorySlug}` : '/products'}
+                className={`relative px-3.5 py-2.5 text-[13px] font-bold whitespace-nowrap transition-all duration-200 ${
+                  isActive
+                    ? 'text-indigo-600'
+                    : 'text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+                {isActive && (
+                  <span className="absolute bottom-0 left-2 right-2 h-[2.5px] bg-indigo-600 rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Desktop: inline flex row within header ── */}
+      <div className="hidden sm:flex items-center gap-1 shrink-0 overflow-x-auto scrollbar-hide max-w-[320px] lg:max-w-none">
         {activeTabs.map((tab, i) => {
           const isActive = currentCat === tab.categorySlug;
           return (
             <Link
               key={i}
               href={tab.categorySlug ? `/products?category=${tab.categorySlug}` : '/products'}
-              className={`relative px-3 sm:px-2 py-2.5 sm:py-3.5 text-[13px] sm:text-[15px] font-bold whitespace-nowrap transition-all duration-200 ${
-                isActive 
-                  ? 'text-[var(--color-primary,#4f46e5)]' 
-                  : 'text-gray-400 hover:text-gray-900'
+              className={`relative px-3 py-1.5 text-[13px] font-bold whitespace-nowrap rounded-lg transition-all duration-200 ${
+                isActive
+                  ? 'text-indigo-600 bg-indigo-50'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               {tab.label}
-              {isActive && (
-                <div className="absolute bottom-0 left-1 right-1 h-[2.5px] bg-[var(--color-primary,#4f46e5)] rounded-full transition-all duration-300" />
-              )}
             </Link>
           );
         })}
       </div>
-      <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </div>
+    </>
   );
 }

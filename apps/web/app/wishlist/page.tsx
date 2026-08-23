@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '../../components/Header';
 import Link from 'next/link';
 
 import API from '../../lib/api';
@@ -43,9 +42,13 @@ export default function WishlistPage() {
 
   return (
     <>
-      <Header />
-      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8 pb-20 sm:pb-8">
-        <h1 className="text-[17px] sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">My Wishlist</h1>
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center gap-3 shadow-sm">
+        <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </Link>
+        <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">My Wishlist</h1>
+      </div>
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-8">
         {loading ? (
           <div className="text-center py-20 text-gray-400">Loading...</div>
         ) : items.length === 0 ? (

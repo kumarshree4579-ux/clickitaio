@@ -48,9 +48,13 @@ export default async function HomePage() {
   const badges = trustBadges.length ? trustBadges : defaultBadges;
 
   return (
-    <div className="min-h-screen flex flex-col pb-6 sm:pb-0">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1">
+      {/* Spacer: pushes content below the fixed header */}
+      {/* Mobile: 56px logo + 50px search + ~40px tabs ≈ 146px */}
+      {/* Desktop: 64px */}
+      <div className="h-[146px] sm:h-16 shrink-0" />
+      <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
 
         {/* Hero Slider — managed from admin banners */}
         <section>

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '../../components/Header';
+import Link from 'next/link';
 import DeliveryMap from '../../components/DeliveryMap';
 
 import API from '../../lib/api';
@@ -19,7 +19,8 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddr, setSelectedAddr] = useState<Address | null>(null);
   const [newAddr, setNewAddr] = useState<Address>(emptyAddress);
-  const [showNewAddr, setShowNewAddr] = useState(false);
+  const [showAddressSheet, setShowAddressSheet] = useState(false);
+  const [showNewAddrSheet, setShowNewAddrSheet] = useState(false);
   const [bookingForOther, setBookingForOther] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
@@ -28,8 +29,6 @@ export default function CheckoutPage() {
   const [showMap, setShowMap] = useState(false);
   const [storeSettings, setStoreSettings] = useState<any>(null);
   const [coupon, setCoupon] = useState<any>(null);
-
-  const token = () => localStorage.getItem('token');
 
   useEffect(() => {
     const c = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -40,36 +39,32 @@ export default function CheckoutPage() {
 
     const parsedUser = JSON.parse(user);
     setCurrentUser(parsedUser);
-    setNewAddr(prev => ({
-      ...prev,
-      name: parsedUser.name || '',
-      phone: parsedUser.mobile || ''
-    }));
+    setNewAddr(prev => ({ ...prev, name: parsedUser.name || '', phone: parsedUser.mobile || '' }));
 
     const saved = localStorage.getItem('coupon');
     if (saved) setCoupon(JSON.parse(saved));
+    
     apiFetch('/addresses')
       .then(async r => {
-        if (!r.ok) {
-          throw new Error('Failed to fetch addresses');
-        }
+        if (!r.ok) throw new Error('Failed to fetch addresses');
         return r.json();
       })
       .then(data => {
         if (Array.isArray(data)) {
           setAddresses(data);
           if (data.length) setSelectedAddr(data.find((a: any) => a.isDefault) || data[0]);
-          else setShowNewAddr(true);
+          else setShowNewAddrSheet(true);
         } else {
           setAddresses([]);
-          setShowNewAddr(true);
+          setShowNewAddrSheet(true);
         }
       }).catch(() => {
         setAddresses([]);
-        setShowNewAddr(true);
+        setShowNewAddrSheet(true);
       });
+      
     fetch(`${API}/settings/public`).then(r => r.json()).then(setStoreSettings).catch(() => { });
-  }, []);
+  }, [router]);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const discount = coupon?.discount || 0;
@@ -102,8 +97,9 @@ export default function CheckoutPage() {
       setAddresses(a => [...a, saved]);
     }
     setSelectedAddr(saved);
-    setShowNewAddr(false);
-    setNewAddr(emptyAddress);
+    setShowNewAddrSheet(false);
+    setShowAddressSheet(false);
+    setNewAddr({ ...emptyAddress, name: currentUser?.name || '', phone: currentUser?.mobile || '' });
   }
 
   function handleMapConfirm(result: any) {
@@ -113,16 +109,16 @@ export default function CheckoutPage() {
       ...(result.addressData || {}),
       location: { lat: result.lat, lng: result.lng }
     }));
-    setShowNewAddr(true);
   }
 
   async function placeOrder() {
     if (!selectedAddr) {
-      setError('Please select or add a delivery address.');
+      setError('Please select a delivery address.');
+      setShowAddressSheet(true);
       return;
     }
     if (storeSettings?.hasZones && !selectedAddr.location) {
-      setError('The selected address does not have a map location. Please add a new address with a map location.');
+      setError('Address requires map location. Please add a new address.');
       return;
     }
     setLoading(true); setError('');
@@ -192,211 +188,192 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <Header />
       {showMap && <DeliveryMap onConfirm={handleMapConfirm} onClose={() => setShowMap(false)} />}
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 md:py-8 pb-44 md:pb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 hidden md:block">Checkout</h1>
-        {error && <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl shadow-sm flex items-center gap-2"><svg className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span className="text-xs sm:text-sm">{error}</span></div>}
+      <main className="bg-gray-50 min-h-screen pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pb-28">
+        <div className="max-w-2xl mx-auto">
+        {/* Sticky Title */}
+        <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center gap-3 shadow-sm">
+          <Link href="/cart" className="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          </Link>
+          <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">Checkout</h1>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          <div className="md:col-span-2 space-y-3 md:space-y-6">
-
-
-
-            {/* Delivery Address */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h2 className="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center text-xs sm:text-sm">📍</div>
-                  Delivery Address
-                </h2>
-                {addresses.length > 0 && !showNewAddr && (
-                  <button onClick={() => setShowNewAddr(true)} className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
-                    + Add New
-                  </button>
-                )}
-              </div>
-
-              {!showNewAddr && (
-                <div className="space-y-2.5 sm:space-y-3 mb-2">
-                  {addresses.map((a: any, idx: number) => (
-                    <label key={a._id || idx} className={`flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border rounded-2xl cursor-pointer transition-all ${selectedAddr?._id === a._id ? 'border-indigo-500 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-500 ring-opacity-20' : 'hover:border-gray-300 hover:bg-gray-50'}`}>
-                      <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => setSelectedAddr(a)} className="mt-1 w-4 h-4 accent-indigo-600 cursor-pointer" />
-                      <div className="text-sm flex-1">
-                        <div className="flex justify-between items-start">
-                          <p className="font-bold text-gray-800">{a.name} <span className="text-gray-400 font-normal mx-1">•</span> {a.phone}</p>
-                          <div className="flex items-center gap-2">
-                            {a.isDefault && <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">DEFAULT</span>}
-                            <button
-                              type="button"
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setNewAddr(a); setShowNewAddr(true); }}
-                              className="text-indigo-600 hover:text-indigo-800 p-1 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
-                              title="Edit Address"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-gray-500 text-xs mt-1.5 leading-relaxed">{a.line1}{a.line2 ? `, ${a.line2}` : ''} <br /> {a.city}, {a.state} - <span className="font-medium text-gray-700">{a.pincode}</span></p>
-                      </div>
-                    </label>
-                  ))}
-                  {addresses.length === 0 && <p className="text-sm text-gray-500 italic">No addresses saved yet.</p>}
-                </div>
-              )}
-
-              {showNewAddr && (
-                <div className="border border-indigo-100 bg-indigo-50/30 rounded-2xl p-3.5 sm:p-5 space-y-3 sm:space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                      <span className="text-indigo-500">{newAddr._id ? '✎' : '+'}</span> {newAddr._id ? 'Edit Address' : 'Enter New Address'}
-                    </h3>
-                    <label className="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer">
-                      <input type="checkbox" checked={bookingForOther} onChange={e => {
-                        setBookingForOther(e.target.checked);
-                        if (e.target.checked) {
-                          setNewAddr(a => ({ ...a, name: '', phone: '' }));
-                        } else if (currentUser) {
-                          setNewAddr(a => ({ ...a, name: currentUser.name || '', phone: currentUser.mobile || '' }));
-                        }
-                      }} className="w-3.5 h-3.5 accent-indigo-600 rounded" />
-                      Booking for someone else?
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="col-span-2">
-                      {newAddr.location ? (
-                        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                          <span className="text-xl">📍</span>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-emerald-800">Map location selected</p>
-                          </div>
-                          <button onClick={() => setShowMap(true)} className="text-xs text-indigo-600 font-medium hover:underline">Change</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setShowMap(true)} className="w-full flex items-center justify-between border-2 border-dashed border-gray-200 hover:border-indigo-300 rounded-xl p-3 text-left transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-lg text-indigo-500">📍</div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Drop pin on map</p>
-                              <p className="text-[10px] text-red-400 font-bold">Required for accurate delivery</p>
-                            </div>
-                          </div>
-                          <span className="bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-bold">Select</span>
-                        </button>
-                      )}
-                    </div>
-                    {(['name', 'phone', 'line1', 'line2', 'city', 'state', 'pincode'] as const).map(f => (
-                      <input key={f} placeholder={f.charAt(0).toUpperCase() + f.slice(1)} value={newAddr[f] || ''}
-                        onChange={e => setNewAddr(a => ({ ...a, [f]: e.target.value }))}
-                        className={`border-gray-200 border rounded-xl px-3.5 sm:px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white shadow-sm transition-shadow ${f === 'line1' ? 'sm:col-span-2' : ''}`} />
-                    ))}
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <button onClick={saveNewAddress} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm transition-colors w-full sm:w-auto">
-                      Save Address
-                    </button>
-                    {addresses.length > 0 && (
-                      <button onClick={() => { setShowNewAddr(false); setNewAddr(emptyAddress); }} className="bg-white border border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors w-full sm:w-auto">
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
+        {error && (
+          <div className="max-w-2xl mx-auto px-4 mt-4">
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-semibold border border-red-100 flex items-center gap-2">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              {error}
             </div>
+          </div>
+        )}
 
-            {/* Payment */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 shadow-sm">
-              <h2 className="font-bold text-gray-900 text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-xs sm:text-sm">💳</div>
-                Payment Method
-              </h2>
-              <div className="space-y-2.5 sm:space-y-3">
-                {[
-                  { value: 'razorpay', label: '💳 Pay Online (Razorpay)', sub: 'UPI, Cards, Net Banking, Wallets' },
-                  { value: 'cod', label: '💵 Cash on Delivery', sub: 'Pay when your order arrives' },
-                ].map(opt => (
-                  <label key={opt.value} className={`flex gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${paymentMethod === opt.value ? 'border-indigo-400 bg-indigo-50' : 'hover:bg-gray-50'}`}>
-                    <input type="radio" name="payment" value={opt.value} checked={paymentMethod === opt.value}
-                      onChange={() => setPaymentMethod(opt.value as any)} className="mt-1 accent-indigo-600" />
+        <div className="max-w-2xl mx-auto p-4 space-y-4">
+          
+          {/* Address Dropdown Row */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100/80">
+            <h2 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Delivery Address</h2>
+            <button onClick={() => setShowAddressSheet(true)} className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 p-3.5 rounded-xl border border-gray-200 transition-colors text-left group">
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-lg shadow-inner">📍</div>
+                <div className="flex-1 min-w-0">
+                  {selectedAddr ? (
+                    <>
+                      <p className="font-bold text-gray-900 text-[15px] truncate">{selectedAddr.name}</p>
+                      <p className="text-[13px] text-gray-500 truncate mt-0.5">{selectedAddr.line1}, {selectedAddr.city}</p>
+                    </>
+                  ) : (
+                    <p className="font-bold text-indigo-600 text-[15px]">Select Delivery Address</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-indigo-600">
+                <span className="text-xl font-medium leading-none">+</span>
+                <svg className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </button>
+          </div>
+
+          {/* Payment Method */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100/80">
+            <h2 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Payment Method</h2>
+            <div className="space-y-2.5">
+              {[
+                { value: 'razorpay', label: 'Online Payment', sub: 'UPI, Cards, Net Banking, Wallets', icon: '💳' },
+                { value: 'cod', label: 'Cash on Delivery', sub: 'Pay when your order arrives', icon: '💵' },
+              ].map(opt => (
+                <label key={opt.value} className={`flex items-center justify-between p-3.5 border rounded-xl cursor-pointer transition-colors ${paymentMethod === opt.value ? 'border-indigo-400 bg-indigo-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-lg ${paymentMethod === opt.value ? 'bg-indigo-100' : 'bg-gray-100'}`}>{opt.icon}</div>
                     <div>
-                      <p className="text-sm font-medium">{opt.label}</p>
-                      <p className="text-xs text-gray-500">{opt.sub}</p>
+                      <p className={`font-bold text-[14px] ${paymentMethod === opt.value ? 'text-indigo-900' : 'text-gray-800'}`}>{opt.label}</p>
+                      <p className="text-[12px] text-gray-500 mt-0.5">{opt.sub}</p>
                     </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Order Summary */}
-          <div>
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4 sticky top-24 shadow-sm">
-              <h2 className="font-bold text-gray-900 text-lg">Order Summary</h2>
-
-              <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {cart.map((item, idx) => (
-                  <div key={item._id || idx} className="flex justify-between text-sm">
-                    <span className="text-gray-700 truncate flex-1 mr-3 flex items-center gap-2">
-                      <div className="w-5 h-5 bg-gray-100 rounded text-[10px] flex items-center justify-center font-bold text-gray-500">{item.qty}x</div>
-                      {item.name}
-                    </span>
-                    <span className="font-semibold text-gray-900">₹{fmt(item.price * item.qty)}</span>
                   </div>
-                ))}
-              </div>
-
-              <div className="border-t border-dashed border-gray-200 pt-4 space-y-2 text-sm text-gray-600">
-                <div className="flex justify-between"><span>Subtotal</span><span className="font-medium text-gray-900">₹{fmt(subtotal)}</span></div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span className={shipping === 0 ? 'text-emerald-600 font-bold tracking-wide uppercase text-xs mt-0.5' : 'font-medium text-gray-900'}>{shipping === 0 ? 'Free' : `₹${shipping}`}</span>
-                </div>
-                {discount > 0 && <div className="flex justify-between text-emerald-600 font-medium"><span>Coupon Discount</span><span>-₹{fmt(discount)}</span></div>}
-              </div>
-
-              <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
-                <span className="font-bold text-gray-900">To Pay</span>
-                <span className="font-black text-xl text-gray-900">₹{fmt(total)}</span>
-              </div>
-
-              {error && (
-                <div className="bg-red-50 text-red-600 px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-100 flex items-center gap-2">
-                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  {error}
-                </div>
-              )}
-              {/* Desktop Place Order Button */}
-              <button onClick={placeOrder} disabled={loading}
-                className="hidden md:flex w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-transform active:scale-95 items-center justify-center gap-2 shadow-sm">
-                {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Place Order' : `Pay ₹${fmt(total)}`}
-                {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
-              </button>
+                  <input type="radio" name="payment" value={opt.value} checked={paymentMethod === opt.value}
+                    onChange={() => setPaymentMethod(opt.value as any)} className="w-5 h-5 accent-indigo-600" />
+                </label>
+              ))}
             </div>
           </div>
+          
+        </div>
+
+        {/* Bottom Pay Bar */}
+        <div className="fixed bottom-14 sm:bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.06)] pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-3">
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
+            <div className="shrink-0 flex flex-col justify-center">
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Total Payable</span>
+              <span className="text-[18px] font-black text-gray-900 leading-none">₹{fmt(total)}</span>
+            </div>
+            <button onClick={placeOrder} disabled={loading}
+              className="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-md shadow-indigo-200/50 flex items-center justify-center gap-2 text-[15px] disabled:opacity-70">
+              {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Complete Order' : 'Pay & Complete'}
+              {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
+            </button>
+          </div>
+        </div>
         </div>
       </main>
 
-      {/* Mobile Sticky Bottom Bar */}
-      {!showNewAddr && (
-        <div className="md:hidden fixed bottom-[60px] left-0 right-0 bg-white border-t border-gray-200 px-3 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40">
-          {error && (
-            <div className="mb-2.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-red-100 flex items-center justify-center gap-1.5 transition-all">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              {error}
+      {/* Address Selection Bottom Sheet */}
+      {showAddressSheet && !showNewAddrSheet && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setShowAddressSheet(false)} />
+          <div className="relative bg-white rounded-t-3xl h-[65vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom max-w-2xl mx-auto w-full">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white rounded-t-3xl">
+              <h3 className="font-bold text-lg text-gray-900">Select Delivery Address</h3>
+              <button onClick={() => setShowAddressSheet(false)} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 font-bold text-lg leading-none transition-colors">&times;</button>
             </div>
-          )}
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-            <div className="shrink-0">
-              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Total</p>
-              <p className="text-lg font-black text-gray-900">₹{fmt(total)}</p>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-gray-50">
+              
+              {/* Add New Address Button */}
+              <button onClick={() => { 
+                setNewAddr({ ...emptyAddress, name: currentUser?.name || '', phone: currentUser?.mobile || '' }); 
+                setShowNewAddrSheet(true); 
+              }} 
+                className="w-full flex items-center gap-4 bg-white border border-indigo-200 border-dashed shadow-sm p-4 rounded-2xl hover:bg-indigo-50 transition-colors text-left group">
+                 <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-light group-hover:scale-110 transition-transform">+</div>
+                 <span className="font-bold text-indigo-700 text-[15px]">Add New Address</span>
+              </button>
+
+              {/* Existing Addresses */}
+              {addresses.map(a => (
+                 <label key={a._id} className={`flex items-start gap-4 p-4 bg-white border rounded-2xl cursor-pointer transition-all ${selectedAddr?._id === a._id ? 'border-indigo-500 shadow-md ring-1 ring-indigo-500/20' : 'border-gray-200 hover:border-gray-300 shadow-sm'}`}>
+                   <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => { setSelectedAddr(a); setShowAddressSheet(false); }} className="mt-1 w-5 h-5 accent-indigo-600 cursor-pointer shrink-0" />
+                   <div className="flex-1 min-w-0">
+                     <p className="font-bold text-gray-900 text-[15px] flex items-center gap-2">
+                       {a.name}
+                       {a.isDefault && <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">Default</span>}
+                     </p>
+                     <p className="text-gray-500 text-[13px] font-medium mt-1">{a.phone}</p>
+                     <p className="text-gray-500 text-[13px] mt-1.5 leading-relaxed pr-2">{a.line1}{a.line2 ? `, ${a.line2}` : ''}, {a.city}, {a.state} - <span className="font-semibold text-gray-700">{a.pincode}</span></p>
+                   </div>
+                 </label>
+              ))}
             </div>
-            <button onClick={placeOrder} disabled={loading || !selectedAddr}
-              className="flex-1 bg-indigo-600 text-white py-3 px-5 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-sm text-sm">
-              {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Place Order' : 'Proceed to Pay'}
-              {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
+          </div>
+        </div>
+      )}
+
+      {/* Add New Address Overlay */}
+      {showNewAddrSheet && !showMap && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4">
+          <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4 shrink-0 shadow-sm">
+            <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+              <button onClick={() => setShowNewAddrSheet(false)} className="mr-2 text-gray-400 hover:text-gray-700"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></button>
+              {newAddr._id ? 'Edit Address' : 'Add New Address'}
+            </h3>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full space-y-4">
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+              <label className="flex items-center gap-2 text-[13px] font-bold text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={bookingForOther} onChange={e => {
+                  setBookingForOther(e.target.checked);
+                  if (e.target.checked) setNewAddr(a => ({ ...a, name: '', phone: '' }));
+                  else if (currentUser) setNewAddr(a => ({ ...a, name: currentUser.name || '', phone: currentUser.mobile || '' }));
+                }} className="w-4 h-4 accent-indigo-600 rounded" />
+                Booking for someone else?
+              </label>
+            </div>
+
+            <div className="space-y-4">
+              {newAddr.location ? (
+                <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
+                  <span className="text-2xl">📍</span>
+                  <div className="flex-1">
+                    <p className="text-[14px] font-bold text-emerald-800">Map location selected</p>
+                  </div>
+                  <button onClick={() => setShowMap(true)} className="text-[13px] text-indigo-600 font-bold bg-white px-3 py-1.5 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-50">Change</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowMap(true)} className="w-full flex items-center justify-between border-2 border-dashed border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 rounded-2xl p-4 text-left transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">📍</div>
+                    <div>
+                      <p className="text-[15px] font-bold text-indigo-900">Drop pin on map</p>
+                      <p className="text-[11px] text-rose-500 font-bold uppercase tracking-wider mt-0.5">Required for delivery</p>
+                    </div>
+                  </div>
+                  <span className="bg-indigo-600 text-white text-[13px] px-4 py-2 rounded-xl font-bold shadow-sm">Select</span>
+                </button>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(['name', 'phone', 'line1', 'line2', 'city', 'state', 'pincode'] as const).map(f => (
+                  <input key={f} placeholder={f.charAt(0).toUpperCase() + f.slice(1)} value={newAddr[f] || ''}
+                    onChange={e => setNewAddr(a => ({ ...a, [f]: e.target.value }))}
+                    className={`border-gray-200 border rounded-xl px-4 py-3.5 text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-gray-50/50 shadow-sm transition-all ${f === 'line1' ? 'sm:col-span-2' : ''}`} />
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-4 border-t border-gray-100 shrink-0 max-w-2xl mx-auto w-full">
+            <button onClick={saveNewAddress} className="w-full bg-indigo-600 text-white py-4 rounded-xl text-[15px] font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95">
+              Save Address
             </button>
           </div>
         </div>
