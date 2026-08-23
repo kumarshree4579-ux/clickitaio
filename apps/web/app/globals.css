@@ -44,6 +44,14 @@ button, a, input, select, textarea {
   touch-action: manipulation;
 }
 
+
+/* Safe area support for notched devices */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 input, textarea, select {
   font-size: 16px; /* Prevents iOS zoom on focus */
 }
