@@ -46,7 +46,7 @@ export default function AddressesPage() {
     load();
   }
 
-  const inp = 'w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300';
+  const inp = 'w-full border border-gray-200 rounded-lg px-3.5 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 bg-white';
 
   return (
     <>

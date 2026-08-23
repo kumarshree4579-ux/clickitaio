@@ -67,9 +67,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     if (!initialized) return;
 
     if (!location && hasZones) {
-      // Need to ask for location
+      // Need location but don't have it — silently show prompt without error messages
       setIsPromptOpen(true);
-      setIsServiceable(false);
+      setIsServiceable(null); // null = unknown, not false
       return;
     }
 
@@ -85,8 +85,6 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       setIsServiceable(inside);
       if (!inside) setServiceabilityMessage(unserviceableMsg);
       else setServiceabilityMessage('');
-      // If it is completely unserviceable, we might force the prompt open,
-      // but let's let them browse with a warning.
     } else {
       // No zones defined, everywhere is serviceable
       setIsServiceable(true);

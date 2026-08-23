@@ -109,10 +109,9 @@ export default function CartPage() {
   return (
     <>
       <Header />
-      <main className="bg-gray-50 min-h-screen pb-32 md:pb-8">
+      <main className="bg-gray-50 min-h-screen pb-36 md:pb-8">
         <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-6">
 
-          {/* Header row */}
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-[17px] sm:text-2xl font-bold text-gray-900">
               My Cart <span className="text-gray-400 font-normal text-[14px] sm:text-base">({totalQty} item{totalQty !== 1 ? 's' : ''})</span>
@@ -122,6 +121,13 @@ export default function CartPage() {
               Clear all
             </button>
           </div>
+
+          {/* Mobile top checkout button */}
+          <Link href="/checkout"
+            className="flex md:hidden items-center justify-between bg-indigo-600 text-white px-4 py-3 rounded-xl mb-3 active:scale-[0.98] transition-transform">
+            <span className="font-bold text-[14px]">Proceed to Pay</span>
+            <span className="font-bold text-[15px]">₹{fmt(total)} →</span>
+          </Link>
 
           <div className="flex flex-col md:grid md:grid-cols-3 gap-4">
 
@@ -255,14 +261,14 @@ export default function CartPage() {
         </div>
 
         {/* ── Mobile sticky checkout bar ── */}
-        <div className="fixed bottom-14 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-[60px] left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="shrink-0">
             <p className="text-[11px] text-gray-400 font-medium">Total</p>
             <p className="text-[17px] font-bold text-gray-900 leading-tight">₹{fmt(total)}</p>
           </div>
           <Link href="/checkout"
             className="flex-1 bg-indigo-600 text-white text-center py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors text-[15px]">
-            Checkout
+            Proceed to Pay
           </Link>
         </div>
       </main>

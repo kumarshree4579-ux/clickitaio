@@ -231,7 +231,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {/* ── Mobile sticky CTA ── */}
-        <div className="fixed bottom-14 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-100 px-3 py-2.5 flex items-center gap-2.5 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-[60px] left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-100 px-3 py-2.5 flex items-center gap-2.5 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
           <div className="shrink-0 min-w-0">
             <p className="text-sm font-bold text-gray-900 leading-none">₹{fmt(product.sellingPrice)}</p>
             {discount > 0 && <p className="text-[10px] text-gray-400 line-through mt-0.5">₹{fmt(product.mrp)}</p>}

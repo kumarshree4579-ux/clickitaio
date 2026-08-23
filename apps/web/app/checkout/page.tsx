@@ -381,7 +381,7 @@ export default function CheckoutPage() {
 
       {/* Mobile Sticky Bottom Bar */}
       {!showNewAddr && (
-        <div className="md:hidden fixed bottom-14 left-0 right-0 bg-white border-t border-gray-200 px-3 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40">
+        <div className="md:hidden fixed bottom-[60px] left-0 right-0 bg-white border-t border-gray-200 px-3 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40">
           {error && (
             <div className="mb-2.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-red-100 flex items-center justify-center gap-1.5 transition-all">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

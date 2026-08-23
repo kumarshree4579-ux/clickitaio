@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import NotificationBar from '../components/NotificationBar';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SplashLoader from '../components/SplashLoader';
+import ProfileCompletePrompt from '../components/ProfileCompletePrompt';
 import { LocationProvider } from '../lib/LocationContext';
 import GlobalLocationPrompt from '../components/GlobalLocationPrompt';
 import RealtimeListener from '../components/RealtimeListener';
@@ -76,6 +77,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full flex flex-col bg-gray-50 pb-14 sm:pb-0">
         <LocationProvider>
           <SplashLoader />
+          <ProfileCompletePrompt />
           <NotificationBar />
           {children}
           <Footer />

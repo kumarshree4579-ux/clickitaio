@@ -75,11 +75,11 @@ export default function MobileBottomNav() {
             <Link
               key={item.label}
               href={item.href}
-              className={`relative flex flex-col items-center justify-center w-full h-full space-y-0.5 transition-colors ${
+              className={`relative flex flex-col items-center justify-center w-full h-full space-y-0.5 transition-all duration-200 ${
                 isActive ? 'text-[var(--color-primary)]' : 'text-gray-400 hover:text-gray-700'
               }`}
             >
-              <div className="relative">
+              <div className={`relative transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100'}`}>
                 {item.icon}
                 {'badge' in item && (item as any).badge > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-indigo-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-bold">
@@ -87,7 +87,8 @@ export default function MobileBottomNav() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-none">{item.label}</span>
+              <span className={`text-[10px] font-medium leading-none transition-all duration-200 ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
+              {isActive && <span className="absolute bottom-1 w-4 h-0.5 bg-[var(--color-primary)] rounded-full" />}
             </Link>
           );
         })}
