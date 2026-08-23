@@ -30,15 +30,15 @@ export default function MobileTopbar() {
   if (activeTabs.length === 0) return null;
 
   return (
-    <div className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-[60px] sm:top-[73px] z-30 overflow-x-auto no-scrollbar shadow-sm">
-      <div className="flex px-4 sm:px-8 gap-6 items-center w-max mx-auto sm:mx-0">
+    <div className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-[48px] sm:top-[73px] z-30 overflow-x-auto no-scrollbar shadow-sm">
+      <div className="flex px-3 sm:px-8 gap-4 sm:gap-6 items-center w-max mx-auto sm:mx-0">
         {activeTabs.map((tab, i) => {
           const isActive = currentCat === tab.categorySlug;
           return (
             <Link
               key={i}
               href={tab.categorySlug ? `/products?category=${tab.categorySlug}` : '/products'}
-              className={`relative px-2 py-3.5 text-[15px] font-bold whitespace-nowrap transition-colors duration-200 ${
+              className={`relative px-1.5 sm:px-2 py-2.5 sm:py-3.5 text-[13px] sm:text-[15px] font-bold whitespace-nowrap transition-colors duration-200 ${
                 isActive 
                   ? 'text-[var(--color-primary,#4f46e5)]' 
                   : 'text-gray-500 hover:text-gray-900'

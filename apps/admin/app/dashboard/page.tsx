@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '../../lib/apiFetch';
 
@@ -14,10 +14,10 @@ export default function DashboardPage() {
   const [lowStock, setLowStock] = useState<any[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<any[]>([]);
 
-  useEffect(() => {
+  const fetchDashboardData = useCallback(() => {
     Promise.all([
       apiFetch(`/reports/summary`).then(r => r.json()),
-      apiFetch(`/orders?limit=5&status=received`).then(r => r.json()),
+      apiFetch(`/orders?limit=5&status=pending,received,confirmed`).then(r => r.json()),
       apiFetch(`/orders?limit=5&status=running`).then(r => r.json()),
       apiFetch(`/orders?limit=5&status=completed`).then(r => r.json()),
       apiFetch(`/orders?limit=5&status=cancelled`).then(r => r.json()),
@@ -33,6 +33,25 @@ export default function DashboardPage() {
       setRecentCustomers(rc.items || []);
     }).catch(() => { });
   }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Auto-refresh when SSE sends a new order or order status update
+  useEffect(() => {
+    const handleNewOrder = () => fetchDashboardData();
+    const handleStatusUpdate = () => fetchDashboardData();
+
+    window.addEventListener('admin:new_order', handleNewOrder);
+    window.addEventListener('admin:order_status_update', handleStatusUpdate);
+
+    return () => {
+      window.removeEventListener('admin:new_order', handleNewOrder);
+      window.removeEventListener('admin:order_status_update', handleStatusUpdate);
+    };
+  }, [fetchDashboardData]);
 
   if (!summary) return (
     <div className="flex items-center justify-center h-64">
@@ -86,7 +105,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col max-h-96">
           <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
             <h2 className="font-bold text-gray-800">New Orders</h2>
-            <Link href="/dashboard/orders?status=received" className="text-xs text-blue-600 hover:underline">View all</Link>
+            <Link href="/dashboard/orders?status=pending,received,confirmed" className="text-xs text-blue-600 hover:underline">View all</Link>
           </div>
           <div className="divide-y overflow-y-auto flex-1">
             {newOrders.map((o: any) => (

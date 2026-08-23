@@ -195,20 +195,20 @@ export default function CheckoutPage() {
       <Header />
       {showMap && <DeliveryMap onConfirm={handleMapConfirm} onClose={() => setShowMap(false)} />}
 
-      <main className="max-w-5xl mx-auto px-4 py-6 md:py-8 pb-48 md:pb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 hidden md:block">Checkout</h1>
-        {error && <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl shadow-sm flex items-center gap-2"><svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>{error}</div>}
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 md:py-8 pb-44 md:pb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 hidden md:block">Checkout</h1>
+        {error && <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl shadow-sm flex items-center gap-2"><svg className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span className="text-xs sm:text-sm">{error}</span></div>}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="md:col-span-2 space-y-3 md:space-y-6">
 
 
 
             {/* Delivery Address */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                  <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center text-sm">📍</div>
+            <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="font-bold text-gray-900 text-base sm:text-lg flex items-center gap-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center text-xs sm:text-sm">📍</div>
                   Delivery Address
                 </h2>
                 {addresses.length > 0 && !showNewAddr && (
@@ -219,9 +219,9 @@ export default function CheckoutPage() {
               </div>
 
               {!showNewAddr && (
-                <div className="space-y-3 mb-2">
+                <div className="space-y-2.5 sm:space-y-3 mb-2">
                   {addresses.map((a: any, idx: number) => (
-                    <label key={a._id || idx} className={`flex items-start gap-4 p-4 border rounded-2xl cursor-pointer transition-all ${selectedAddr?._id === a._id ? 'border-indigo-500 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-500 ring-opacity-20' : 'hover:border-gray-300 hover:bg-gray-50'}`}>
+                    <label key={a._id || idx} className={`flex items-start gap-3 sm:gap-4 p-3 sm:p-4 border rounded-2xl cursor-pointer transition-all ${selectedAddr?._id === a._id ? 'border-indigo-500 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-500 ring-opacity-20' : 'hover:border-gray-300 hover:bg-gray-50'}`}>
                       <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => setSelectedAddr(a)} className="mt-1 w-4 h-4 accent-indigo-600 cursor-pointer" />
                       <div className="text-sm flex-1">
                         <div className="flex justify-between items-start">
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
               )}
 
               {showNewAddr && (
-                <div className="border border-indigo-100 bg-indigo-50/30 rounded-2xl p-5 space-y-4">
+                <div className="border border-indigo-100 bg-indigo-50/30 rounded-2xl p-3.5 sm:p-5 space-y-3 sm:space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                       <span className="text-indigo-500">{newAddr._id ? '✎' : '+'}</span> {newAddr._id ? 'Edit Address' : 'Enter New Address'}
@@ -264,7 +264,7 @@ export default function CheckoutPage() {
                       Booking for someone else?
                     </label>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="col-span-2">
                       {newAddr.location ? (
                         <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
                     {(['name', 'phone', 'line1', 'line2', 'city', 'state', 'pincode'] as const).map(f => (
                       <input key={f} placeholder={f.charAt(0).toUpperCase() + f.slice(1)} value={newAddr[f] || ''}
                         onChange={e => setNewAddr(a => ({ ...a, [f]: e.target.value }))}
-                        className={`border-gray-200 border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white shadow-sm transition-shadow ${f === 'line1' ? 'col-span-2' : ''}`} />
+                        className={`border-gray-200 border rounded-xl px-3.5 sm:px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 bg-white shadow-sm transition-shadow ${f === 'line1' ? 'sm:col-span-2' : ''}`} />
                     ))}
                   </div>
                   <div className="flex gap-3 pt-2">
@@ -308,12 +308,12 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h2 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-sm">💳</div>
+            <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 shadow-sm">
+              <h2 className="font-bold text-gray-900 text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-xs sm:text-sm">💳</div>
                 Payment Method
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 {[
                   { value: 'razorpay', label: '💳 Pay Online (Razorpay)', sub: 'UPI, Cards, Net Banking, Wallets' },
                   { value: 'cod', label: '💵 Cash on Delivery', sub: 'Pay when your order arrives' },
@@ -381,20 +381,20 @@ export default function CheckoutPage() {
 
       {/* Mobile Sticky Bottom Bar */}
       {!showNewAddr && (
-        <div className="md:hidden fixed bottom-[64px] left-0 right-0 bg-white border-t border-gray-200 p-4 pb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40">
+        <div className="md:hidden fixed bottom-14 left-0 right-0 bg-white border-t border-gray-200 px-3 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40">
           {error && (
-            <div className="mb-3 bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-semibold border border-red-100 flex items-center justify-center gap-1.5 transition-all">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="mb-2.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-red-100 flex items-center justify-center gap-1.5 transition-all">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               {error}
             </div>
           )}
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total to pay</p>
-              <p className="text-xl font-black text-gray-900">₹{fmt(total)}</p>
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <div className="shrink-0">
+              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Total</p>
+              <p className="text-lg font-black text-gray-900">₹{fmt(total)}</p>
             </div>
             <button onClick={placeOrder} disabled={loading || !selectedAddr}
-              className="flex-1 bg-indigo-600 text-white py-3.5 px-6 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-sm text-sm">
+              className="flex-1 bg-indigo-600 text-white py-3 px-5 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-sm text-sm">
               {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Place Order' : 'Proceed to Pay'}
               {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
             </button>

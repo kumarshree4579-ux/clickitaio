@@ -26,9 +26,9 @@ export default function RecentlyViewed({ excludeId }: { excludeId?: string }) {
   if (!products.length) return null;
 
   return (
-    <section className="mt-12">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-900">Recently Viewed</h2>
+    <section className="mt-6 sm:mt-12">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-sm sm:text-lg font-bold text-gray-900">Recently Viewed</h2>
         <button onClick={() => { localStorage.removeItem('recently_viewed'); setProducts([]); }}
           className="text-xs text-gray-400 hover:text-red-400 transition-colors">Clear</button>
       </div>

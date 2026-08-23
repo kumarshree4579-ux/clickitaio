@@ -22,9 +22,7 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState<SuggestGroup[]>([]);
   const [showSuggest, setShowSuggest] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
-  const [menuOpen, setMenuOpen] = useState(false);       // user dropdown
-  const [mobileMenu, setMobileMenu] = useState(false);   // mobile nav drawer
-  const [searchOpen, setSearchOpen] = useState(false);   // mobile search bar
+  const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -53,17 +51,6 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // Focus mobile search input when it opens
-  useEffect(() => {
-    if (searchOpen) setTimeout(() => mobileSearchRef.current?.focus(), 50);
-  }, [searchOpen]);
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenu(false);
-    setSearchOpen(false);
-  }, []);
-
   const fetchSuggestions = useCallback((q: string) => {
     if (q.trim().length < 2) { setSuggestions([]); setShowSuggest(false); return; }
     fetch(`${API}/products/suggest?q=${encodeURIComponent(q.trim())}`)
@@ -88,7 +75,6 @@ export default function Header() {
     }
     setShowSuggest(false);
     setSearch('');
-    setSearchOpen(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -102,7 +88,6 @@ export default function Header() {
     router.push(`/products/${id}`);
     setShowSuggest(false);
     setSearch('');
-    setSearchOpen(false);
   }
 
   function logout() {
@@ -113,7 +98,6 @@ export default function Header() {
     localStorage.removeItem('coupon');
     setUser(null);
     setMenuOpen(false);
-    setMobileMenu(false);
     router.push('/');
   }
 
@@ -157,15 +141,15 @@ export default function Header() {
             ))}
             <div className="border-t border-gray-100 px-4 py-2.5">
               <button type="button"
-                onClick={() => { router.push(`/products?q=${encodeURIComponent(search.trim())}`); setShowSuggest(false); setSearch(''); setSearchOpen(false); }}
+                onClick={() => { router.push(`/products?q=${encodeURIComponent(search.trim())}`); setShowSuggest(false); setSearch(''); }}
                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                See all results for "{search}"
+                See all results for &ldquo;{search}&rdquo;
               </button>
             </div>
           </>
         ) : (
-          <div className="px-4 py-5 text-sm text-gray-400 text-center">No products found for "{search}"</div>
+          <div className="px-4 py-5 text-sm text-gray-400 text-center">No products found for &ldquo;{search}&rdquo;</div>
         )}
       </div>
     );
@@ -174,29 +158,27 @@ export default function Header() {
   return (
     <>
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-2.5 sm:px-6 lg:px-8">
 
           {/* Main row */}
-          <div className="flex items-center h-14 sm:h-16 gap-3">
+          <div className="flex items-center h-12 sm:h-16 gap-2 sm:gap-3">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">DB</span>
-              </div>
+            <Link href="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <img src="/logo192.png" alt="Daily Basket" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
               <span className="font-bold text-base sm:text-lg text-gray-900 tracking-tight hidden lg:block">Daily Basket</span>
             </Link>
 
             {/* Location Pill */}
             <div className="shrink-0 sm:border-l sm:border-gray-200 sm:pl-3 block">
               <button onClick={openPrompt} className="flex flex-col items-start hover:opacity-80 transition-opacity">
-                <div className="flex items-center gap-1.5 max-w-[200px]">
-                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide shrink-0">Delivering to</span>
-                   {isServiceable === false && <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide truncate" title={serviceabilityMessage || 'Unserviceable'}>{serviceabilityMessage || 'Unserviceable'}</span>}
+                <div className="flex items-center gap-1 sm:gap-1.5 max-w-[140px] sm:max-w-[200px]">
+                   <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wide shrink-0">Delivering to</span>
+                   {isServiceable === false && <span className="text-[8px] sm:text-[9px] bg-red-100 text-red-700 px-1 sm:px-1.5 py-0.5 rounded font-bold uppercase tracking-wide truncate" title={serviceabilityMessage || 'Unserviceable'}>{serviceabilityMessage || 'Unserviceable'}</span>}
                 </div>
-                <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mt-0.5">
-                  <span className="truncate max-w-[120px] lg:max-w-[160px]">{addressString || 'Select Location'}</span>
-                  <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                <div className="flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm font-bold text-gray-900 mt-0.5">
+                  <span className="truncate max-w-[90px] sm:max-w-[120px] lg:max-w-[160px]">{addressString || 'Select Location'}</span>
+                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </button>
             </div>
@@ -217,7 +199,7 @@ export default function Header() {
                   />
                   {search && (
                     <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
                   )}
                 </div>
               </form>
@@ -228,24 +210,17 @@ export default function Header() {
             <div className="flex-1 sm:hidden" />
 
             {/* Right actions */}
-            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            <div className="flex items-center gap-0 sm:gap-1 shrink-0">
 
-              {/* Mobile search toggle */}
-              <button onClick={() => setSearchOpen(o => !o)}
-                className="sm:hidden p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-                {searchOpen
-                  ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
-              </button>
-
+              {/* Support */}
               <Link href="/support" title="Support"
-                className="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                className="hidden sm:flex p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </Link>
 
-              {/* Wishlist — hidden on xs, visible sm+ */}
+              {/* Wishlist — desktop only */}
               <Link href="/wishlist" title="Wishlist"
                 className="hidden sm:flex p-2.5 rounded-xl text-gray-500 hover:text-rose-500 hover:bg-rose-50 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,9 +228,9 @@ export default function Header() {
                 </svg>
               </Link>
 
-              {/* Cart */}
+              {/* Cart — desktop only (mobile has it in bottom nav) */}
               <Link href="/cart" title="Cart"
-                className="relative p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                className="hidden sm:flex relative p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -322,34 +297,32 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Mobile search bar — slides in below main row */}
-          {searchOpen && (
-            <div className="sm:hidden pb-3 relative" ref={searchRef}>
-              <form onSubmit={handleSearch}>
-                <div className="relative">
-                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <input
-                    ref={mobileSearchRef}
-                    value={search} onChange={handleChange} onKeyDown={handleKeyDown}
-                    onFocus={() => suggestions.length > 0 && setShowSuggest(true)}
-                    placeholder="Search products, brands..."
-                    autoComplete="off"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-8 py-2.5 text-sm focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
-                  />
-                  {search && (
-                    <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
-                  )}
-                </div>
-              </form>
-              <SuggestDropdown />
-            </div>
-          )}
+          {/* Mobile search bar — always visible below main row */}
+          <div className="sm:hidden pb-2 relative" ref={searchRef}>
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  ref={mobileSearchRef}
+                  value={search} onChange={handleChange} onKeyDown={handleKeyDown}
+                  onFocus={() => suggestions.length > 0 && setShowSuggest(true)}
+                  placeholder="Search products, brands..."
+                  autoComplete="off"
+                  className="w-full bg-gray-100 border-0 rounded-xl pl-9 pr-8 py-2 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
+                />
+                {search && (
+                  <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                )}
+              </div>
+            </form>
+            <SuggestDropdown />
+          </div>
         </div>
       </header>
-      <Suspense fallback={<div className="h-14 sm:hidden bg-white border-b" />}>
+      <Suspense fallback={<div className="h-10 sm:hidden bg-white border-b" />}>
         <MobileTopbar />
       </Suspense>
     </>

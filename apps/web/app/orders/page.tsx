@@ -47,14 +47,14 @@ export default function OrdersPage() {
       <Header />
       
       {/* Header Banner */}
-      <div className="bg-indigo-600 text-white pt-8 pb-16 px-4 rounded-b-3xl shadow-sm">
+      <div className="bg-indigo-600 text-white pt-6 sm:pt-8 pb-12 sm:pb-16 px-3 sm:px-4 rounded-b-3xl shadow-sm">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">My Orders</h1>
-          <p className="text-indigo-100">Manage and track all your orders in one place.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1 sm:mb-2">My Orders</h1>
+          <p className="text-indigo-100 text-sm">Manage and track all your orders in one place.</p>
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 -mt-10">
+      <main className="max-w-3xl mx-auto px-2.5 sm:px-4 -mt-8 sm:-mt-10">
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
@@ -86,7 +86,7 @@ export default function OrdersPage() {
             </Link>
           </motion.div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3 sm:space-y-5">
             {orders.map((order: any, idx: number) => (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -96,56 +96,56 @@ export default function OrdersPage() {
                 className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 overflow-hidden group"
               >
                 {/* Order Header */}
-                <div className="flex items-center justify-between p-5 border-b border-gray-50 bg-gray-50/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <div className="flex items-center justify-between p-3 sm:p-5 border-b border-gray-50 bg-gray-50/50">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm sm:text-base">
                       {STATUS_ICONS[order.status] || '📦'}
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 font-medium">Order #{order.orderNumber}</p>
-                      <p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 font-medium">Order #{order.orderNumber}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'} capitalize flex items-center gap-1 shadow-sm`}>
+                  <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold border ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'} capitalize flex items-center gap-1 shadow-sm`}>
                     {order.status.replace(/_/g, ' ')}
                   </span>
                 </div>
 
                 {/* Order Items */}
-                <div className="p-5">
-                  <div className="flex gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="p-3 sm:p-5">
+                  <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto pb-1 sm:pb-2 scrollbar-hide">
                     {order.items.map((item: any, i: number) => (
-                      <div key={i} className="flex flex-col items-center gap-1 min-w-[70px]">
-                        <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative group-hover:border-indigo-100 transition-colors">
+                      <div key={i} className="flex flex-col items-center gap-0.5 sm:gap-1 min-w-[56px] sm:min-w-[70px]">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative group-hover:border-indigo-100 transition-colors">
                           {item.image ? (
                             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xl text-gray-300">📦</div>
+                            <div className="w-full h-full flex items-center justify-center text-base sm:text-xl text-gray-300">📦</div>
                           )}
                           {item.qty > 1 && (
-                            <div className="absolute -top-1 -right-1 bg-gray-800 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white shadow-sm">
+                            <div className="absolute -top-1 -right-1 bg-gray-800 text-white text-[9px] sm:text-[10px] w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full font-bold border-2 border-white shadow-sm">
                               {item.qty}
                             </div>
                           )}
                         </div>
-                        <span className="text-[10px] text-gray-500 font-medium truncate w-16 text-center">{item.name}</span>
+                        <span className="text-[9px] sm:text-[10px] text-gray-500 font-medium truncate w-12 sm:w-16 text-center">{item.name}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Order Footer & Actions */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total Amount</p>
-                      <p className="font-extrabold text-gray-900 text-lg">₹{order.total?.toLocaleString('en-IN')}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-semibold">Total</p>
+                      <p className="font-extrabold text-gray-900 text-base sm:text-lg">₹{order.total?.toLocaleString('en-IN')}</p>
                     </div>
                     
                     <Link 
                       href={`/orders/${order._id}`}
-                      className="bg-gray-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-2"
+                      className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-1.5 sm:gap-2"
                     >
-                      <span>Track Order</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                      <span>Track</span>
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                     </Link>
                   </div>
                 </div>

@@ -12,6 +12,11 @@ const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 
 export const viewport: Viewport = {
   themeColor: '#2563eb',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {
@@ -21,6 +26,10 @@ export const metadata: Metadata = {
   },
   description: 'Your one-stop shop for everything you need',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo192.png',
+    apple: '/logo192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -63,7 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" className={`${geist.variable} h-full`} style={themeStyles} data-scroll-behavior="smooth">
-      <body className="min-h-full flex flex-col bg-gray-50 pb-16 sm:pb-0">
+      <body className="min-h-full flex flex-col bg-gray-50 pb-14 sm:pb-0">
         <LocationProvider>
           <NotificationBar />
           {children}

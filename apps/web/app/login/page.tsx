@@ -84,9 +84,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <Link href="/" className="relative flex items-center gap-3 w-fit">
-          <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">E</span>
-          </div>
+          <img src="/logo192.png" alt="Ecom" className="w-10 h-10 rounded-2xl object-contain" />
           <span className="text-white font-bold text-xl tracking-tight">Ecom</span>
         </Link>
 
@@ -124,25 +122,23 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col min-h-screen bg-gray-50">
 
         {/* Mobile top bar */}
-        <div className="lg:hidden flex items-center justify-between px-5 pt-6 pb-2">
+        <div className="lg:hidden flex items-center justify-between px-4 pt-5 pb-2">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="font-bold text-gray-900 text-lg">Ecom</span>
+            <img src="/logo192.png" alt="Ecom" className="w-8 h-8 rounded-xl object-contain" />
+            <span className="font-bold text-gray-900 text-base">Ecom</span>
           </Link>
-          <Link href="/" className="text-sm text-indigo-600 font-medium hover:underline">
+          <Link href="/" className="text-xs text-indigo-600 font-medium hover:underline">
             ← Back to store
           </Link>
         </div>
 
         {/* Form area */}
-        <div className="flex-1 flex items-center justify-center px-5 py-10 sm:px-10">
+        <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-10">
           <div className="w-full max-w-sm">
 
             {/* Heading */}
-            <div className="mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <div className="mb-6 sm:mb-8">
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
                 {step === 'email' ? 'Welcome back 👋' : 'Check your inbox'}
               </h1>
               <p className="text-gray-500 text-sm mt-2">
@@ -154,7 +150,7 @@ export default function LoginPage() {
 
             {/* Error */}
             {error && (
-              <div className="mb-5 flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-2xl">
+              <div className="mb-4 sm:mb-5 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl">
                 <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -218,7 +214,7 @@ export default function LoginPage() {
             )}
 
             {/* Divider */}
-            <div className="flex items-center gap-3 my-6">
+            <div className="flex items-center gap-3 my-5 sm:my-6">
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-xs text-gray-400">or</span>
               <div className="flex-1 h-px bg-gray-200" />
@@ -233,7 +229,7 @@ export default function LoginPage() {
               Browse as guest
             </Link>
 
-            <p className="text-center text-xs text-gray-400 mt-6">
+            <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-5 sm:mt-6">
               By signing in, you agree to our{' '}
               <Link href="/pages/terms" className="text-indigo-600 hover:underline">Terms</Link> and{' '}
               <Link href="/pages/privacy" className="text-indigo-600 hover:underline">Privacy Policy</Link>

@@ -24,31 +24,31 @@ export default function RelatedProducts({ categoryId, categoryName, excludeId }:
   if (!products.length) return null;
 
   return (
-    <section className="mt-12">
+    <section className="mt-6 sm:mt-12">
       {/* Section header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-indigo-600 rounded-full" />
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-1 h-5 sm:h-6 bg-indigo-600 rounded-full" />
           <div>
-            <h2 className="text-lg font-bold text-gray-900">More from {categoryName}</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Similar products you might like</p>
+            <h2 className="text-sm sm:text-lg font-bold text-gray-900">More from {categoryName}</h2>
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">Similar products you might like</p>
           </div>
         </div>
         <Link href={`/products?category=${categoryId}`}
-          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+          className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 shrink-0">
           View all
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </Link>
       </div>
 
       {/* Horizontal scroll row */}
-      <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
+      <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
         {products.map(p => {
           const discount = p.mrp > p.sellingPrice
             ? Math.round(((p.mrp - p.sellingPrice) / p.mrp) * 100) : 0;
           return (
             <Link key={p._id} href={`/products/${p._id}`}
-              className="shrink-0 w-36 sm:w-44 bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group">
+              className="shrink-0 w-32 sm:w-44 bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group">
               <div className="relative w-full bg-gray-50 overflow-hidden" style={{ paddingBottom: '100%' }}>
                 <div className="absolute inset-0">
                   {p.images?.[0]?.url

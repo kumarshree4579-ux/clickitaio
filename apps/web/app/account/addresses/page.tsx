@@ -51,24 +51,24 @@ export default function AddressesPage() {
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-4">
+      <main className="max-w-2xl mx-auto px-2.5 sm:px-4 py-5 sm:py-8 space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <Link href="/account" className="text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">← Account</Link>
-            <h1 className="text-xl font-bold text-gray-900">Saved Addresses</h1>
+            <Link href="/account" className="text-xs sm:text-sm text-indigo-600 hover:underline flex items-center gap-1 mb-1">← Account</Link>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Saved Addresses</h1>
           </div>
           <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">+ Add New</button>
+            className="bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm hover:bg-indigo-700">+ Add</button>
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="font-semibold text-gray-800">{editing ? 'Edit' : 'New'} Address</h2>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 space-y-3">
+            <h2 className="font-semibold text-gray-800 text-sm sm:text-base">{editing ? 'Edit' : 'New'} Address</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><label className="text-xs text-gray-500 mb-1 block">Full Name</label><input className={inp} value={form.name} onChange={e => setForm((f: any) => ({ ...f, name: e.target.value }))} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">Phone</label><input className={inp} value={form.phone} onChange={e => setForm((f: any) => ({ ...f, phone: e.target.value }))} /></div>
-              <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">Address Line 1</label><input className={inp} value={form.line1} onChange={e => setForm((f: any) => ({ ...f, line1: e.target.value }))} /></div>
-              <div className="col-span-2"><label className="text-xs text-gray-500 mb-1 block">Address Line 2 (optional)</label><input className={inp} value={form.line2} onChange={e => setForm((f: any) => ({ ...f, line2: e.target.value }))} /></div>
+              <div className="sm:col-span-2"><label className="text-xs text-gray-500 mb-1 block">Address Line 1</label><input className={inp} value={form.line1} onChange={e => setForm((f: any) => ({ ...f, line1: e.target.value }))} /></div>
+              <div className="sm:col-span-2"><label className="text-xs text-gray-500 mb-1 block">Address Line 2 (optional)</label><input className={inp} value={form.line2} onChange={e => setForm((f: any) => ({ ...f, line2: e.target.value }))} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">City</label><input className={inp} value={form.city} onChange={e => setForm((f: any) => ({ ...f, city: e.target.value }))} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">State</label><input className={inp} value={form.state} onChange={e => setForm((f: any) => ({ ...f, state: e.target.value }))} /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">Pincode</label><input className={inp} value={form.pincode} onChange={e => setForm((f: any) => ({ ...f, pincode: e.target.value }))} /></div>
@@ -87,21 +87,21 @@ export default function AddressesPage() {
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {addresses.map(a => (
-            <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-start justify-between gap-4">
-              <div className="flex-1">
+            <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 flex items-start justify-between gap-3 sm:gap-4">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-gray-900 text-sm">{a.name}</p>
-                  {a.isDefault && <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">Default</span>}
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">{a.name}</p>
+                  {a.isDefault && <span className="text-[10px] sm:text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium shrink-0">Default</span>}
                 </div>
-                <p className="text-sm text-gray-500">{a.phone}</p>
-                <p className="text-sm text-gray-500 mt-0.5">{a.line1}{a.line2 ? `, ${a.line2}` : ''}, {a.city}, {a.state} - {a.pincode}</p>
+                <p className="text-xs sm:text-sm text-gray-500">{a.phone}</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">{a.line1}{a.line2 ? `, ${a.line2}` : ''}, {a.city}, {a.state} - {a.pincode}</p>
               </div>
-              <div className="flex gap-3 shrink-0">
+              <div className="flex gap-2 sm:gap-3 shrink-0">
                 <button onClick={() => { setForm({ ...a }); setEditing(a._id); setShowForm(true); }}
-                  className="text-indigo-600 hover:underline text-xs">Edit</button>
-                <button onClick={() => del(a._id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                  className="text-indigo-600 hover:underline text-[11px] sm:text-xs">Edit</button>
+                <button onClick={() => del(a._id)} className="text-red-500 hover:underline text-[11px] sm:text-xs">Delete</button>
               </div>
             </div>
           ))}

@@ -60,14 +60,14 @@ export default async function HomePage() {
         {/* Trust badges */}
         {badges.length > 0 && (
         <section className="bg-white border-b border-slate-100">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="w-full px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
               {badges.map((b: any) => (
-                <div key={b.title} className="flex items-center gap-3 py-2">
-                  <span className="text-2xl">{b.icon}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">{b.title}</p>
-                    <p className="text-xs text-slate-500">{b.subtitle || b.sub}</p>
+                <div key={b.title} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2">
+                  <span className="text-xl sm:text-2xl">{b.icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{b.title}</p>
+                    <p className="text-[10px] sm:text-xs text-slate-500 truncate">{b.subtitle || b.sub}</p>
                   </div>
                 </div>
               ))}
@@ -76,32 +76,32 @@ export default async function HomePage() {
         </section>
         )}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-14">
+        <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-14 max-w-7xl">
 
           {/* Categories */}
           {categories.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Shop by Category</h2>
-                  <p className="text-slate-500 text-sm mt-1">Browse our wide selection of categories</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900">Shop by Category</h2>
+                  <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Browse our wide selection of categories</p>
                 </div>
-                <Link href="/products" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <Link href="/products" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 shrink-0">
+                  View all <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </Link>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
                 {categories.map((c: any) => (
                   <Link key={c._id} href={`/products?category=${c._id}`}
-                    className="group flex flex-col items-center gap-2 p-3 bg-white rounded-2xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                    className="group flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-3 bg-white rounded-2xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
                       {c.image ? (
                         <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200" />
                       ) : (
-                        <svg className="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                        <svg className="w-6 h-6 sm:w-7 sm:h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                       )}
                     </div>
-                    <p className="text-xs font-medium text-slate-700 text-center leading-tight">{c.name}</p>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-700 text-center leading-tight">{c.name}</p>
                   </Link>
                 ))}
               </div>
@@ -114,16 +114,16 @@ export default async function HomePage() {
           {/* Best Sellers */}
           {bestSellers.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Best Sellers</h2>
-                  <p className="text-slate-500 text-sm mt-1">Our most popular products</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900">Best Sellers</h2>
+                  <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Our most popular products</p>
                 </div>
-                <Link href="/products?bestSeller=true" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <Link href="/products?bestSeller=true" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 shrink-0">
+                  View all <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
                 {bestSellers.map((p: any) => <ProductCard key={p._id} product={p} />)}
               </div>
             </section>
@@ -132,16 +132,16 @@ export default async function HomePage() {
           {/* Featured Products */}
           {featured.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Featured Products</h2>
-                  <p className="text-slate-500 text-sm mt-1">Handpicked just for you</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900">Featured Products</h2>
+                  <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Handpicked just for you</p>
                 </div>
-                <Link href="/products" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <Link href="/products" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 shrink-0">
+                  View all <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
                 {featured.map((p: any) => <ProductCard key={p._id} product={p} />)}
               </div>
             </section>
@@ -150,16 +150,16 @@ export default async function HomePage() {
           {/* New Arrivals */}
           {newArrivals.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">New Arrivals</h2>
-                  <p className="text-slate-500 text-sm mt-1">Fresh products just added</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-900">New Arrivals</h2>
+                  <p className="text-slate-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Fresh products just added</p>
                 </div>
-                <Link href="/products?newArrival=true" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                  View all <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <Link href="/products?newArrival=true" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 shrink-0">
+                  View all <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
                 {newArrivals.map((p: any) => <ProductCard key={p._id} product={p} />)}
               </div>
             </section>

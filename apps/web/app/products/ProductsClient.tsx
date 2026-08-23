@@ -107,7 +107,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
       {/* Top bar: title + mobile filter btn + sort */}
       <div className="flex items-center gap-3 mb-4">
         <div className="flex-1 min-w-0">
-          <h1 className="text-base sm:text-xl font-bold text-gray-900 truncate">
+          <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">
             {sp.q ? `"${sp.q}"` : sp.category ? topCats.find(c => c._id === sp.category)?.name || 'Products' : 'All Products'}
           </h1>
           <p className="text-xs text-gray-400 mt-0.5">{total} product{total !== 1 ? 's' : ''}</p>

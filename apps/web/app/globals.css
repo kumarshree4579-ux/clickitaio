@@ -15,7 +15,12 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
 
 body {
   background: #f8f9fc;
@@ -23,6 +28,32 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x pan-y;
+}
+
+/* Prevent horizontal overflow globally */
+#__next, main, section, article, div {
+  max-width: 100vw;
+}
+
+/* Safe area support for notched devices */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile-first touch interactions */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+input, textarea, select {
+  font-size: 16px; /* Prevents iOS zoom on focus */
 }
 
 /* Scrollbar */
@@ -30,6 +61,12 @@ body {
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Hide scrollbar on mobile */
+@media (max-width: 640px) {
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+}
 
 /* Line clamp utilities */
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
@@ -49,3 +86,16 @@ a, button { transition: all 0.15s ease; }
 /* Fix for Leaflet dragging */
 .leaflet-container { touch-action: none; }
 .leaflet-marker-icon { touch-action: none; }
+
+/* Mobile image containment */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent content from breaking layout on mobile */
+@media (max-width: 640px) {
+  .max-w-7xl, .max-w-5xl, .max-w-4xl, .max-w-3xl, .max-w-2xl {
+    max-width: 100% !important;
+  }
+}

@@ -51,10 +51,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <Header />
-      <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <main className="w-full px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6">
 
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4 overflow-x-auto scrollbar-hide whitespace-nowrap">
+        <nav className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 overflow-x-auto scrollbar-hide whitespace-nowrap">
           <Link href="/" className="hover:text-indigo-600 shrink-0">Home</Link>
           <span>/</span>
           <span className="text-gray-700 font-medium shrink-0">Products</span>
@@ -72,7 +72,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         >
           {/* Product grid — server rendered */}
           {sorted.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
               {sorted.map((p: any) => <ProductCard key={p._id} product={p} />)}
             </div>
           ) : (

@@ -91,12 +91,12 @@ export default function CartPage() {
     <>
       <Header />
       <main className="bg-gray-50 min-h-screen pb-28 md:pb-8">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-5xl mx-auto px-2.5 sm:px-6 py-3 sm:py-6">
 
           {/* Header row */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
-              Cart <span className="text-gray-400 font-normal text-base">({totalQty})</span>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h1 className="text-base sm:text-2xl font-bold text-gray-900">
+              Cart <span className="text-gray-400 font-normal text-sm sm:text-base">({totalQty})</span>
             </h1>
             <button onClick={() => { setCart([]); localStorage.removeItem('cart'); window.dispatchEvent(new Event('cart-updated')); }}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors">
@@ -104,7 +104,7 @@ export default function CartPage() {
             </button>
           </div>
 
-          <div className="flex flex-col md:grid md:grid-cols-3 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-3 gap-3 sm:gap-4">
 
             {/* ── Order summary — TOP on mobile, right column on desktop ── */}
             <div className="md:col-start-3 md:row-start-1 md:sticky md:top-20 md:self-start">
@@ -177,13 +177,13 @@ export default function CartPage() {
             </div>
 
             {/* ── Cart items ── */}
-            <div className="md:col-span-2 md:col-start-1 md:row-start-1 space-y-2.5">
+            <div className="md:col-span-2 md:col-start-1 md:row-start-1 space-y-2">
               {cart.map(item => (
-                <div key={item._id} className="bg-white rounded-2xl shadow-sm p-3 sm:p-4 flex gap-3 items-start">
+                <div key={item._id} className="bg-white rounded-2xl shadow-sm p-2.5 sm:p-4 flex gap-2.5 sm:gap-3 items-start">
 
                   {/* Image */}
                   <Link href={`/products/${item._id}`} className="shrink-0">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-xl overflow-hidden">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gray-100 rounded-xl overflow-hidden">
                       {item.image
                         ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>}
@@ -236,13 +236,13 @@ export default function CartPage() {
         </div>
 
         {/* ── Mobile sticky checkout bar (sits above MobileBottomNav) ── */}
-        <div className="fixed bottom-16 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-100 px-4 py-3 flex items-center gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+        <div className="fixed bottom-14 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-100 px-3 py-2.5 flex items-center gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
           <div className="shrink-0">
-            <p className="text-[11px] text-gray-400">Total</p>
-            <p className="text-base font-bold text-gray-900 leading-none">₹{fmt(total)}</p>
+            <p className="text-[10px] text-gray-400">Total</p>
+            <p className="text-sm font-bold text-gray-900 leading-none">₹{fmt(total)}</p>
           </div>
           <Link href="/checkout"
-            className="flex-1 bg-indigo-600 text-white text-center py-3 rounded-2xl font-semibold hover:bg-indigo-700 transition-colors text-sm">
+            className="flex-1 bg-indigo-600 text-white text-center py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors text-sm">
             Checkout →
           </Link>
         </div>

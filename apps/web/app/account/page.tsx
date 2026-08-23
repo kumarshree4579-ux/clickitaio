@@ -84,14 +84,14 @@ export default function AccountPage() {
   return (
     <>
       <Header />
-      <main className="max-w-2xl mx-auto px-4 py-10 space-y-4">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 space-y-3 sm:space-y-4">
         {/* Profile card */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm relative overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm relative overflow-hidden">
           {/* Decorative background blob */}
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-50 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="flex flex-col sm:flex-row sm:items-start gap-6 relative">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 relative">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg shrink-0">
               {(user.name || user.email)[0].toUpperCase()}
             </div>
             
@@ -100,7 +100,7 @@ export default function AccountPage() {
                 <>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <p className="font-bold text-gray-900 text-2xl">{user.name || 'Customer'}</p>
+                      <p className="font-bold text-gray-900 text-xl sm:text-2xl">{user.name || 'Customer'}</p>
                       <p className="text-gray-500">{user.email}</p>
                       {user.mobile && (
                         <p className="text-gray-500 text-sm mt-1 flex items-center gap-1.5">
@@ -160,12 +160,12 @@ export default function AccountPage() {
         </div>
 
         {/* Menu */}
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           {menuItems.map(item => (
             <Link key={item.href} href={item.href}
-              className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 p-4 hover:border-indigo-200 hover:shadow-sm transition-all group">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${item.color}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              className="flex items-center gap-3 sm:gap-4 bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 hover:border-indigo-200 hover:shadow-sm transition-all group">
+              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${item.color}`}>
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
               </div>
@@ -182,8 +182,8 @@ export default function AccountPage() {
 
         {/* Active Devices */}
         {sessions.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-4 text-lg">Active Devices</h3>
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">Active Devices</h3>
             <div className="space-y-4">
               {sessions.map((s) => (
                 <div key={s._id} className="flex items-center justify-between border-b border-gray-50 pb-4 last:border-0 last:pb-0">

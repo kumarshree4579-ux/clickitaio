@@ -7,9 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 sm:col-span-1">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
-              </div>
+              <img src="/logo192.png" alt="Ecom" className="w-8 h-8 rounded-lg object-contain" />
               <span className="text-white font-bold text-lg">Ecom</span>
             </div>
             <p className="text-sm leading-relaxed">Your one-stop shop for quality products at great prices.</p>
