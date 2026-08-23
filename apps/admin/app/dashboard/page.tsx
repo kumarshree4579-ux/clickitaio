@@ -64,6 +64,7 @@ export default function DashboardPage() {
     { label: "Today's Revenue", value: `₹${summary.today.sales.toLocaleString('en-IN')}`, icon: '💰', color: 'bg-emerald-500', href: '/dashboard/reports' },
     { label: 'Month Orders', value: summary.month.orders, icon: '📅', color: 'bg-violet-500', href: '/dashboard/orders' },
     { label: 'Month Revenue', value: `₹${summary.month.sales.toLocaleString('en-IN')}`, icon: '📈', color: 'bg-orange-500', href: '/dashboard/reports' },
+    { label: 'Active Orders', value: summary.orders.active, icon: '🔄', color: 'bg-amber-500', href: '/dashboard/orders' },
     { label: 'Pending Orders', value: summary.orders.pending, icon: '⏳', color: 'bg-yellow-500', href: '/dashboard/orders' },
     { label: 'Delivered', value: summary.orders.delivered, icon: '✅', color: 'bg-teal-500', href: '/dashboard/orders' },
     { label: 'Cancelled', value: summary.orders.cancelled, icon: '❌', color: 'bg-red-500', href: '/dashboard/orders' },

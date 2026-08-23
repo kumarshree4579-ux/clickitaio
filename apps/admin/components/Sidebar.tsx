@@ -36,6 +36,7 @@ const menuItems = [
       { href: '/dashboard/brands', label: 'Brand' },
       { href: '/dashboard/products', label: 'Products' },
       { href: '/dashboard/inventory', label: 'Inventory' },
+      { href: '/dashboard/media', label: 'Media Gallery' },
       { href: '/dashboard/import', label: 'Bulk Import' },
     ]
   },

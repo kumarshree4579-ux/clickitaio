@@ -31,3 +31,8 @@ export async function uploadBufferToCloudinary(buffer: Buffer, folder?: string) 
     streamifier.createReadStream(buffer).pipe(uploadStream);
   });
 }
+
+export async function deleteFromCloudinary(publicId: string): Promise<void> {
+  configureCloudinary();
+  await cloudinary.uploader.destroy(publicId);
+}
