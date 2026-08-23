@@ -19,6 +19,7 @@ export default function Header() {
   const { addressString, isServiceable, serviceabilityMessage, openPrompt } = useLocation();
   const [suggestions, setSuggestions] = useState<SuggestGroup[]>([]);
   const [showSuggest, setShowSuggest] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -49,12 +50,25 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Lock body scroll when search suggestions are open on mobile
+  useEffect(() => {
+    if (showSuggest && window.innerWidth < 640) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showSuggest]);
+
   const fetchSuggestions = useCallback((q: string) => {
-    if (q.trim().length < 2) { setSuggestions([]); setShowSuggest(false); return; }
+    if (q.trim().length < 2) { setSuggestions([]); setShowSuggest(false); setSearching(false); return; }
+    setSearching(true);
+    setShowSuggest(true);
     fetch(`${API}/products/suggest?q=${encodeURIComponent(q.trim())}`)
       .then(r => r.json())
-      .then(d => { setSuggestions(Array.isArray(d) ? d : []); setShowSuggest(true); setActiveIdx(-1); })
-      .catch(() => { });
+      .then(d => { setSuggestions(Array.isArray(d) ? d : []); setActiveIdx(-1); })
+      .catch(() => { })
+      .finally(() => setSearching(false));
   }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -90,9 +104,38 @@ export default function Header() {
   }
 
   const SuggestDropdown = () => {
-    if (!showSuggest || suggestions.length === 0) return null;
+    if (!showSuggest) return null;
+
+    // Skeleton while searching
+    if (searching) {
+      return (
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] p-3 space-y-3">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="flex items-center gap-3 animate-pulse">
+              <div className="w-9 h-9 bg-gray-100 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 bg-gray-100 rounded w-3/4" />
+                <div className="h-3 bg-gray-50 rounded w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // No results
+    if (suggestions.length === 0 && search.trim().length >= 2) {
+      return (
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] p-6 text-center">
+          <p className="text-sm text-gray-400">No products found for &ldquo;{search}&rdquo;</p>
+        </div>
+      );
+    }
+
+    if (suggestions.length === 0) return null;
+
     return (
-      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] max-h-80 overflow-y-auto">
+      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] max-h-80 overflow-y-auto overscroll-contain">
         {suggestions.map((group, gi) => (
           <div key={gi}>
             <div className="px-4 pt-3 pb-1">
@@ -118,6 +161,8 @@ export default function Header() {
           </div>
         ))}
       </div>
+    );
+  };
     );
   };
 
