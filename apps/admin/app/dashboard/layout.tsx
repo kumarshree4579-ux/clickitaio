@@ -297,7 +297,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden">
         {/* Topbar */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 shrink-0 gap-3 z-10">
           {/* Hamburger */}
