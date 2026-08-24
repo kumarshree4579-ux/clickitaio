@@ -124,8 +124,8 @@ function OrdersContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: statusToSet, note }),
     });
-    setSelected(null);
-    setNewStatus('');
+    setSelected({ ...selected, status: statusToSet });
+    setNewStatus(statusToSet);
     load();
   }
 

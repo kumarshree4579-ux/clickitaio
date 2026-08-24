@@ -46,6 +46,8 @@ router.get('/public', async (_req: Request, res: Response) => {
     trustBadges: s.trustBadges,
     topbarTabs: s.topbarTabs,
     appTheme: s.appTheme,
+    orderAlertSound: (s as any).orderAlertSound || 'beep',
+    orderAlertDuration: (s as any).orderAlertDuration || 10,
   });
 });
 

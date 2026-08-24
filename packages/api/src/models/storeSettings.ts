@@ -17,8 +17,8 @@ export interface IStoreSettings extends Document {
   storeName: string;
   storeLocation: { lat: number; lng: number };
   deliveryZones: IDeliveryZone[];
-  estimatedDeliveryMinutes: number; // default ETA
-  deliveryMessage: string;          // shown to customer e.g. "Delivered in X"
+  estimatedDeliveryMinutes: number;
+  deliveryMessage: string;
   unserviceableMessage: string;
   isDeliveryEnabled: boolean;
   minOrderAmount: number;
@@ -27,6 +27,8 @@ export interface IStoreSettings extends Document {
   trustBadges: ITrustBadge[];
   topbarTabs?: { label: string; categorySlug: string; isActive: boolean }[];
   appTheme?: { primaryColor: string; secondaryColor: string; activeThemeName: string };
+  orderAlertSound?: 'beep' | 'chime' | 'bell' | 'urgent' | 'none';
+  orderAlertDuration?: number; // seconds
 }
 
 const StoreSettingsSchema = new Schema<IStoreSettings>({
@@ -63,6 +65,8 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
     secondaryColor: { type: String, default: '#7c3aed' },
     activeThemeName: { type: String, default: 'default' },
   },
+  orderAlertSound: { type: String, enum: ['beep', 'chime', 'bell', 'urgent', 'none'], default: 'beep' },
+  orderAlertDuration: { type: Number, default: 10 },
 }, { timestamps: true });
 
 export const StoreSettings = model<IStoreSettings>('StoreSettings', StoreSettingsSchema);

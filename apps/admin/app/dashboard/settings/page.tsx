@@ -299,6 +299,7 @@ export default function SettingsPage() {
           { id: 'delivery', name: 'Delivery & Map', icon: '📍' },
           { id: 'general', name: 'General Config', icon: '⚙️' },
           { id: 'badges', name: 'Trust Badges', icon: '⭐' },
+          { id: 'notifications', name: 'Notifications', icon: '🔔' },
           { id: 'security', name: 'Security', icon: '🔐' },
         ].map(t => (
           <button
@@ -571,6 +572,98 @@ export default function SettingsPage() {
           </div>
         </div>
         
+        {/* ── Notifications Tab ── */}
+        <div className={activeTab === 'notifications' ? 'block' : 'hidden'}>
+          <div className="max-w-3xl">
+            <Card title="Order Alert Settings" desc="Configure sound and duration for new order notifications.">
+              <div className="space-y-5">
+                {/* Sound Type */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">Alert Sound</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {[
+                      { id: 'beep', label: 'Beep', icon: '🔊' },
+                      { id: 'chime', label: 'Chime', icon: '🎵' },
+                      { id: 'bell', label: 'Bell', icon: '🔔' },
+                      { id: 'urgent', label: 'Urgent', icon: '🚨' },
+                      { id: 'none', label: 'None', icon: '🔇' },
+                    ].map(s => (
+                      <button
+                        key={s.id}
+                        onClick={() => setSettings((prev: any) => ({ ...prev, orderAlertSound: s.id }))}
+                        className={`p-3 rounded-xl border text-center transition-all ${
+                          settings?.orderAlertSound === s.id || (!settings?.orderAlertSound && s.id === 'beep')
+                            ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500/20'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="text-xl block mb-1">{s.icon}</span>
+                        <span className="text-xs font-semibold text-gray-700">{s.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-2">Alert Duration</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="3"
+                      max="30"
+                      step="1"
+                      value={settings?.orderAlertDuration || 10}
+                      onChange={e => setSettings((prev: any) => ({ ...prev, orderAlertDuration: parseInt(e.target.value) }))}
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                    <span className="text-sm font-bold text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg min-w-[48px] text-center">
+                      {settings?.orderAlertDuration || 10}s
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1.5">How long the alert sound plays and auto-accept timer runs</p>
+                </div>
+
+                {/* Preview button */}
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      const sound = settings?.orderAlertSound || 'beep';
+                      if (sound === 'none') return;
+                      try {
+                        const AC = window.AudioContext || (window as any).webkitAudioContext;
+                        if (!AC) return;
+                        const ctx = new AC();
+                        const gain = ctx.createGain();
+                        gain.connect(ctx.destination);
+                        let t = ctx.currentTime;
+                        gain.gain.setValueAtTime(0, t);
+                        const freq = sound === 'chime' ? 523 : sound === 'bell' ? 1400 : sound === 'urgent' ? 1000 : 880;
+                        for (let i = 0; i < 3; i++) {
+                          const osc = ctx.createOscillator();
+                          osc.connect(gain);
+                          osc.type = sound === 'urgent' ? 'sawtooth' : sound === 'chime' ? 'sine' : 'square';
+                          osc.frequency.setValueAtTime(freq, t);
+                          gain.gain.setValueAtTime(0.4, t);
+                          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                          osc.start(t);
+                          osc.stop(t + 0.15);
+                          t += 0.25;
+                        }
+                        setTimeout(() => ctx.close(), 2000);
+                      } catch {}
+                    }}
+                    className="flex items-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-50 px-4 py-2.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                    Preview Sound (3s)
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
         <div className={activeTab === 'security' ? 'block' : 'hidden'}>
           <div className="max-w-3xl">
             <Card title="Active Devices" desc="Manage devices currently logged into your admin account.">

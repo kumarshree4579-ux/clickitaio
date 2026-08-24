@@ -13,6 +13,7 @@ const menuItems = [
     label: 'Orders',
     icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
     links: [
+      { href: '/dashboard/orders?status=running', label: 'Running Orders' },
       { href: '/dashboard/orders', label: 'All Orders' },
       { href: '/dashboard/orders?status=received', label: 'Received' },
       { href: '/dashboard/orders?status=accepted', label: 'Accepted' },

@@ -8,8 +8,6 @@ import { apiFetch } from '../../lib/apiFetch';
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 const token = () => typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-const AUTO_ACCEPT_SECONDS = 10;
-
 interface IncomingOrder {
   _id: string;
   orderNumber: string;
@@ -21,45 +19,96 @@ interface IncomingOrder {
   createdAt: string;
 }
 
-function playNotificationSound(ctxRef: React.MutableRefObject<AudioContext | null>) {
+type SoundType = 'beep' | 'chime' | 'bell' | 'urgent' | 'none';
+
+function playNotificationSound(ctxRef: React.MutableRefObject<AudioContext | null>, soundType: SoundType = 'beep', duration: number = 10) {
+  if (soundType === 'none') return;
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
-    // Close any previous context
     if (ctxRef.current) { try { ctxRef.current.close(); } catch {} }
-    
+
     const ctx = new AudioContext();
     ctxRef.current = ctx;
     const gainNode = ctx.createGain();
     gainNode.connect(ctx.destination);
 
-    const totalDuration = 10;
-    const beepDuration = 0.15;
-    const pauseBetweenBeeps = 0.1;
-    const pauseBetweenSets = 0.8;
-
     let time = ctx.currentTime;
-    const endTime = ctx.currentTime + totalDuration;
-
+    const endTime = ctx.currentTime + duration;
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
 
-    while (time < endTime) {
-      for (let i = 0; i < 3 && time < endTime; i++) {
+    if (soundType === 'beep') {
+      // 3 beeps repeating pattern
+      while (time < endTime) {
+        for (let i = 0; i < 3 && time < endTime; i++) {
+          const osc = ctx.createOscillator();
+          osc.connect(gainNode);
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(i === 1 ? 1200 : 880, time);
+          gainNode.gain.setValueAtTime(0.4, time);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+          osc.start(time);
+          osc.stop(time + 0.15);
+          time += 0.25;
+        }
+        time += 0.8;
+      }
+    } else if (soundType === 'chime') {
+      // Gentle chime — two-tone ascending pattern
+      while (time < endTime) {
+        const osc1 = ctx.createOscillator();
+        osc1.connect(gainNode);
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(523, time); // C5
+        gainNode.gain.setValueAtTime(0.3, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+        osc1.start(time);
+        osc1.stop(time + 0.3);
+
+        const osc2 = ctx.createOscillator();
+        osc2.connect(gainNode);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(659, time + 0.2); // E5
+        gainNode.gain.setValueAtTime(0.3, time + 0.2);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+        osc2.start(time + 0.2);
+        osc2.stop(time + 0.5);
+        time += 1.5;
+      }
+    } else if (soundType === 'bell') {
+      // Bell ring — high frequency with decay
+      while (time < endTime) {
         const osc = ctx.createOscillator();
         osc.connect(gainNode);
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(i === 1 ? 1200 : 880, time);
-
-        gainNode.gain.setValueAtTime(0.4, time);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, time + beepDuration);
-
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1400, time);
+        osc.frequency.exponentialRampToValueAtTime(800, time + 0.5);
+        gainNode.gain.setValueAtTime(0.5, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.6);
         osc.start(time);
-        osc.stop(time + beepDuration);
-        time += beepDuration + pauseBetweenBeeps;
+        osc.stop(time + 0.6);
+        time += 1.2;
       }
-      time += pauseBetweenSets;
+    } else if (soundType === 'urgent') {
+      // Urgent alarm — fast alternating high-low
+      while (time < endTime) {
+        for (let i = 0; i < 6 && time < endTime; i++) {
+          const osc = ctx.createOscillator();
+          osc.connect(gainNode);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(i % 2 === 0 ? 1000 : 600, time);
+          gainNode.gain.setValueAtTime(0.35, time);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+          osc.start(time);
+          osc.stop(time + 0.1);
+          time += 0.12;
+        }
+        time += 0.6;
+      }
     }
-  } catch(e) {}
+
+    setTimeout(() => { try { ctx.close(); } catch {} }, (duration + 1) * 1000);
+  } catch {}
 }
 
 function stopSound(ctxRef: React.MutableRefObject<AudioContext | null>) {
@@ -72,7 +121,24 @@ function stopSound(ctxRef: React.MutableRefObject<AudioContext | null>) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState<IncomingOrder[]>([]);
-  const [countdown, setCountdown] = useState(AUTO_ACCEPT_SECONDS);
+  const [countdown, setCountdown] = useState(10);
+  const [accepting, setAccepting] = useState(false);
+  const [alertSettings, setAlertSettings] = useState<{ sound: SoundType; duration: number }>({ sound: 'beep', duration: 10 });
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const currentOrder = pendingOrders[0] || null;
+
+  // Fetch alert settings
+  useEffect(() => {
+    fetch(`${API}/settings/public`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.orderAlertSound) setAlertSettings(prev => ({ ...prev, sound: data.orderAlertSound }));
+        if (data?.orderAlertDuration) setAlertSettings(prev => ({ ...prev, duration: data.orderAlertDuration }));
+      })
+      .catch(() => {});
+  }, []);
   const [accepting, setAccepting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -92,7 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Remove from queue
     setPendingOrders(prev => prev.filter(o => o._id !== orderId));
     setAccepting(false);
-    setCountdown(AUTO_ACCEPT_SECONDS);
+    setCountdown(alertSettings.duration);
     // Refresh dashboard data
     window.dispatchEvent(new CustomEvent('admin:order_status_update', { detail: { _id: orderId, status: 'accepted' } }));
   }, []);
@@ -104,13 +170,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return;
     }
 
-    setCountdown(AUTO_ACCEPT_SECONDS);
+    setCountdown(alertSettings.duration);
     timerRef.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
           // Auto-accept
           acceptOrder(currentOrder._id);
-          return AUTO_ACCEPT_SECONDS;
+          return alertSettings.duration;
         }
         return prev - 1;
       });
@@ -140,7 +206,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         window.dispatchEvent(new CustomEvent('admin:new_order', { detail: order }));
         setPendingOrders(prev => [...prev, order]);
-        playNotificationSound(audioCtxRef);
+        playNotificationSound(audioCtxRef, alertSettings.sound, alertSettings.duration);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+        }
       } catch(err) {}
     });
 
@@ -164,7 +233,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   function handleDismiss() {
     stopSound(audioCtxRef);
     setPendingOrders(prev => prev.slice(1));
-    setCountdown(AUTO_ACCEPT_SECONDS);
+    setCountdown(alertSettings.duration);
   }
 
   return (
@@ -186,7 +255,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="h-1.5 bg-gray-100">
               <div 
                 className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-linear rounded-r-full"
-                style={{ width: `${(countdown / AUTO_ACCEPT_SECONDS) * 100}%` }}
+                style={{ width: `${(countdown / alertSettings.duration) * 100}%` }}
               />
             </div>
 

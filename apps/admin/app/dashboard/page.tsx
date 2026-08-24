@@ -9,6 +9,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<any>(null);
   const [newOrders, setNewOrders] = useState<any[]>([]);
   const [runningOrders, setRunningOrders] = useState<any[]>([]);
+  const [runningOrdersTotal, setRunningOrdersTotal] = useState(0);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
   const [cancelledOrders, setCancelledOrders] = useState<any[]>([]);
   const [lowStock, setLowStock] = useState<any[]>([]);
@@ -34,6 +35,7 @@ export default function DashboardPage() {
       setSummary(s);
       setNewOrders(no.items || []);
       setRunningOrders(ro.items || []);
+      setRunningOrdersTotal(ro.total || 0);
       setCompletedOrders(co.items || []);
       setCancelledOrders(ca.items || []);
       setLowStock(ls || []);
@@ -75,7 +77,7 @@ export default function DashboardPage() {
     { label: 'Month Orders', value: summary.month.orders, icon: '📅', color: 'bg-violet-500', href: '/dashboard/orders' },
     { label: 'Month Revenue', value: `₹${summary.month.sales.toLocaleString('en-IN')}`, icon: '📈', color: 'bg-orange-500', href: '/dashboard/reports' },
     { label: 'Active Orders', value: summary.orders.active, icon: '🔄', color: 'bg-amber-500', href: '/dashboard/orders' },
-    { label: 'Pending Orders', value: summary.orders.pending, icon: '⏳', color: 'bg-yellow-500', href: '/dashboard/orders' },
+    { label: 'Running Orders', value: runningOrdersTotal, icon: '🏃', color: 'bg-blue-500', href: '/dashboard/orders?status=running' },
     { label: 'Delivered', value: summary.orders.delivered, icon: '✅', color: 'bg-teal-500', href: '/dashboard/orders' },
     { label: 'Cancelled', value: summary.orders.cancelled, icon: '❌', color: 'bg-red-500', href: '/dashboard/orders' },
     { label: 'Total Customers', value: summary.customers, icon: '👥', color: 'bg-indigo-500', href: '/dashboard/customers' },
