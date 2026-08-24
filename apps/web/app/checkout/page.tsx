@@ -193,7 +193,7 @@ export default function CheckoutPage() {
       <main className="bg-gray-50 min-h-screen pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pb-28">
         <div className="max-w-2xl mx-auto">
         {/* Sticky Title */}
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center gap-3 shadow-sm">
+        <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center gap-3 shadow-sm" style={{ paddingTop: 'max(14px, env(safe-area-inset-top))' }}>
           <Link href="/cart" className="text-gray-400 hover:text-gray-600 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
           </Link>
@@ -319,7 +319,7 @@ export default function CheckoutPage() {
 
       {/* Add New Address Overlay */}
       {showNewAddrSheet && !showMap && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4" style={{ paddingTop: 'env(safe-area-inset-top, 24px)' }}>
           <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4 shrink-0 shadow-sm">
             <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
               <button onClick={() => setShowNewAddrSheet(false)} className="mr-2 text-gray-400 hover:text-gray-700"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></button>
@@ -371,7 +371,7 @@ export default function CheckoutPage() {
             </div>
           </div>
           
-          <div className="p-4 border-t border-gray-100 shrink-0 max-w-2xl mx-auto w-full">
+          <div className="p-4 border-t border-gray-100 shrink-0 max-w-2xl mx-auto w-full" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
             <button onClick={saveNewAddress} className="w-full bg-indigo-600 text-white py-4 rounded-xl text-[15px] font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95">
               Save Address
             </button>
