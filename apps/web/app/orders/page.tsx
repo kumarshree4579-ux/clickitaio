@@ -48,9 +48,9 @@ export default function OrdersPage() {
       <div className="sticky top-0 z-40 bg-white border-b border-gray-100 h-14 px-4 sm:px-6 flex items-center gap-6 shadow-sm">
 
         {/* <div className="sticky top-0 z-40 bg-indigo-600 text-white px-4 sm:px-6 py-4 flex items-center gap-3 shadow-sm"> */}
-        <h1 className="text-[17px] font-bold tracking-tight">My Orders</h1>
+        <h1 className="text-[18px] font-bold tracking-tight">My Orders</h1>
         {!loading && orders.length > 0 && (
-          <span className="text-indigo-200 text-sm font-medium">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
+          <span className="text-indigo-200 text-[14px] font-medium">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
         )}
       </div>
 
@@ -96,17 +96,17 @@ export default function OrdersPage() {
                 className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 overflow-hidden group"
               >
                 {/* Order Header */}
-                <div className="flex items-center justify-between p-3 sm:p-5 border-b border-gray-50 bg-gray-50/50">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm sm:text-base">
+                <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-gray-50 bg-gray-50/50">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-[15px] sm:text-base">
                       {STATUS_ICONS[order.status] || '📦'}
                     </div>
                     <div>
-                      <p className="text-xs sm:text-sm text-gray-500 font-medium">Order #{order.orderNumber}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      <p className="text-[13px] sm:text-sm text-gray-800 font-semibold">Order #{order.orderNumber}</p>
+                      <p className="text-[11px] sm:text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     </div>
                   </div>
-                  <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold border ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'} capitalize flex items-center gap-1 shadow-sm`}>
+                  <span className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold border ${STATUS_COLOR[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'} capitalize`}>
                     {order.status.replace(/_/g, ' ')}
                   </span>
                 </div>
@@ -128,7 +128,7 @@ export default function OrdersPage() {
                             </div>
                           )}
                         </div>
-                        <span className="text-[10px] sm:text-[10px] text-gray-500 font-medium truncate w-12 sm:w-16 text-center">{item.name}</span>
+                        <span className="text-[11px] sm:text-[11px] text-gray-500 font-medium truncate w-14 sm:w-16 text-center">{item.name}</span>
                       </div>
                     ))}
                   </div>
@@ -136,15 +136,15 @@ export default function OrdersPage() {
                   {/* Order Footer & Actions */}
                   <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100">
                     <div>
-                      <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider font-semibold">Total</p>
-                      <p className="font-extrabold text-gray-900 text-base sm:text-lg">₹{order.total?.toLocaleString('en-IN')}</p>
+                      <p className="text-[11px] sm:text-xs text-gray-500 uppercase tracking-wider font-semibold">Total</p>
+                      <p className="font-extrabold text-gray-900 text-[17px] sm:text-lg">₹{order.total?.toLocaleString('en-IN')}</p>
                     </div>
 
                     <Link
                       href={`/orders/${order._id}`}
-                      className="bg-gray-900 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-1.5 sm:gap-2"
+                      className="bg-gray-900 text-white px-4 sm:px-6 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-1.5 sm:gap-2"
                     >
-                      <span>Track</span>
+                      <span>Track Order</span>
                       <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                     </Link>
                   </div>

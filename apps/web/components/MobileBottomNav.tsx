@@ -68,7 +68,7 @@ export default function MobileBottomNav() {
 
   return (
     <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">
-      <div className="flex items-center justify-around h-14">
+      <div className="flex items-center justify-around h-[58px]">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
           return (
@@ -87,7 +87,7 @@ export default function MobileBottomNav() {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] font-medium leading-none transition-all duration-200 ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
+              <span className={`text-[11px] font-medium leading-none transition-all duration-200 ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
               {isActive && <span className="absolute bottom-1 w-4 h-0.5 bg-[var(--color-primary)] rounded-full" />}
             </Link>
           );

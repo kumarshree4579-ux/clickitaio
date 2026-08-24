@@ -47,9 +47,9 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20 sm:pb-8">
+    <div className="bg-gray-50 min-h-screen pb-24 sm:pb-8">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/account" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
@@ -163,14 +163,14 @@ export default function AddressesPage() {
               </label>
             </div>
 
-            {/* Actions */}
-            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex gap-2.5">
+            {/* Actions — sticky at bottom on mobile */}
+            <div className="px-4 py-3 border-t border-gray-100 bg-white sticky bottom-0 flex gap-2.5 rounded-b-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
               <button onClick={save} disabled={saving}
-                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-[14px] font-bold hover:bg-indigo-700 disabled:opacity-50 active:scale-[0.98] transition-all">
+                className="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl text-[15px] font-bold hover:bg-indigo-700 disabled:opacity-50 active:scale-[0.98] transition-all">
                 {saving ? 'Saving...' : editing ? 'Update Address' : 'Save Address'}
               </button>
               <button onClick={() => { setShowForm(false); setForm(empty); setEditing(null); }}
-                className="px-5 py-3 rounded-xl text-[14px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 active:scale-[0.98] transition-all">
+                className="px-5 py-3.5 rounded-xl text-[14px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 active:scale-[0.98] transition-all">
                 Cancel
               </button>
             </div>
