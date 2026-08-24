@@ -139,11 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       })
       .catch(() => {});
   }, []);
-  const [accepting, setAccepting] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const currentOrder = pendingOrders[0] || null;
 
   const acceptOrder = useCallback(async (orderId: string) => {
     setAccepting(true);
