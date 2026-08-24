@@ -7,7 +7,7 @@ function requireEnv(key: string): string {
 }
 
 export function signAccessToken(payload: object) {
-  const opts: SignOptions = { expiresIn: (process.env.JWT_ACCESS_EXPIRES || '15m') as SignOptions['expiresIn'] };
+  const opts: SignOptions = { expiresIn: (process.env.JWT_ACCESS_EXPIRES || '1d') as SignOptions['expiresIn'] };
   return jwt.sign(payload, requireEnv('JWT_SECRET'), opts);
 }
 

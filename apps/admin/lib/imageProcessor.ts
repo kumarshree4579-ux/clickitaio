@@ -121,24 +121,31 @@ export interface UploadResult {
   batchId: string;
 }
 
-export async function uploadProcessedFiles(
-  files: ProcessedFile[],
+/**
+ * Full pipeline: select files → process in browser → upload to server.
+ * Streams chunks of UPLOAD_BATCH_SIZE files with CONCURRENT_BATCHES workers
+ * to keep memory usage minimal.
+ */
+export async function processAndUpload(
+  files: File[],
   apiUrl: string,
   token: string,
-  onProgress?: (uploaded: number, total: number) => void
+  onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   const batchId = crypto.randomUUID();
   let uploaded = 0;
   let failed = 0;
+  let processedCount = 0;
   const total = files.length;
 
-  // Split into chunks of UPLOAD_BATCH_SIZE
-  const chunks: ProcessedFile[][] = [];
+  onProgress?.({ phase: 'processing', processed: 0, uploaded: 0, total, failed: 0 });
+
+  // Split raw files into chunks of UPLOAD_BATCH_SIZE
+  const chunks: File[][] = [];
   for (let i = 0; i < total; i += UPLOAD_BATCH_SIZE) {
     chunks.push(files.slice(i, i + UPLOAD_BATCH_SIZE));
   }
 
-  // Process chunks with concurrency limit
   const queue = [...chunks];
   const workers: Promise<void>[] = [];
 
@@ -149,24 +156,52 @@ export async function uploadProcessedFiles(
         if (!chunk) break;
 
         try {
-          const formData = new FormData();
-          formData.append('batchId', batchId);
+          // 1. Process this chunk
+          const processedChunk = await processFiles(chunk);
+          processedCount += chunk.length;
+          onProgress?.({ phase: 'uploading', processed: processedCount, uploaded, total, failed });
 
-          for (const file of chunk) {
-            // Use .webp extension but keep original name for mapping
-            formData.append('files', file.blob, file.originalName);
-          }
+          // 2. Upload this chunk
+          if (processedChunk.length > 0) {
+            const formData = new FormData();
+            formData.append('batchId', batchId);
 
-          const res = await fetch(`${apiUrl}/uploads/bulk`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-          });
+            for (const file of processedChunk) {
+              formData.append('files', file.blob, file.originalName);
+            }
 
-          if (res.ok) {
-            const data = await res.json();
-            uploaded += data.count || 0;
-            failed += chunk.length - (data.count || 0);
+            let success = false;
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            while (!success && attempts < maxAttempts) {
+              attempts++;
+              try {
+                const res = await fetch(`${apiUrl}/uploads/bulk`, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}` },
+                  body: formData,
+                });
+
+                if (res.ok) {
+                  const data = await res.json();
+                  uploaded += data.count || 0;
+                  failed += chunk.length - (data.count || 0);
+                  success = true;
+                } else if (res.status === 401 || res.status === 403) {
+                  // No point retrying auth errors
+                  break;
+                } else {
+                  if (attempts < maxAttempts) await new Promise(r => setTimeout(r, 1000 * attempts));
+                }
+              } catch {
+                if (attempts < maxAttempts) await new Promise(r => setTimeout(r, 1000 * attempts));
+              }
+            }
+
+            if (!success) {
+              failed += chunk.length;
+            }
           } else {
             failed += chunk.length;
           }
@@ -174,43 +209,14 @@ export async function uploadProcessedFiles(
           failed += chunk.length;
         }
 
-        onProgress?.(uploaded, total);
+        onProgress?.({ phase: 'uploading', processed: processedCount, uploaded, total, failed });
       }
     })());
   }
 
   await Promise.all(workers);
-  onProgress?.(uploaded, total);
+  
+  onProgress?.({ phase: 'done', processed: processedCount, uploaded, total, failed });
 
   return { uploaded, failed, batchId };
-}
-
-/**
- * Full pipeline: select files → process in browser → upload to server.
- */
-export async function processAndUpload(
-  files: File[],
-  apiUrl: string,
-  token: string,
-  onProgress?: (progress: UploadProgress) => void
-): Promise<UploadResult> {
-  const total = files.length;
-
-  onProgress?.({ phase: 'processing', processed: 0, uploaded: 0, total, failed: 0 });
-
-  // Phase 1: Process images (convert to WebP, strip metadata)
-  const processed = await processFiles(files, (done) => {
-    onProgress?.({ phase: 'processing', processed: done, uploaded: 0, total, failed: 0 });
-  });
-
-  onProgress?.({ phase: 'uploading', processed: processed.length, uploaded: 0, total: processed.length, failed: total - processed.length });
-
-  // Phase 2: Upload to server
-  const result = await uploadProcessedFiles(processed, apiUrl, token, (uploaded) => {
-    onProgress?.({ phase: 'uploading', processed: processed.length, uploaded, total: processed.length, failed: total - processed.length });
-  });
-
-  onProgress?.({ phase: 'done', processed: processed.length, uploaded: result.uploaded, total, failed: result.failed + (total - processed.length) });
-
-  return result;
 }
