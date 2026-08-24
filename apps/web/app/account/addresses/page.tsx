@@ -2,11 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-import API from '../../../lib/api';
 import { apiFetch } from '../../../lib/apiFetch';
-const token = () => localStorage.getItem('token');
 
+const token = () => localStorage.getItem('token');
 const empty = { name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
 
 export default function AddressesPage() {
@@ -16,6 +14,7 @@ export default function AddressesPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token()) { router.push('/login'); return; }
@@ -23,8 +22,10 @@ export default function AddressesPage() {
   }, []);
 
   async function load() {
+    setLoading(true);
     const data = await apiFetch('/addresses').then(r => r.json());
     setAddresses(Array.isArray(data) ? data : []);
+    setLoading(false);
   }
 
   async function save() {
@@ -40,80 +41,214 @@ export default function AddressesPage() {
   }
 
   async function del(id: string) {
-    if (!confirm('Delete address?')) return;
+    if (!confirm('Delete this address?')) return;
     await apiFetch(`/addresses/${id}`, { method: 'DELETE' });
     load();
   }
 
-  const inp = 'w-full border border-gray-200 rounded-lg px-3.5 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 bg-white';
-
   return (
-    <>
-      {/* Sticky Back Bar */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <Link href="/account" className="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          </Link>
-          <h1 className="text-[17px] font-bold text-gray-900 tracking-tight">My Addresses</h1>
+    <div className="bg-gray-50 min-h-screen pb-20 sm:pb-8">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/account" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+            </Link>
+            <h1 className="text-[17px] font-bold text-gray-900">My Addresses</h1>
+          </div>
+          {!showForm && (
+            <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
+              className="bg-indigo-600 text-white px-3.5 py-2 rounded-lg text-[13px] font-bold hover:bg-indigo-700 active:scale-95 transition-all">
+              + Add New
+            </button>
+          )}
         </div>
-        <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
-          className="bg-indigo-600 text-white px-3 py-2 rounded-xl text-xs sm:text-sm hover:bg-indigo-700 font-bold flex items-center gap-1">+ Add New</button>
       </div>
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 py-5 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:py-8 sm:pb-12 space-y-3 sm:space-y-4">
 
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4 space-y-3">
+
+        {/* ─── Add/Edit Form ─── */}
         {showForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 space-y-3">
-            <h2 className="font-semibold text-gray-800 text-sm sm:text-base">{editing ? 'Edit' : 'New'} Address</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><label className="text-xs text-gray-500 mb-1 block">Full Name</label><input className={inp} value={form.name} onChange={e => setForm((f: any) => ({ ...f, name: e.target.value }))} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Phone</label><input className={inp} value={form.phone} onChange={e => setForm((f: any) => ({ ...f, phone: e.target.value }))} /></div>
-              <div className="sm:col-span-2"><label className="text-xs text-gray-500 mb-1 block">Address Line 1</label><input className={inp} value={form.line1} onChange={e => setForm((f: any) => ({ ...f, line1: e.target.value }))} /></div>
-              <div className="sm:col-span-2"><label className="text-xs text-gray-500 mb-1 block">Address Line 2 (optional)</label><input className={inp} value={form.line2} onChange={e => setForm((f: any) => ({ ...f, line2: e.target.value }))} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">City</label><input className={inp} value={form.city} onChange={e => setForm((f: any) => ({ ...f, city: e.target.value }))} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">State</label><input className={inp} value={form.state} onChange={e => setForm((f: any) => ({ ...f, state: e.target.value }))} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Pincode</label><input className={inp} value={form.pincode} onChange={e => setForm((f: any) => ({ ...f, pincode: e.target.value }))} /></div>
-              <div><label className="text-xs text-gray-500 mb-1 block">Country</label><input className={inp} value={form.country} onChange={e => setForm((f: any) => ({ ...f, country: e.target.value }))} /></div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="font-bold text-gray-900 text-[15px]">{editing ? 'Edit Address' : 'Add New Address'}</h2>
             </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" checked={form.isDefault} onChange={e => setForm((f: any) => ({ ...f, isDefault: e.target.checked }))} className="accent-indigo-600" />
-              Set as default address
-            </label>
-            <div className="flex gap-2 pt-1">
-              <button onClick={save} disabled={saving} className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm hover:bg-indigo-700 disabled:opacity-50">
-                {saving ? 'Saving...' : 'Save Address'}
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">Full Name *</label>
+                  <input
+                    placeholder="John Doe"
+                    value={form.name}
+                    onChange={e => setForm((f: any) => ({ ...f, name: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">Phone Number *</label>
+                  <input
+                    placeholder="+91 9876543210"
+                    value={form.phone}
+                    onChange={e => setForm((f: any) => ({ ...f, phone: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">Address Line 1 *</label>
+                <input
+                  placeholder="House/Flat no., Building, Street"
+                  value={form.line1}
+                  onChange={e => setForm((f: any) => ({ ...f, line1: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">Address Line 2</label>
+                <input
+                  placeholder="Landmark, Area (optional)"
+                  value={form.line2}
+                  onChange={e => setForm((f: any) => ({ ...f, line2: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">City *</label>
+                  <input
+                    placeholder="Mumbai"
+                    value={form.city}
+                    onChange={e => setForm((f: any) => ({ ...f, city: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">State *</label>
+                  <input
+                    placeholder="Maharashtra"
+                    value={form.state}
+                    onChange={e => setForm((f: any) => ({ ...f, state: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">Pincode *</label>
+                  <input
+                    placeholder="400001"
+                    value={form.pincode}
+                    onChange={e => setForm((f: any) => ({ ...f, pincode: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-medium text-gray-500 mb-1.5 block">Country</label>
+                  <input
+                    value={form.country}
+                    onChange={e => setForm((f: any) => ({ ...f, country: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2.5 pt-1 cursor-pointer">
+                <input type="checkbox" checked={form.isDefault} onChange={e => setForm((f: any) => ({ ...f, isDefault: e.target.checked }))} className="w-4 h-4 accent-indigo-600 rounded" />
+                <span className="text-[14px] text-gray-700 font-medium">Set as default address</span>
+              </label>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex gap-2.5">
+              <button onClick={save} disabled={saving}
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-[14px] font-bold hover:bg-indigo-700 disabled:opacity-50 active:scale-[0.98] transition-all">
+                {saving ? 'Saving...' : editing ? 'Update Address' : 'Save Address'}
               </button>
-              <button onClick={() => setShowForm(false)} className="border px-5 py-2 rounded-xl text-sm hover:bg-gray-50">Cancel</button>
+              <button onClick={() => { setShowForm(false); setForm(empty); setEditing(null); }}
+                className="px-5 py-3 rounded-xl text-[14px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 active:scale-[0.98] transition-all">
+                Cancel
+              </button>
             </div>
           </div>
         )}
 
-        <div className="space-y-2.5 sm:space-y-3">
-          {addresses.map(a => (
-            <div key={a._id} className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-5 flex items-start justify-between gap-3 sm:gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">{a.name}</p>
-                  {a.isDefault && <span className="text-[10px] sm:text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium shrink-0">Default</span>}
+        {/* ─── Address List ─── */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 animate-pulse">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-4 w-28 bg-gray-200 rounded" />
+                  <div className="h-4 w-14 bg-gray-100 rounded-full" />
                 </div>
-                <p className="text-xs sm:text-sm text-gray-500">{a.phone}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">{a.line1}{a.line2 ? `, ${a.line2}` : ''}, {a.city}, {a.state} - {a.pincode}</p>
+                <div className="h-3.5 w-32 bg-gray-100 rounded mt-1" />
+                <div className="h-3.5 w-48 bg-gray-100 rounded mt-1.5" />
               </div>
-              <div className="flex gap-2 sm:gap-3 shrink-0">
-                <button onClick={() => { setForm({ ...a }); setEditing(a._id); setShowForm(true); }}
-                  className="text-indigo-600 hover:underline text-xs px-2 py-1.5 min-h-[32px] flex items-center">Edit</button>
-                <button onClick={() => del(a._id)} className="text-red-500 hover:underline text-xs px-2 py-1.5 min-h-[32px] flex items-center">Delete</button>
+            ))}
+          </div>
+        ) : addresses.length === 0 && !showForm ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-800 font-semibold text-[15px]">No addresses yet</p>
+            <p className="text-gray-400 text-[13px] mt-1">Add your first delivery address</p>
+            <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
+              className="mt-5 bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-indigo-700 active:scale-95 transition-all">
+              + Add Address
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {addresses.map(a => (
+              <div key={a._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-900 text-[14px]">{a.name}</p>
+                        {a.isDefault && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wide border border-emerald-100">Default</span>
+                        )}
+                      </div>
+                      <p className="text-[13px] text-gray-500 font-medium">{a.phone}</p>
+                      <p className="text-[13px] text-gray-600 mt-1.5 leading-relaxed">
+                        {a.line1}{a.line2 ? `, ${a.line2}` : ''}<br />
+                        {a.city}, {a.state} — <span className="font-semibold">{a.pincode}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                {/* Action bar */}
+                <div className="flex border-t border-gray-100 divide-x divide-gray-100">
+                  <button
+                    onClick={() => { setForm({ ...a }); setEditing(a._id); setShowForm(true); window.scrollTo({ top: 0 }); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => del(a._id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-          {addresses.length === 0 && !showForm && (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-400">
-              <p className="text-3xl mb-3">📍</p>
-              <p>No saved addresses yet</p>
-            </div>
-          )}
-        </div>
-      </main>
-    </>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
