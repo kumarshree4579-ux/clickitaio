@@ -126,8 +126,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
 
   function logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     document.cookie = 'token=; path=/; max-age=0';
+    document.cookie = 'refreshToken=; path=/; max-age=0';
     router.push('/login');
   }
 
