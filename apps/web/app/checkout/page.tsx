@@ -371,7 +371,7 @@ export default function CheckoutPage() {
             </div>
           </div>
           
-          <div className="p-4 border-t border-gray-100 shrink-0 max-w-2xl mx-auto w-full" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+          <div className="p-4 border-t border-gray-100 shrink-0 max-w-2xl mx-auto w-full" style={{ paddingBottom: 'max(60px, env(safe-area-inset-bottom))' }}>
             <button onClick={saveNewAddress} className="w-full bg-indigo-600 text-white py-4 rounded-xl text-[15px] font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95">
               Save Address
             </button>
