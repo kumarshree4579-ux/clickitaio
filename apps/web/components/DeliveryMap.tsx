@@ -65,7 +65,7 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
     if (!mapRef.current || mapInstanceRef.current) return;
     const L = (window as any).L;
     const defaultCenter = storeSettings?.storeLocation || { lat: 20.5937, lng: 78.9629 };
-    const map = L.map(mapRef.current, { zoomControl: false }).setView([defaultCenter.lat, defaultCenter.lng], 14);
+    const map = L.map(mapRef.current, { zoomControl: false }).setView([defaultCenter.lat, defaultCenter.lng], 18);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
     L.control.zoom({ position: 'bottomleft' }).addTo(map);
     map.on('moveend', () => { const c = map.getCenter(); checkDelivery(c.lat, c.lng); });
@@ -81,12 +81,12 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocationDenied(false);
-        mapInstanceRef.current?.setView([pos.coords.latitude, pos.coords.longitude], 16);
+        mapInstanceRef.current?.setView([pos.coords.latitude, pos.coords.longitude], 18);
         setLocating(false);
       },
       (err) => {
         setLocating(false);
-        if (err.code === err.PERMISSION_DENIED) setLocationDenied(true);
+        setLocationDenied(true);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -98,12 +98,12 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocationDenied(false);
-        mapInstanceRef.current?.setView([pos.coords.latitude, pos.coords.longitude], 17);
+        mapInstanceRef.current?.setView([pos.coords.latitude, pos.coords.longitude], 18);
         setLocating(false);
       },
       (err) => {
         setLocating(false);
-        if (err.code === err.PERMISSION_DENIED) setLocationDenied(true);
+        setLocationDenied(true);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -125,7 +125,7 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
         if (geoData?.address) {
           const a = geoData.address;
           addressData = {
-            line1: a.road || a.suburb || a.neighbourhood || '',
+            line1: [a.house_number, a.road || a.suburb || a.neighbourhood].filter(Boolean).join(', '),
             line2: a.suburb || a.neighbourhood || '',
             city: a.city || a.town || a.village || a.county || '',
             state: a.state || '',
