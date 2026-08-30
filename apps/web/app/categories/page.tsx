@@ -4,7 +4,7 @@ import API from '../../lib/api';
 
 async function getCategories() {
   try {
-    const res = await fetch(`${API}/categories`, { 
+    const res = await fetch(`${API}/categories`, {
       cache: 'no-store',
       signal: AbortSignal.timeout(3000)
     });
@@ -27,12 +27,12 @@ export default async function CategoriesPage() {
       <div className="h-[56px] sm:h-16 shrink-0" />
       <main className="w-full px-3 sm:px-6 lg:px-8 py-9 pb-20 sm:py-6 sm:pb-6 max-w-4xl mx-auto">
         <h1 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 px-0.5 sm:px-1">Shop by Category</h1>
-        
+
         {mainCategories.length > 0 ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 sm:gap-4">
             {mainCategories.map((cat: any) => (
-              <Link 
-                key={cat._id} 
+              <Link
+                key={cat._id}
                 href={`/categories/${cat._id}`}
                 className="flex flex-col items-center gap-1.5 sm:gap-2 group p-1.5 sm:p-2 hover:bg-gray-50 rounded-2xl transition-colors"
               >

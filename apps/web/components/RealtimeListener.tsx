@@ -7,6 +7,8 @@ export default function RealtimeListener() {
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let retryCount = 0;
+
     function connect() {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -32,6 +34,10 @@ export default function RealtimeListener() {
 
       const es = new EventSource(sseUrl);
       esRef.current = es;
+
+      es.onopen = () => {
+        retryCount = 0; // Reset backoff on successful connection
+      };
 
       es.addEventListener('order_status_update', (e) => {
         try {
@@ -61,11 +67,14 @@ export default function RealtimeListener() {
       });
 
       es.onerror = () => {
-        // EventSource auto-reconnects, but if it fails completely, retry after 5s
         es.close();
         esRef.current = null;
         if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = setTimeout(connect, 5000);
+        
+        // Exponential backoff: 5s, 10s, 20s, 40s, up to max 60s
+        const backoff = Math.min(5000 * Math.pow(2, retryCount), 60000);
+        retryCount++;
+        reconnectTimeoutRef.current = setTimeout(connect, backoff);
       };
     }
 

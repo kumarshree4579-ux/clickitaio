@@ -63,21 +63,21 @@ export default async function HomePage() {
 
         {/* Trust badges */}
         {badges.length > 0 && (
-        <section className="bg-white border-b border-slate-100">
-          <div className="w-full px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-              {badges.map((b: any) => (
-                <div key={b.title} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2">
-                  <span className="text-xl sm:text-2xl">{b.icon}</span>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{b.title}</p>
-                    <p className="text-[10px] sm:text-xs text-slate-500 truncate">{b.subtitle || b.sub}</p>
+          <section className="bg-white border-b border-slate-100">
+            <div className="w-full px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                {badges.map((b: any) => (
+                  <div key={b.title} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2">
+                    <span className="text-xl sm:text-2xl">{b.icon}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{b.title}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500 truncate">{b.subtitle || b.sub}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
         )}
 
         <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-14 max-w-7xl">

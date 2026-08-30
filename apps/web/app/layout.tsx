@@ -50,7 +50,7 @@ async function getSettings() {
   try {
     // using absolute URL for server-side fetch
     const apiUrl = process.env.API_URL || 'http://127.0.0.1:4000';
-    const res = await fetch(`${apiUrl}/settings/public`, { 
+    const res = await fetch(`${apiUrl}/settings/public`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(3000)
     });
@@ -63,7 +63,7 @@ async function getSettings() {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings();
-  
+
   const themeStyles = settings?.appTheme ? {
     '--color-primary': settings.appTheme.primaryColor || '#4f46e5',
     '--color-secondary': settings.appTheme.secondaryColor || '#7c3aed',

@@ -25,6 +25,7 @@ router.get('/', async (_req: Request, res: Response) => {
 
   const enriched = cats.map(cat => {
     const c = cat.toObject() as any;
+    c.isFallbackImage = !c.image && !!imageMap[cat._id.toString()];
     if (!c.image) c.image = imageMap[cat._id.toString()] || null;
     return c;
   });

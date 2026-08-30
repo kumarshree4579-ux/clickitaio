@@ -99,10 +99,16 @@ export default function InfiniteProducts({ categoryId, subCategoryId }: { catego
   if (products.length === 0) {
     return (
       <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
            <span className="text-3xl text-gray-300">📦</span>
         </div>
-        <p className="text-gray-500 font-medium text-sm">No products found in this category.</p>
+        <p className="text-gray-500 font-medium text-sm mb-5">No products found in this category.</p>
+        <button 
+          onClick={() => { setInitialLoading(true); fetchProducts(1, true); }}
+          className="px-6 py-2 bg-indigo-50 text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-100 transition-colors shadow-sm"
+        >
+          Reload Products
+        </button>
       </div>
     );
   }
@@ -111,7 +117,7 @@ export default function InfiniteProducts({ categoryId, subCategoryId }: { catego
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 pb-4">
         {products.map(p => (
-          <ProductCard key={p._id} product={p} />
+          <ProductCard key={p._id} product={p} compact={true} />
         ))}
       </div>
       

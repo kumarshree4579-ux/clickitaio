@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { exportToCSV } from '../../../lib/exportCsv';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const token = () => localStorage.getItem('token');
@@ -61,6 +62,10 @@ export default function InventoryPage() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-800">Inventory</h1>
           <div className="flex gap-2">
+            <button onClick={() => exportToCSV('inventory_export', products)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              Export
+            </button>
             {(['all', 'low'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium ${tab === t ? 'bg-blue-600 text-white' : 'border hover:bg-gray-50'}`}>

@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import API from '../../../lib/api';
 import { apiFetch } from '../../../lib/apiFetch';
+import { exportToCSV } from '../../../lib/exportCsv';
 
 const STATUSES = [
   'pending', 'received', 'confirmed', 'accepted', 'processing',
@@ -129,6 +130,22 @@ function OrdersContent() {
     load();
   }
 
+  async function handleExport() {
+    setLoading(true);
+    try {
+      let url = `/orders?limit=1000`;
+      if (currentStatus) url += `&status=${currentStatus}`;
+      const res = await apiFetch(url);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      exportToCSV(`orders_export_${currentStatus || 'all'}`, data.items || []);
+    } catch (err) {
+      alert('Failed to export orders');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const activeLabel = currentStatus ? currentStatus.replace(/_/g, ' ') : 'All Orders';
 
   return (
@@ -138,6 +155,10 @@ function OrdersContent() {
           <h1 className="text-2xl font-bold text-gray-800 capitalize">{activeLabel}</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and track your {activeLabel.toLowerCase()}</p>
         </div>
+        <button onClick={handleExport} className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-all self-start sm:self-auto">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          Export CSV
+        </button>
       </div>
 
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
