@@ -75,6 +75,53 @@ router.get('/', requireAuth, requireAdmin, async (req: AuthedRequest, res: Respo
   }
 });
 
+// ─── GET /media/ids — get all IDs matching filter ───
+router.get('/ids', requireAuth, requireAdmin, async (req: AuthedRequest, res: Response) => {
+  try {
+    const { filter = 'all', q = '' } = req.query as any;
+
+    const query: any = {};
+    if (q) {
+      query.originalName = { $regex: q, $options: 'i' };
+    }
+
+    // Get all media matching query
+    const items = await Media.find(query).select('_id url').lean();
+
+    if (filter !== 'all') {
+      const mediaUrls = items.map(m => m.url);
+      const linkedProducts = await Product.find(
+        { 'images.url': { $in: mediaUrls } },
+        { 'images.url': 1 }
+      ).lean();
+
+      const urlCountMap: Record<string, number> = {};
+      for (const p of linkedProducts) {
+        for (const img of p.images) {
+          urlCountMap[img.url] = (urlCountMap[img.url] || 0) + 1;
+        }
+      }
+
+      const enriched = items.map(m => ({
+        ...m,
+        linkCount: urlCountMap[m.url] || 0,
+      }));
+
+      let filtered = enriched;
+      if (filter === 'unlinked') filtered = enriched.filter(m => m.linkCount === 0);
+      else if (filter === 'linked') filtered = enriched.filter(m => m.linkCount > 0);
+      else if (filter === 'multi') filtered = enriched.filter(m => m.linkCount > 1);
+
+      return res.json({ ids: filtered.map(m => m._id) });
+    }
+
+    return res.json({ ids: items.map(m => m._id) });
+  } catch (err) {
+    console.error('media ids error', err);
+    return res.status(500).json({ error: 'Failed to fetch media ids' });
+  }
+});
+
 // ─── GET /media/:id/products — products linked to this image ───
 router.get('/:id/products', requireAuth, requireAdmin, async (req: AuthedRequest, res: Response) => {
   try {

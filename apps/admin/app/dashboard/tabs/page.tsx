@@ -24,9 +24,14 @@ export default function TabsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const [categories, setCategories] = useState<any[]>([]);
+
   useEffect(() => {
     fetch(`${API}/settings`, { headers: { Authorization: `Bearer ${token()}` } })
       .then(r => r.json()).then(setSettings);
+      
+    fetch(`${API}/categories`)
+      .then(r => r.json()).then(setCategories);
   }, []);
 
   async function save() {
@@ -104,8 +109,18 @@ export default function TabsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-700 mb-1 block">Category Slug</label>
-                  <input value={t.categorySlug} onChange={e => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], categorySlug: e.target.value }; return { ...s, topbarTabs: tabs }; })}
-                    className={inp} placeholder="e.g. food, grocery" />
+                  <select 
+                    value={t.categorySlug} 
+                    onChange={e => setSettings((s: any) => { const tabs = [...s.topbarTabs]; tabs[i] = { ...tabs[i], categorySlug: e.target.value }; return { ...s, topbarTabs: tabs }; })}
+                    className={inp}
+                  >
+                    <option value="">Select Category...</option>
+                    {categories.map(c => (
+                      <option key={c.slug} value={c.slug}>
+                        {c.name} ({c.slug})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               

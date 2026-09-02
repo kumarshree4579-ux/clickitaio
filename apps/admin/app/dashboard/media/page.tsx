@@ -25,6 +25,8 @@ export default function MediaGalleryPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState<{ deleted: number, total: number } | null>(null);
+  const [selectingAll, setSelectingAll] = useState(false);
   const [infoModal, setInfoModal] = useState<{ mediaId: string; products: any[] } | null>(null);
   const [infoLoading, setInfoLoading] = useState(false);
 
@@ -54,24 +56,55 @@ export default function MediaGalleryPage() {
     });
   }
 
-  function selectAll() {
-    if (selected.size === items.length) setSelected(new Set());
-    else setSelected(new Set(items.map(i => i._id)));
+  function handleMasterCheckbox() {
+    if (selected.size >= items.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(items.map(i => i._id)));
+    }
+  }
+
+  async function selectAllMatching() {
+    setSelectingAll(true);
+    try {
+      const params = new URLSearchParams({ filter });
+      if (search) params.set('q', search);
+      const res = await apiFetch(`/media/ids?${params}`);
+      const data = await res.json();
+      if (data.ids) {
+        setSelected(new Set(data.ids));
+      }
+    } catch (err) {
+      console.error('Failed to select all', err);
+    }
+    setSelectingAll(false);
   }
 
   async function bulkDelete() {
     if (!confirm(`Delete ${selected.size} image(s) from cloud storage? This cannot be undone.`)) return;
     setDeleting(true);
+    
+    const idsArray = Array.from(selected);
+    const chunkSize = 50;
+    setDeleteProgress({ deleted: 0, total: idsArray.length });
+    
+    let deletedCount = 0;
     try {
-      await apiFetch('/uploads/media/bulk', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: Array.from(selected) }),
-      });
+      for (let i = 0; i < idsArray.length; i += chunkSize) {
+        const chunk = idsArray.slice(i, i + chunkSize);
+        await apiFetch('/uploads/media/bulk', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: chunk }),
+        });
+        deletedCount += chunk.length;
+        setDeleteProgress({ deleted: deletedCount, total: idsArray.length });
+      }
       setSelected(new Set());
       load();
     } catch {}
     setDeleting(false);
+    setDeleteProgress(null);
   }
 
   async function showLinkedProducts(mediaId: string) {
@@ -137,23 +170,54 @@ export default function MediaGalleryPage() {
       </div>
 
       {/* Bulk actions bar */}
-      {selected.size > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 flex items-center justify-between">
+      {items.length > 0 && (
+        <div className={`border rounded-xl px-4 py-3 flex items-center justify-between transition-colors ${
+          selected.size > 0 ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50 border-gray-200'
+        }`}>
           <div className="flex items-center gap-3">
-            <button onClick={selectAll} className="text-xs font-medium text-indigo-600 hover:underline">
-              {selected.size === items.length ? 'Deselect all' : 'Select all on page'}
-            </button>
-            <span className="text-sm font-semibold text-indigo-700">{selected.size} selected</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selected.size >= items.length && items.length > 0}
+                onChange={handleMasterCheckbox}
+                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+              />
+              <span className={`text-sm font-medium ${selected.size > 0 ? 'text-indigo-700' : 'text-gray-600'}`}>
+                {selected.size > 0 ? `${selected.size} selected` : 'Select All on Page'}
+              </span>
+            </label>
           </div>
           <button
             onClick={bulkDelete}
-            disabled={deleting}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-700 disabled:opacity-50 flex items-center gap-1.5"
+            disabled={deleting || selected.size === 0}
+            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+              selected.size > 0 
+                ? 'bg-red-600 text-white hover:bg-red-700' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            {deleting ? 'Deleting...' : `Delete (${selected.size})`}
+            {deleteProgress ? `Deleting ${deleteProgress.deleted} of ${deleteProgress.total}...` : deleting ? 'Deleting...' : `Delete ${selected.size > 0 ? `(${selected.size})` : ''}`}
+          </button>
+        </div>
+      )}
+
+      {/* Gmail style select all banner */}
+      {selected.size === items.length && total > items.length && (
+        <div className="bg-indigo-50/50 border border-indigo-100 text-center py-2 text-sm text-indigo-800 rounded-lg animate-in fade-in zoom-in-95 duration-200">
+          All {items.length} images on this page are selected.{' '}
+          <button onClick={selectAllMatching} className="text-indigo-600 font-bold hover:underline ml-1">
+            {selectingAll ? 'Selecting...' : `Select all ${total} images matching filter`}
+          </button>
+        </div>
+      )}
+      {selected.size === total && total > items.length && (
+        <div className="bg-indigo-50/50 border border-indigo-100 text-center py-2 text-sm text-indigo-800 rounded-lg animate-in fade-in zoom-in-95 duration-200">
+          All {total} images are selected.{' '}
+          <button onClick={() => setSelected(new Set())} className="text-indigo-600 font-bold hover:underline ml-1">
+            Clear selection
           </button>
         </div>
       )}
