@@ -36,7 +36,7 @@ export const ProductSchema = z.object({
   isBestSeller: z.boolean().default(false),
   isTrending: z.boolean().default(false),
   gst: z.number().min(0).max(100).default(0),
-  weight: z.number().positive().optional(),
+  weight: z.string().max(100).optional(),
   warranty: z.string().max(200).optional(),
   returnPolicy: z.string().max(500).optional(),
   tags: z.array(z.string()).default([]),

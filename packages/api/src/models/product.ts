@@ -35,7 +35,7 @@ export interface IProduct extends Document {
   metaTitle?: string;
   metaDescription?: string;
   tags: string[];
-  weight?: number;
+  weight?: string;
   warranty?: string;
   returnPolicy?: string;
 }
@@ -73,7 +73,7 @@ const ProductSchema = new Schema<IProduct>({
   metaTitle: { type: String },
   metaDescription: { type: String },
   tags: [{ type: String }],
-  weight: { type: Number },
+  weight: { type: String },
   warranty: { type: String },
   returnPolicy: { type: String },
 }, { timestamps: true });

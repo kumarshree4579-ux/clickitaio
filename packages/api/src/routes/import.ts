@@ -123,7 +123,7 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
     const minStock = parseInt(getAlt('min stock', 'minstock')) || 0;
     const description = getAlt('description');
     const shortDescription = getAlt('short description', 'shortdescription');
-    const weight = parseFloat(getAlt('weight')) || undefined;
+    const weight = getAlt('weight') || undefined;
     const warranty = getAlt('warranty');
     const returnPolicy = getAlt('return policy', 'returnpolicy');
     const barcode = getAlt('barcode');
