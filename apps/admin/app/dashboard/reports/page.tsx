@@ -26,7 +26,7 @@ export default function ReportsPage() {
 
   const statCards = [
     { label: "Today's Orders", value: summary.today.orders, icon: '📦', color: 'bg-blue-500' },
-    { label: "Today's Revenue", value: `₹${summary.today.sales.toLocaleString()}`, icon: '💰', color: 'bg-green-500' },
+    // { label: "Today's Revenue", value: `₹${summary.today.sales.toLocaleString()}`, icon: '💰', color: 'bg-green-500' },
     { label: "Month Orders", value: summary.month.orders, icon: '📅', color: 'bg-purple-500' },
     { label: "Month Revenue", value: `₹${summary.month.sales.toLocaleString()}`, icon: '📈', color: 'bg-orange-500' },
     { label: 'Pending Orders', value: summary.orders.pending, icon: '⏳', color: 'bg-yellow-500' },

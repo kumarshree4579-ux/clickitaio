@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = '1', limit = '20', q, category, subCategory, brand, status = 'active', featured, newArrival, bestSeller } = req.query as any;
+    const { page = '1', limit = '20', q, category, subCategory, brand, status = 'active', featured, newArrival, bestSeller, missingImages } = req.query as any;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const filter: any = { status };
     if (q) filter.$text = { $search: q };
@@ -17,6 +17,9 @@ router.get('/', async (req: Request, res: Response) => {
     if (featured === 'true') filter.isFeatured = true;
     if (newArrival === 'true') filter.isNewArrival = true;
     if (bestSeller === 'true') filter.isBestSeller = true;
+    if (missingImages === 'true') {
+      filter.$or = [{ images: { $size: 0 } }, { images: { $exists: false } }];
+    }
     const [items, total] = await Promise.all([
       Product.find(filter).populate('category', 'name slug').populate('subCategory', 'name slug').populate('brand', 'name').skip(skip).limit(parseInt(limit)).sort({ createdAt: -1 }),
       Product.countDocuments(filter),

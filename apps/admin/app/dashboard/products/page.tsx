@@ -95,6 +95,7 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [q, setQ] = useState('');
+  const [missingImages, setMissingImages] = useState(false);
   const [uploadingCount, setUploadingCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -111,6 +112,7 @@ export default function ProductsPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (q) params.set('q', q);
+      if (missingImages) params.set('missingImages', 'true');
       const res = await fetch(`${API}/products?${params}`, { 
         headers: { Authorization: `Bearer ${token()}` },
         signal: controller.signal,
@@ -126,7 +128,7 @@ export default function ProductsPage() {
     }
   }
 
-  useEffect(() => { load(); }, [page, q]);
+  useEffect(() => { load(); }, [page, q, missingImages]);
   useEffect(() => {
     fetch(`${API}/categories`).then(r => r.json()).then(d => setCats(Array.isArray(d) ? d : []));
     fetch(`${API}/brands`).then(r => r.json()).then(d => setBrands(Array.isArray(d) ? d : []));
@@ -283,8 +285,14 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <input placeholder="Search products..." value={q} onChange={e => { setQ(e.target.value); setPage(1); }}
-        className="mb-4 border rounded-lg px-3 py-2 text-sm w-full max-w-sm" />
+      <div className="flex flex-col sm:flex-row gap-4 mb-4 items-center">
+        <input placeholder="Search products..." value={q} onChange={e => { setQ(e.target.value); setPage(1); }}
+          className="border rounded-lg px-3 py-2 text-sm w-full max-w-sm" />
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" checked={missingImages} onChange={e => { setMissingImages(e.target.checked); setPage(1); }} className="w-4 h-4 accent-indigo-600" />
+          Show only Missing Images
+        </label>
+      </div>
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50">

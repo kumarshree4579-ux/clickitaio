@@ -5,6 +5,7 @@ import { uploadBufferToCloudinary } from '../utils/cloudinary';
 import { deleteFromCloudinary } from '../utils/cloudinary';
 import { requireAuth, AuthedRequest, requireAdmin } from '../middleware/auth';
 import { Media } from '../models/media';
+import { Product } from '../models/product';
 
 const router = Router();
 const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } });
@@ -58,6 +59,15 @@ router.post('/bulk', requireAuth, requireAdmin, upload.array('files', 20), async
         });
 
         uploaded.push({ originalName, url: result.url, public_id: result.public_id });
+
+        // Auto-map this newly uploaded image to products waiting for it
+        await Product.updateMany(
+          { pendingImages: originalName },
+          { 
+            $push: { images: { url: result.url, public_id: result.public_id, alt: originalName } },
+            $pull: { pendingImages: originalName }
+          }
+        );
       } catch {
         // Skip failed files silently
       }

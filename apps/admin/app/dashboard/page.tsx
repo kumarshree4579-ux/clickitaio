@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
   const statCards = [
     { label: "Today's Orders", value: summary.today.orders, icon: '📦', color: 'bg-blue-500', href: '/dashboard/orders' },
-    { label: "Today's Revenue", value: `₹${summary.today.sales.toLocaleString('en-IN')}`, icon: '💰', color: 'bg-emerald-500', href: '/dashboard/reports' },
+    // { label: "Today's Revenue", value: `₹${summary.today.sales.toLocaleString('en-IN')}`, icon: '💰', color: 'bg-emerald-500', href: '/dashboard/reports' },
     { label: 'Month Orders', value: summary.month.orders, icon: '📅', color: 'bg-violet-500', href: '/dashboard/orders' },
     { label: 'Month Revenue', value: `₹${summary.month.sales.toLocaleString('en-IN')}`, icon: '📈', color: 'bg-orange-500', href: '/dashboard/reports' },
     { label: 'Active Orders', value: summary.orders.active, icon: '🔄', color: 'bg-amber-500', href: '/dashboard/orders' },

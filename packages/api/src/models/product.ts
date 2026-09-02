@@ -38,6 +38,7 @@ export interface IProduct extends Document {
   weight?: string;
   warranty?: string;
   returnPolicy?: string;
+  pendingImages?: string[];
 }
 
 const ProductSchema = new Schema<IProduct>({
@@ -76,6 +77,7 @@ const ProductSchema = new Schema<IProduct>({
   weight: { type: String },
   warranty: { type: String },
   returnPolicy: { type: String },
+  pendingImages: [{ type: String }],
 }, { timestamps: true });
 
 ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });

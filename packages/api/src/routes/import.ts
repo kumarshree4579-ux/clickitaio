@@ -64,10 +64,11 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
   }
 
   // Helper: resolve pipe-separated image filenames to URLs
-  async function resolveImages(imagesStr: string, row: number, sku: string): Promise<{ url: string }[]> {
-    if (!imagesStr) return [];
+  async function resolveImages(imagesStr: string, row: number, sku: string): Promise<{ resolved: { url: string }[], pending: string[] }> {
+    if (!imagesStr) return { resolved: [], pending: [] };
     const filenames = imagesStr.split('|').map(f => f.trim()).filter(Boolean);
     const resolved: { url: string }[] = [];
+    const pending: string[] = [];
 
     for (const filename of filenames) {
       // If it's already a URL, use directly
@@ -82,9 +83,10 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
       } else {
         // Not found — add to missing report, don't block product creation
         missingImages.push({ row, sku, filename });
+        pending.push(filename);
       }
     }
-    return resolved;
+    return { resolved, pending };
   }
 
   // Parse headers
@@ -156,9 +158,12 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
 
     // Resolve images — support both pipe-separated single column and Image1..Image20 columns
     let images: { url: string }[] = [];
+    let pendingImages: string[] = [];
     const imagesCol = getAlt('images');
     if (imagesCol) {
-      images = await resolveImages(imagesCol, i, sku);
+      const imgRes = await resolveImages(imagesCol, i, sku);
+      images = imgRes.resolved;
+      pendingImages = imgRes.pending;
     } else {
       // Fallback: check image1..image20 columns (backward compat)
       for (let n = 1; n <= 20; n++) {
@@ -173,6 +178,7 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
               images.push({ url: media.url });
             } else {
               missingImages.push({ row: i, sku, filename: url });
+              pendingImages.push(url);
             }
           }
         }
@@ -184,7 +190,7 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
         name, mrp, sellingPrice, stock, description, shortDescription,
         weight, warranty, returnPolicy, barcode, tags, gst, minStock,
         status, isFeatured, isNewArrival, isBestSeller, isTrending,
-        metaTitle, metaDescription,
+        metaTitle, metaDescription, pendingImages,
         ...(categoryId && { category: categoryId }),
         ...(subCategoryId && { subCategory: subCategoryId }),
         ...(brandId && { brand: brandId }),
