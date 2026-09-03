@@ -121,7 +121,7 @@ export default function ProductCard({ product, compact = false }: Props) {
         {/* Brand & Ratings */}
         <div className="flex items-center justify-between mb-0.5 sm:mb-1">
           {product.brand ? (
-            <p className="text-[9px] sm:text-[10px] font-bold text-indigo-500 uppercase tracking-wide truncate pr-2">{product.brand.name}</p>
+            <p className="text-[9px] sm:text-[10px] font-bold text-primary uppercase tracking-wide truncate pr-2">{product.brand.name}</p>
           ) : (
             <div />
           )}
@@ -145,10 +145,10 @@ export default function ProductCard({ product, compact = false }: Props) {
           </button>
         ) : qtyInCart > 0 ? (
           <div className="flex gap-1 mt-1.5 w-full items-center">
-            <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-md px-1 py-0.5 sm:py-1 flex-1">
-              <button onClick={(e) => updateCart(e, -1)} className={`flex items-center justify-center bg-white rounded text-indigo-600 font-bold shadow-sm active:scale-95 transition-transform ${compact ? 'w-4 h-4 text-xs' : 'w-5 h-5 sm:w-7 sm:h-7 text-sm sm:text-base'}`}>-</button>
+            <div className="flex items-center justify-between bg-primary-light border border-primary-light rounded-md px-1 py-0.5 sm:py-1 flex-1">
+              <button onClick={(e) => updateCart(e, -1)} className={`flex items-center justify-center bg-white rounded text-primary font-bold shadow-sm active:scale-95 transition-transform ${compact ? 'w-4 h-4 text-xs' : 'w-5 h-5 sm:w-7 sm:h-7 text-sm sm:text-base'}`}>-</button>
               <span className="text-[10px] sm:text-xs font-bold text-indigo-900">{qtyInCart}</span>
-              <button onClick={(e) => updateCart(e, 1)} disabled={qtyInCart >= (product.stock || 1)} className={`flex items-center justify-center bg-indigo-600 rounded text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform ${compact ? 'w-4 h-4 text-xs' : 'w-5 h-5 sm:w-7 sm:h-7 text-sm sm:text-base'}`}>+</button>
+              <button onClick={(e) => updateCart(e, 1)} disabled={qtyInCart >= (product.stock || 1)} className={`flex items-center justify-center bg-primary rounded text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform ${compact ? 'w-4 h-4 text-xs' : 'w-5 h-5 sm:w-7 sm:h-7 text-sm sm:text-base'}`}>+</button>
             </div>
             <button onClick={(e) => { e.preventDefault(); router.push('/cart'); }} className={`bg-emerald-500 text-white rounded-md font-bold hover:bg-emerald-600 flex items-center justify-center shadow-sm active:scale-95 transition-transform shrink-0 ${compact ? 'px-1.5 py-0.5' : 'px-2 sm:px-2.5 py-1 sm:py-1.5'}`}>
               <svg className={compact ? 'w-3 h-3' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -158,7 +158,7 @@ export default function ProductCard({ product, compact = false }: Props) {
           <button onClick={(e) => updateCart(e, 1)} disabled={outOfStock}
             className={`mt-1.5 w-full font-medium rounded-md transition-all active:scale-95 ${compact ? 'text-[10px] py-1' : 'text-[11px] sm:text-sm py-1.5 sm:py-2'} ${
               outOfStock ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+              : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
             }`}>
             {outOfStock ? 'Out of Stock' : 'Add to Cart'}
           </button>

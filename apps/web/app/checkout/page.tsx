@@ -216,7 +216,7 @@ export default function CheckoutPage() {
             <h2 className="text-[12px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Delivery Address</h2>
             <button onClick={() => setShowAddressSheet(true)} className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 p-3.5 rounded-xl border border-gray-200 transition-colors text-left group">
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-lg shadow-inner">📍</div>
+                <div className="w-9 h-9 bg-primary-light text-primary rounded-full flex items-center justify-center text-lg shadow-inner">📍</div>
                 <div className="flex-1 min-w-0">
                   {selectedAddr ? (
                     <>
@@ -224,11 +224,11 @@ export default function CheckoutPage() {
                       <p className="text-[13px] text-gray-500 truncate mt-0.5">{selectedAddr.line1}, {selectedAddr.city}</p>
                     </>
                   ) : (
-                    <p className="font-bold text-indigo-600 text-[15px]">Select Delivery Address</p>
+                    <p className="font-bold text-primary text-[15px]">Select Delivery Address</p>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-indigo-600">
+              <div className="flex items-center gap-2 text-primary">
                 <span className="text-xl font-medium leading-none">+</span>
                 <svg className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
               </div>
@@ -243,16 +243,16 @@ export default function CheckoutPage() {
                 { value: 'razorpay', label: 'Online Payment', sub: 'UPI, Cards, Net Banking, Wallets', icon: '💳' },
                 { value: 'cod', label: 'Cash on Delivery', sub: 'Pay when your order arrives', icon: '💵' },
               ].map(opt => (
-                <label key={opt.value} className={`flex items-center justify-between p-3.5 border rounded-xl cursor-pointer transition-colors ${paymentMethod === opt.value ? 'border-indigo-400 bg-indigo-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <label key={opt.value} className={`flex items-center justify-between p-3.5 border rounded-xl cursor-pointer transition-colors ${paymentMethod === opt.value ? 'border-indigo-400 bg-primary-light/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-lg ${paymentMethod === opt.value ? 'bg-indigo-100' : 'bg-gray-100'}`}>{opt.icon}</div>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-lg ${paymentMethod === opt.value ? 'bg-primary-light' : 'bg-gray-100'}`}>{opt.icon}</div>
                     <div>
                       <p className={`font-bold text-[14px] ${paymentMethod === opt.value ? 'text-indigo-900' : 'text-gray-800'}`}>{opt.label}</p>
                       <p className="text-[12px] text-gray-500 mt-0.5">{opt.sub}</p>
                     </div>
                   </div>
                   <input type="radio" name="payment" value={opt.value} checked={paymentMethod === opt.value}
-                    onChange={() => setPaymentMethod(opt.value as any)} className="w-5 h-5 accent-indigo-600" />
+                    onChange={() => setPaymentMethod(opt.value as any)} className="w-5 h-5 accent-primary" />
                 </label>
               ))}
             </div>
@@ -268,7 +268,7 @@ export default function CheckoutPage() {
               <span className="text-[18px] font-black text-gray-900 leading-none">₹{fmt(total)}</span>
             </div>
             <button onClick={placeOrder} disabled={loading}
-              className="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-md shadow-indigo-200/50 flex items-center justify-center gap-2 text-[15px] disabled:opacity-70">
+              className="flex-1 bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-primary-dark active:scale-95 transition-all shadow-md shadow-indigo-200/50 flex items-center justify-center gap-2 text-[15px] disabled:opacity-70">
               {loading ? 'Processing...' : paymentMethod === 'cod' ? 'Complete Order' : 'Pay & Complete'}
               {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
             </button>
@@ -293,15 +293,15 @@ export default function CheckoutPage() {
                 setNewAddr({ ...emptyAddress, name: currentUser?.name || '', phone: currentUser?.mobile || '' }); 
                 setShowNewAddrSheet(true); 
               }} 
-                className="w-full flex items-center gap-4 bg-white border border-indigo-200 border-dashed shadow-sm p-4 rounded-2xl hover:bg-indigo-50 transition-colors text-left group">
-                 <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-light group-hover:scale-110 transition-transform">+</div>
-                 <span className="font-bold text-indigo-700 text-[15px]">Add New Address</span>
+                className="w-full flex items-center gap-4 bg-white border border-indigo-200 border-dashed shadow-sm p-4 rounded-2xl hover:bg-primary-light transition-colors text-left group">
+                 <div className="w-10 h-10 rounded-full bg-primary-light text-primary flex items-center justify-center text-xl font-light group-hover:scale-110 transition-transform">+</div>
+                 <span className="font-bold text-primary-dark text-[15px]">Add New Address</span>
               </button>
 
               {/* Existing Addresses */}
               {addresses.map(a => (
                  <label key={a._id} className={`flex items-start gap-4 p-4 bg-white border rounded-2xl cursor-pointer transition-all ${selectedAddr?._id === a._id ? 'border-indigo-500 shadow-md ring-1 ring-indigo-500/20' : 'border-gray-200 hover:border-gray-300 shadow-sm'}`}>
-                   <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => { setSelectedAddr(a); setShowAddressSheet(false); }} className="mt-1 w-5 h-5 accent-indigo-600 cursor-pointer shrink-0" />
+                   <input type="radio" name="address" checked={selectedAddr?._id === a._id} onChange={() => { setSelectedAddr(a); setShowAddressSheet(false); }} className="mt-1 w-5 h-5 accent-primary cursor-pointer shrink-0" />
                    <div className="flex-1 min-w-0">
                      <p className="font-bold text-gray-900 text-[15px] flex items-center gap-2">
                        {a.name}
@@ -334,7 +334,7 @@ export default function CheckoutPage() {
                   setBookingForOther(e.target.checked);
                   if (e.target.checked) setNewAddr(a => ({ ...a, name: '', phone: '' }));
                   else if (currentUser) setNewAddr(a => ({ ...a, name: currentUser.name || '', phone: currentUser.mobile || '' }));
-                }} className="w-4 h-4 accent-indigo-600 rounded" />
+                }} className="w-4 h-4 accent-primary rounded" />
                 Booking for someone else?
               </label>
             </div>
@@ -346,18 +346,18 @@ export default function CheckoutPage() {
                   <div className="flex-1">
                     <p className="text-[14px] font-bold text-emerald-800">Map location selected</p>
                   </div>
-                  <button onClick={() => setShowMap(true)} className="text-[13px] text-indigo-600 font-bold bg-white px-3 py-1.5 rounded-lg border border-indigo-100 shadow-sm hover:bg-indigo-50">Change</button>
+                  <button onClick={() => setShowMap(true)} className="text-[13px] text-primary font-bold bg-white px-3 py-1.5 rounded-lg border border-primary-light shadow-sm hover:bg-primary-light">Change</button>
                 </div>
               ) : (
-                <button onClick={() => setShowMap(true)} className="w-full flex items-center justify-between border-2 border-dashed border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 rounded-2xl p-4 text-left transition-colors group">
+                <button onClick={() => setShowMap(true)} className="w-full flex items-center justify-between border-2 border-dashed border-indigo-200 bg-primary-light/30 hover:bg-primary-light rounded-2xl p-4 text-left transition-colors group">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">📍</div>
+                    <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">📍</div>
                     <div>
                       <p className="text-[15px] font-bold text-indigo-900">Drop pin on map</p>
                       <p className="text-[11px] text-rose-500 font-bold uppercase tracking-wider mt-0.5">Required for delivery</p>
                     </div>
                   </div>
-                  <span className="bg-indigo-600 text-white text-[13px] px-4 py-2 rounded-xl font-bold shadow-sm">Select</span>
+                  <span className="bg-primary text-white text-[13px] px-4 py-2 rounded-xl font-bold shadow-sm">Select</span>
                 </button>
               )}
 
@@ -372,7 +372,7 @@ export default function CheckoutPage() {
           </div>
           
           <div className="p-4 border-t border-gray-100 shrink-0 max-w-2xl mx-auto w-full" style={{ paddingBottom: 'max(60px, env(safe-area-inset-bottom))' }}>
-            <button onClick={saveNewAddress} className="w-full bg-indigo-600 text-white py-4 rounded-xl text-[15px] font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95">
+            <button onClick={saveNewAddress} className="w-full bg-primary text-white py-4 rounded-xl text-[15px] font-bold hover:bg-primary-dark shadow-md transition-all active:scale-95">
               Save Address
             </button>
           </div>

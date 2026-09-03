@@ -1,11 +1,11 @@
 import { Router, Response } from 'express';
-import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
+import { requireAuth, requireRole, optionalAuth, AuthedRequest } from '../middleware/auth';
 import { sse } from '../services/sse';
 
 const router = Router();
 
 // Endpoint for clients to connect to the SSE stream
-router.get('/stream', requireAuth, (req: AuthedRequest, res: Response) => {
+router.get('/stream', optionalAuth, (req: AuthedRequest, res: Response) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -15,7 +15,9 @@ router.get('/stream', requireAuth, (req: AuthedRequest, res: Response) => {
   res.write(`data: ${JSON.stringify({ message: 'Connected' })}\n\n`);
 
   // Add client to the SSE service
-  sse.addClient(req.user!.sub, req.user!.role, res);
+  const clientId = req.user?.sub || `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const role = req.user?.role || 'customer'; // Default role to 'customer' so they receive marketing broadcasts
+  sse.addClient(clientId, role, res);
 });
 
 // Admin-only route to broadcast a marketing message to all customers

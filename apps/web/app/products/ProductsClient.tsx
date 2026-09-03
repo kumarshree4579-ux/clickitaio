@@ -52,13 +52,13 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Categories</p>
         <div className="space-y-0.5">
           <Link href="/products" onClick={() => setDrawerOpen(false)}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${!sp.category ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${!sp.category ? 'bg-primary-light text-primary-dark font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
             <span className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px]">🛍</span>
             All Products
           </Link>
           {topCats.map((c: any) => (
             <Link key={c._id} href={buildUrl({ category: c._id, page: '1' })} onClick={() => setDrawerOpen(false)}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${sp.category === c._id ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${sp.category === c._id ? 'bg-primary-light text-primary-dark font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
               {c.image
                 ? <img src={c.image} alt={c.name} className="w-5 h-5 rounded object-cover shrink-0" />
                 : <span className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px] shrink-0">📦</span>}
@@ -75,7 +75,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
           <div className="space-y-0.5">
             {brands.map((b: any) => (
               <Link key={b._id} href={buildUrl({ brand: b._id, page: '1' })} onClick={() => setDrawerOpen(false)}
-                className={`flex items-center px-3 py-2 rounded-xl text-sm transition-colors ${sp.brand === b._id ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
+                className={`flex items-center px-3 py-2 rounded-xl text-sm transition-colors ${sp.brand === b._id ? 'bg-primary-light text-primary-dark font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
                 {b.name}
               </Link>
             ))}
@@ -93,7 +93,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
             { label: '⭐ Featured', key: 'featured', val: 'true' },
           ].map(f => (
             <Link key={f.key} href={buildUrl({ [f.key]: sp[f.key] ? '' : f.val, page: '1' })} onClick={() => setDrawerOpen(false)}
-              className={`flex items-center px-3 py-2 rounded-xl text-sm transition-colors ${sp[f.key] ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
+              className={`flex items-center px-3 py-2 rounded-xl text-sm transition-colors ${sp[f.key] ? 'bg-primary-light text-primary-dark font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
               {f.label}
             </Link>
           ))}
@@ -129,7 +129,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
           </svg>
           Filters
           {activeFilters.length > 0 && (
-            <span className="bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{activeFilters.length}</span>
+            <span className="bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{activeFilters.length}</span>
           )}
         </button>
       </div>
@@ -139,7 +139,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
         <div className="flex flex-wrap gap-2 mb-4">
           {activeFilters.map(f => (
             <button key={f.key} onClick={() => removeFilter(f.key)}
-              className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
+              className="flex items-center gap-1.5 bg-primary-light text-primary-dark text-xs font-medium px-3 py-1.5 rounded-full hover:bg-primary-light transition-colors">
               {f.label}
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -176,7 +176,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
                 if (pg > Math.ceil(total / 20)) return null;
                 return (
                   <Link key={pg} href={buildUrl({ page: String(pg) })}
-                    className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-colors ${pg === page ? 'bg-indigo-600 text-white' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'}`}>
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-colors ${pg === page ? 'bg-primary text-white' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'}`}>
                     {pg}
                   </Link>
                 );
@@ -209,7 +209,7 @@ export default function ProductsClient({ sp, topCats, brands, total, page, activ
             </div>
             <div className="px-5 pb-8 pt-2 border-t border-gray-100">
               <button onClick={() => setDrawerOpen(false)}
-                className="w-full bg-indigo-600 text-white py-3 rounded-2xl font-semibold text-sm hover:bg-indigo-700">
+                className="w-full bg-primary text-white py-3 rounded-2xl font-semibold text-sm hover:bg-primary-dark">
                 Show {total} Products
               </button>
             </div>

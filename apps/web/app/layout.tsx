@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 import './globals.css';
 import Footer from '../components/Footer';
-import NotificationBar from '../components/NotificationBar';
 import MobileBottomNav from '../components/MobileBottomNav';
 import SplashLoader from '../components/SplashLoader';
 import ProfileCompletePrompt from '../components/ProfileCompletePrompt';
@@ -51,7 +50,7 @@ async function getSettings() {
     // using absolute URL for server-side fetch
     const apiUrl = process.env.API_URL || 'http://127.0.0.1:4000';
     const res = await fetch(`${apiUrl}/settings/public`, {
-      next: { revalidate: 60 },
+      cache: 'no-store',
       signal: AbortSignal.timeout(3000)
     });
     if (!res.ok) return null;
@@ -65,20 +64,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const settings = await getSettings();
 
   const themeStyles = settings?.appTheme ? {
-    '--color-primary': settings.appTheme.primaryColor || '#4f46e5',
-    '--color-secondary': settings.appTheme.secondaryColor || '#7c3aed',
+    '--theme-primary': settings.appTheme.primaryColor || '#4f46e5',
+    '--theme-primary-dark': settings.appTheme.primaryColor || '#4338ca', // Can add color mixing logic later, fallback to primary for now
+    '--theme-primary-light': settings.appTheme.primaryColor ? `${settings.appTheme.primaryColor}20` : '#eef2ff', // 20 hex is ~12% opacity
+    '--theme-secondary': settings.appTheme.secondaryColor || '#7c3aed',
+    '--bg-image': settings.backgroundImage ? `url(${settings.backgroundImage})` : 'none',
   } as React.CSSProperties : {
-    '--color-primary': '#4f46e5',
-    '--color-secondary': '#7c3aed',
+    '--theme-primary': '#4f46e5',
+    '--theme-primary-dark': '#4338ca',
+    '--theme-primary-light': '#eef2ff',
+    '--theme-secondary': '#7c3aed',
+    '--bg-image': 'none',
   } as React.CSSProperties;
 
   return (
     <html lang="en" className={`${geist.variable} h-full`} style={themeStyles}>
-      <body className="min-h-full flex flex-col bg-gray-50">
+      <body className="min-h-full flex flex-col bg-gray-50" style={{ backgroundImage: 'var(--bg-image)', backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}>
         <LocationProvider>
           <SplashLoader />
           <ProfileCompletePrompt />
-          <NotificationBar />
           {children}
           <Footer />
           <MobileBottomNav />

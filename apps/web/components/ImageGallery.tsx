@@ -56,7 +56,7 @@ export default function ImageGallery({ images, name }: { images: any[]; name: st
               <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                 {images.map((_, i) => (
                   <button key={i} onClick={e => { e.stopPropagation(); setActive(i); }}
-                    className={`rounded-full transition-all touch-manipulation ${i === active ? 'w-4 h-1.5 bg-indigo-600' : 'w-1.5 h-1.5 bg-white/70'}`} />
+                    className={`rounded-full transition-all touch-manipulation ${i === active ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-white/70'}`} />
                 ))}
               </div>
             </>

@@ -29,56 +29,24 @@ async function getData() {
       newArrivals: newArrivals.items || [],
       bestSellers: bestSellers.items || [],
       categories: (categories || []).filter((c: any) => !c.parent).slice(0, 6),
-      trustBadges: (settings.trustBadges || []).filter((b: any) => b.isActive),
     };
   } catch {
-    return { featured: [], newArrivals: [], bestSellers: [], categories: [], trustBadges: [] };
+    return { featured: [], newArrivals: [], bestSellers: [], categories: [] };
   }
 }
 
 export default async function HomePage() {
-  const { featured, newArrivals, bestSellers, categories, trustBadges } = await getData();
-
-  const defaultBadges = [
-    { icon: '🚚', title: 'Free Shipping', subtitle: 'On orders above ₹500' },
-    { icon: '↩️', title: 'Easy Returns', subtitle: '7-day return policy' },
-    { icon: '🔒', title: 'Secure Payment', subtitle: 'Razorpay & COD' },
-    { icon: '⭐', title: 'Top Quality', subtitle: 'Verified products' },
-  ];
-  const badges = trustBadges.length ? trustBadges : defaultBadges;
+  const { featured, newArrivals, bestSellers, categories } = await getData();
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      {/* Spacer: pushes content below the fixed header */}
-      {/* Mobile: 56px logo + 50px search + ~40px tabs ≈ 146px */}
-      {/* Desktop: 64px */}
-      <div className="h-[146px] sm:h-16 shrink-0" />
       <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
 
         {/* Hero Slider — managed from admin banners */}
         <section>
           <HeroBanner />
         </section>
-
-        {/* Trust badges */}
-        {badges.length > 0 && (
-          <section className="bg-white border-b border-slate-100">
-            <div className="w-full px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-                {badges.map((b: any) => (
-                  <div key={b.title} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2">
-                    <span className="text-xl sm:text-2xl">{b.icon}</span>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{b.title}</p>
-                      <p className="text-[10px] sm:text-xs text-slate-500 truncate">{b.subtitle || b.sub}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
 
         <div className="w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-14 max-w-7xl">
 

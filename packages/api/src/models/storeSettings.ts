@@ -6,15 +6,8 @@ export interface IDeliveryZone {
   isActive: boolean;
 }
 
-export interface ITrustBadge {
-  icon: string;
-  title: string;
-  subtitle: string;
-  isActive: boolean;
-}
-
 export interface IStoreSettings extends Document {
-  storeName: string;
+  backgroundImage: string;
   storeLocation: { lat: number; lng: number };
   deliveryZones: IDeliveryZone[];
   estimatedDeliveryMinutes: number;
@@ -24,15 +17,15 @@ export interface IStoreSettings extends Document {
   minOrderAmount: number;
   freeDeliveryAbove: number;
   deliveryCharge: number;
-  trustBadges: ITrustBadge[];
   topbarTabs?: { label: string; categorySlug: string; isActive: boolean }[];
   appTheme?: { primaryColor: string; secondaryColor: string; activeThemeName: string };
+  savedThemes: { name: string; primaryColor: string; secondaryColor: string; backgroundImage: string }[];
   orderAlertSound?: 'beep' | 'chime' | 'bell' | 'urgent' | 'none';
   orderAlertDuration?: number; // seconds
 }
 
 const StoreSettingsSchema = new Schema<IStoreSettings>({
-  storeName: { type: String, default: 'Ecom Store' },
+  backgroundImage: { type: String, default: '' },
   storeLocation: {
     lat: { type: Number, default: 20.5937 },
     lng: { type: Number, default: 78.9629 },
@@ -49,12 +42,6 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
   minOrderAmount: { type: Number, default: 0 },
   freeDeliveryAbove: { type: Number, default: 500 },
   deliveryCharge: { type: Number, default: 49 },
-  trustBadges: [{
-    icon: { type: String, default: '' },
-    title: { type: String, default: '' },
-    subtitle: { type: String, default: '' },
-    isActive: { type: Boolean, default: true },
-  }],
   topbarTabs: [{
     label: String,
     categorySlug: String,
@@ -65,6 +52,12 @@ const StoreSettingsSchema = new Schema<IStoreSettings>({
     secondaryColor: { type: String, default: '#7c3aed' },
     activeThemeName: { type: String, default: 'default' },
   },
+  savedThemes: [{
+    name: String,
+    primaryColor: String,
+    secondaryColor: String,
+    backgroundImage: String,
+  }],
   orderAlertSound: { type: String, enum: ['beep', 'chime', 'bell', 'urgent', 'none'], default: 'beep' },
   orderAlertDuration: { type: Number, default: 10 },
 }, { timestamps: true });

@@ -74,21 +74,21 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
                 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ul]:space-y-1.5 [&_ul]:text-gray-600 [&_ul]:text-sm sm:[&_ul]:text-base
                 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4 [&_ol]:space-y-1.5 [&_ol]:text-gray-600 [&_ol]:text-sm sm:[&_ol]:text-base
                 [&_li]:leading-relaxed
-                [&_blockquote]:border-l-4 [&_blockquote]:border-indigo-400 [&_blockquote]:bg-indigo-50 [&_blockquote]:rounded-r-xl [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:my-5 [&_blockquote]:text-indigo-800 [&_blockquote]:italic
-                [&_a]:text-indigo-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-indigo-800
+                [&_blockquote]:border-l-4 [&_blockquote]:border-indigo-400 [&_blockquote]:bg-primary-light [&_blockquote]:rounded-r-xl [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:my-5 [&_blockquote]:text-indigo-800 [&_blockquote]:italic
+                [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-indigo-800
                 [&_strong]:font-semibold [&_strong]:text-gray-800
                 [&_hr]:border-gray-100 [&_hr]:my-6
                 [&_table]:w-full [&_table]:text-sm [&_table]:border-collapse [&_table]:mb-4
                 [&_th]:bg-gray-50 [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:text-gray-700 [&_th]:border [&_th]:border-gray-200
                 [&_td]:px-4 [&_td]:py-2 [&_td]:border [&_td]:border-gray-200 [&_td]:text-gray-600
-                [&_code]:bg-gray-100 [&_code]:text-indigo-700 [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs [&_code]:font-mono"
+                [&_code]:bg-gray-100 [&_code]:text-primary-dark [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs [&_code]:font-mono"
               dangerouslySetInnerHTML={{ __html: page.content }}
             />
 
             {/* Footer nav */}
             <div className="mt-6 flex items-center justify-between">
               <Link href="/"
-                className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
+                className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary-dark font-medium transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
@@ -96,7 +96,7 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
               </Link>
               <div className="flex items-center gap-4 text-xs text-gray-400">
                 {['privacy', 'terms', 'shipping', 'returns'].filter(s => s !== slug).slice(0, 2).map(s => (
-                  <Link key={s} href={`/pages/${s}`} className="hover:text-indigo-600 capitalize transition-colors">
+                  <Link key={s} href={`/pages/${s}`} className="hover:text-primary capitalize transition-colors">
                     {s}
                   </Link>
                 ))}

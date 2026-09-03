@@ -268,7 +268,7 @@ export default function CartPage() {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-4 text-center pb-16">
-          <div className="w-18 h-18 sm:w-20 sm:h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
+          <div className="w-18 h-18 sm:w-20 sm:h-20 bg-primary-light rounded-full flex items-center justify-center mb-4">
             <svg
               className="w-9 h-9 sm:w-10 sm:h-10 text-indigo-300"
               fill="none"
@@ -294,7 +294,7 @@ export default function CartPage() {
 
           <Link
             href="/products"
-            className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors text-sm"
+            className="bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm"
           >
             Start Shopping
           </Link>
@@ -369,7 +369,7 @@ export default function CartPage() {
 
                   <Link
                     href="/products"
-                    className="text-[12px] sm:text-[13px] text-indigo-600 font-bold hover:text-indigo-700"
+                    className="text-[12px] sm:text-[13px] text-primary font-bold hover:text-primary-dark"
                   >
                     + Add items
                   </Link>
@@ -458,7 +458,7 @@ export default function CartPage() {
                 <div className="px-3.5 sm:px-5 py-2.5 sm:py-3 bg-gray-50/50 border-t border-gray-50">
                   <Link
                     href="/products"
-                    className="inline-flex items-center gap-1.5 text-[12px] sm:text-[13px] text-indigo-600 font-bold hover:text-indigo-700"
+                    className="inline-flex items-center gap-1.5 text-[12px] sm:text-[13px] text-primary font-bold hover:text-primary-dark"
                   >
                     ← Continue shopping
                   </Link>
@@ -488,21 +488,21 @@ export default function CartPage() {
                     {/* Coupon */}
                     <button
                       onClick={openCouponSheet}
-                      className="w-full flex items-center justify-between bg-indigo-50/50 hover:bg-indigo-50 border border-indigo-100 border-dashed rounded-xl p-2.5 sm:p-3 my-3 transition-colors text-left group"
+                      className="w-full flex items-center justify-between bg-primary-light/50 hover:bg-primary-light border border-primary-light border-dashed rounded-xl p-2.5 sm:p-3 my-3 transition-colors text-left group"
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-base">
+                        <div className="w-8 h-8 bg-primary-light text-primary rounded-lg flex items-center justify-center text-base">
                           🎟️
                         </div>
 
                         <div className="min-w-0">
-                          <p className="font-bold text-indigo-700 text-[13px] sm:text-[14px] truncate max-w-[200px]">
+                          <p className="font-bold text-primary-dark text-[13px] sm:text-[14px] truncate max-w-[200px]">
                             {coupon
                               ? coupon.coupon.code
                               : 'Apply Coupon'}
                           </p>
 
-                          <p className="text-[10px] sm:text-[11px] text-indigo-600/80 font-medium">
+                          <p className="text-[10px] sm:text-[11px] text-primary/80 font-medium">
                             {coupon
                               ? 'Coupon applied successfully'
                               : 'View available offers'}
@@ -510,7 +510,7 @@ export default function CartPage() {
                         </div>
                       </div>
 
-                      <div className="text-indigo-500 shrink-0">
+                      <div className="text-primary shrink-0">
                         {coupon ? (
                           <span
                             onClick={(e) => {
@@ -518,7 +518,7 @@ export default function CartPage() {
                               e.stopPropagation();
                               removeCoupon();
                             }}
-                            className="p-1 text-lg font-bold hover:text-indigo-700"
+                            className="p-1 text-lg font-bold hover:text-primary-dark"
                             role="button"
                             aria-label="Remove coupon"
                           >
@@ -581,7 +581,7 @@ export default function CartPage() {
                   {/* Desktop Checkout */}
                   <Link
                     href="/checkout"
-                    className="hidden  lg:flex mt-4 w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-md shadow-indigo-200/50 items-center justify-center gap-2 text-[14px]"
+                    className="hidden  lg:flex mt-4 w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md shadow-indigo-200/50 items-center justify-center gap-2 text-[14px]"
                   >
                     Proceed to Checkout
 
@@ -625,7 +625,7 @@ export default function CartPage() {
 
           <Link
             href="/checkout"
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-md shadow-indigo-200/50 flex items-center justify-center gap-2 text-[14px]"
+            className="flex-1 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md shadow-indigo-200/50 flex items-center justify-center gap-2 text-[14px]"
           >
             Proceed to Checkout
 
@@ -718,7 +718,7 @@ export default function CartPage() {
             <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 bg-gray-50">
               {fetchingCoupons ? (
                 <div className="flex justify-center py-10">
-                  <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : availableCoupons.length > 0 ? (
                 availableCoupons.map((c) => {
@@ -733,13 +733,13 @@ export default function CartPage() {
                       key={c._id || c.code}
                       className={`bg-white border ${
                         meetsMinOrder
-                          ? 'border-indigo-100 shadow-sm'
+                          ? 'border-primary-light shadow-sm'
                           : 'border-gray-200 opacity-60'
                       } rounded-2xl p-3.5 sm:p-4 transition-all`}
                     >
                       <div className="flex justify-between items-start gap-3 mb-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-8 h-8 shrink-0 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center text-base">
+                          <span className="w-8 h-8 shrink-0 bg-primary-light text-primary rounded-lg flex items-center justify-center text-base">
                             🎟️
                           </span>
 
@@ -754,7 +754,7 @@ export default function CartPage() {
                               applyCoupon(c.code)
                             }
                             disabled={couponLoading}
-                            className="text-indigo-600 font-bold text-[12px] sm:text-sm bg-indigo-50 px-3 sm:px-4 py-1.5 rounded-lg hover:bg-indigo-100 active:scale-95 transition-all shrink-0"
+                            className="text-primary font-bold text-[12px] sm:text-sm bg-primary-light px-3 sm:px-4 py-1.5 rounded-lg hover:bg-primary-light active:scale-95 transition-all shrink-0"
                           >
                             APPLY
                           </button>

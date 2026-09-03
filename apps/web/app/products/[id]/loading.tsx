@@ -13,7 +13,7 @@ export default function ProductDetailLoading() {
 
           {/* Info skeleton */}
           <div className="space-y-4 animate-pulse">
-            <div className="h-4 w-20 bg-indigo-100 rounded-full" />
+            <div className="h-4 w-20 bg-primary-light rounded-full" />
             <div className="h-7 w-3/4 bg-gray-200 rounded" />
             <div className="h-4 w-1/3 bg-gray-100 rounded" />
             <div className="bg-white rounded-2xl p-4 space-y-2">

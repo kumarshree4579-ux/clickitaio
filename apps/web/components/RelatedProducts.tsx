@@ -28,14 +28,14 @@ export default function RelatedProducts({ categoryId, categoryName, excludeId }:
       {/* Section header */}
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-1 h-5 sm:h-6 bg-indigo-600 rounded-full" />
+          <div className="w-1 h-5 sm:h-6 bg-primary rounded-full" />
           <div>
             <h2 className="text-sm sm:text-lg font-bold text-gray-900">More from {categoryName}</h2>
             <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">Similar products you might like</p>
           </div>
         </div>
         <Link href={`/products?category=${categoryId}`}
-          className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 shrink-0">
+          className="text-xs sm:text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1 shrink-0">
           View all
           <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </Link>
@@ -65,7 +65,7 @@ export default function RelatedProducts({ categoryId, categoryName, excludeId }:
                 </div>
               </div>
               <div className="p-2.5 sm:p-3">
-                {p.brand && <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide mb-0.5 truncate">{p.brand.name}</p>}
+                {p.brand && <p className="text-[10px] font-bold text-primary uppercase tracking-wide mb-0.5 truncate">{p.brand.name}</p>}
                 <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 leading-snug">{p.name}</p>
                 <div className="flex items-baseline gap-1.5 mt-1.5">
                   <span className="text-sm font-bold text-gray-900">₹{fmt(p.sellingPrice)}</span>

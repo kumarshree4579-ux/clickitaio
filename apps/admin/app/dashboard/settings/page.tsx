@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 const API = process.env.NEXT_PUBLIC_API_URL;
 const token = () => localStorage.getItem('token');
 import { apiFetch } from '../../../lib/apiFetch';
+import ThemeEditor from './ThemeEditor';
 
 const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
 
@@ -298,7 +299,6 @@ export default function SettingsPage() {
         {[
           { id: 'delivery', name: 'Delivery & Map', icon: '📍' },
           { id: 'general', name: 'General Config', icon: '⚙️' },
-          { id: 'badges', name: 'Trust Badges', icon: '⭐' },
           { id: 'notifications', name: 'Notifications', icon: '🔔' },
           { id: 'security', name: 'Security', icon: '🔐' },
         ].map(t => (
@@ -427,11 +427,6 @@ export default function SettingsPage() {
           <div className="max-w-3xl space-y-6">
             <Card title="General Setup" desc="Core delivery rules and store info">
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-gray-700 mb-1 block">Store Name</label>
-                <input className={inp} value={settings.storeName || ''} onChange={e => setSettings((s: any) => ({ ...s, storeName: e.target.value }))} />
-              </div>
-
               <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50/50">
                 <div>
                   <p className="text-sm font-medium text-gray-800">Accept Deliveries</p>
@@ -489,88 +484,20 @@ export default function SettingsPage() {
           </Card>
 
           {/* App Theme */}
-          <Card title="App Theme" desc="Customize web app branding">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Primary Color</label>
-                  <div className="flex gap-2 items-center">
-                    <input type="color" className="w-8 h-8 rounded cursor-pointer border-0 p-0" value={settings.appTheme?.primaryColor || '#4f46e5'} onChange={e => setSettings((s: any) => ({ ...s, appTheme: { ...s.appTheme, primaryColor: e.target.value } }))} />
-                    <span className="text-xs text-gray-500 uppercase">{settings.appTheme?.primaryColor || '#4f46e5'}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1 block">Secondary Color</label>
-                  <div className="flex gap-2 items-center">
-                    <input type="color" className="w-8 h-8 rounded cursor-pointer border-0 p-0" value={settings.appTheme?.secondaryColor || '#7c3aed'} onChange={e => setSettings((s: any) => ({ ...s, appTheme: { ...s.appTheme, secondaryColor: e.target.value } }))} />
-                    <span className="text-xs text-gray-500 uppercase">{settings.appTheme?.secondaryColor || '#7c3aed'}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-2 border-t border-gray-100">
-                 <label className="text-xs font-medium text-gray-700 mb-1 block">Active Theme Name</label>
-                 <input className={inp} value={settings.appTheme?.activeThemeName || 'default'} onChange={e => setSettings((s: any) => ({ ...s, appTheme: { ...s.appTheme, activeThemeName: e.target.value } }))} placeholder="e.g. Festival, Rainy, Default" />
-                 <p className="text-xs text-gray-400 mt-1">Useful for seasonal themes.</p>
-              </div>
-            </div>
+          <Card title="App Theme" desc="Customize web app branding and preview changes live.">
+            <ThemeEditor 
+              initialTheme={settings.appTheme} 
+              initialBgImage={settings.backgroundImage} 
+              savedThemes={settings.savedThemes}
+              onSave={(themeUpdates: any) => {
+                setSettings((s: any) => ({ ...s, ...themeUpdates }));
+              }} 
+            />
           </Card>
         </div>
         </div>
 
-        <div className={activeTab === 'badges' ? 'block' : 'hidden'}>
-          <div className="max-w-3xl">
-            <Card 
-              title="Trust Badges" 
-              desc="These display directly below the hero banner on the customer homepage to build trust."
-              extra={
-                <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: [...(s.trustBadges || []), { icon: '⭐', title: 'New Badge', subtitle: 'Short description', isActive: true }] }))}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
-                  Add Badge
-                </button>
-              }
-            >
-              <div className="space-y-4 mt-4">
-                {(settings.trustBadges || []).map((b: any, i: number) => (
-                  <div key={i} className={`flex items-start gap-4 p-5 rounded-2xl border-2 transition-all ${b.isActive ? 'border-gray-200 bg-white shadow-sm' : 'border-gray-100 bg-gray-50 opacity-75'}`}>
-                    <div className="flex flex-col items-center gap-2">
-                      <input value={b.icon} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], icon: e.target.value }; return { ...s, trustBadges: t }; })}
-                        className="w-16 h-16 border-2 border-gray-200 rounded-xl text-center text-2xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-gray-50 shadow-inner" placeholder="🚚" />
-                      <span className="text-[10px] uppercase font-bold text-gray-400">Icon</span>
-                    </div>
-                    <div className="flex-1 space-y-3">
-                      <div>
-                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block">Badge Title</label>
-                        <input value={b.title} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], title: e.target.value }; return { ...s, trustBadges: t }; })}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 font-bold text-gray-900" placeholder="e.g. Free Delivery" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1 block">Short Description</label>
-                        <input value={b.subtitle} onChange={e => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], subtitle: e.target.value }; return { ...s, trustBadges: t }; })}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-gray-600" placeholder="e.g. On orders above $50" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 shrink-0 pt-6">
-                      <button onClick={() => setSettings((s: any) => { const t = [...s.trustBadges]; t[i] = { ...t[i], isActive: !t[i].isActive }; return { ...s, trustBadges: t }; })}
-                        className={`w-24 text-xs px-4 py-2.5 rounded-xl font-bold transition-colors text-center ${b.isActive ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
-                        {b.isActive ? 'VISIBLE' : 'HIDDEN'}
-                      </button>
-                      <button onClick={() => setSettings((s: any) => ({ ...s, trustBadges: s.trustBadges.filter((_: any, idx: number) => idx !== i) }))}
-                        className="w-24 text-red-500 hover:text-red-700 text-xs px-4 py-2.5 bg-red-50 hover:bg-red-100 rounded-xl transition-colors text-center font-bold">Remove</button>
-                    </div>
-                  </div>
-                ))}
-                {!(settings.trustBadges?.length) && (
-                  <div className="text-center py-12 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                    <div className="text-3xl mb-3">🏅</div>
-                    <p className="font-semibold text-gray-600">No Trust Badges</p>
-                    <p className="mt-1">Add badges to build trust with your customers.</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
-        </div>
+
         
         {/* ── Notifications Tab ── */}
         <div className={activeTab === 'notifications' ? 'block' : 'hidden'}>

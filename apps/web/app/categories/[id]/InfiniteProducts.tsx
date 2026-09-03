@@ -105,7 +105,7 @@ export default function InfiniteProducts({ categoryId, subCategoryId }: { catego
         <p className="text-gray-500 font-medium text-sm mb-5">No products found in this category.</p>
         <button 
           onClick={() => { setInitialLoading(true); fetchProducts(1, true); }}
-          className="px-6 py-2 bg-indigo-50 text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-100 transition-colors shadow-sm"
+          className="px-6 py-2 bg-primary-light text-primary-dark font-bold text-sm rounded-xl hover:bg-primary-light transition-colors shadow-sm"
         >
           Reload Products
         </button>

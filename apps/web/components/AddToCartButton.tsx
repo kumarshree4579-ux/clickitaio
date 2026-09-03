@@ -62,10 +62,10 @@ export default function AddToCartButton({ product }: Props) {
   if (qtyInCart > 0) {
     return (
       <div className="w-full flex items-center justify-between gap-2">
-        <div className="flex flex-1 items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-2 py-2.5">
-          <button onClick={() => updateCart(-1)} className="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-indigo-600 font-bold shadow-sm active:scale-95 transition-transform">-</button>
+        <div className="flex flex-1 items-center justify-between bg-primary-light border border-primary-light rounded-xl px-2 py-2.5">
+          <button onClick={() => updateCart(-1)} className="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-primary font-bold shadow-sm active:scale-95 transition-transform">-</button>
           <span className="text-sm font-bold text-indigo-900">{qtyInCart}</span>
-          <button onClick={() => updateCart(1)} disabled={qtyInCart >= product.stock} className="w-8 h-8 flex items-center justify-center bg-indigo-600 rounded-lg text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform">+</button>
+          <button onClick={() => updateCart(1)} disabled={qtyInCart >= product.stock} className="w-8 h-8 flex items-center justify-center bg-primary rounded-lg text-white font-bold shadow-sm disabled:opacity-50 active:scale-95 transition-transform">+</button>
         </div>
         <button onClick={() => router.push('/cart')} className="bg-gray-900 text-white rounded-xl px-4 py-3.5 text-sm font-bold shadow-sm flex items-center gap-1 hover:bg-gray-800 transition-colors active:scale-95">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -77,7 +77,7 @@ export default function AddToCartButton({ product }: Props) {
 
   return (
     <button onClick={() => updateCart(1)}
-      className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white active:scale-95`}>
+      className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white active:scale-95`}>
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
       Add to Cart
     </button>

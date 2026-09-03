@@ -49,9 +49,9 @@ export default function HeroBanner() {
             Shop the Best<br />
             <span className="text-indigo-200">Products Online</span>
           </h1>
-          <p className="text-indigo-100 text-sm sm:text-lg mb-5 sm:mb-8 max-w-xl mx-auto">Discover amazing products at unbeatable prices.</p>
+          <p className="text-primary-light text-sm sm:text-lg mb-5 sm:mb-8 max-w-xl mx-auto">Discover amazing products at unbeatable prices.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/products" className="bg-white text-indigo-600 font-semibold px-6 sm:px-8 py-3 rounded-xl hover:bg-indigo-50 transition-colors shadow-lg text-sm sm:text-base">Shop Now</Link>
+            <Link href="/products" className="bg-white text-primary font-semibold px-6 sm:px-8 py-3 rounded-xl hover:bg-primary-light transition-colors shadow-lg text-sm sm:text-base">Shop Now</Link>
             <Link href="/products?newArrival=true" className="border-2 border-white/40 text-white font-semibold px-6 sm:px-8 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm sm:text-base">New Arrivals</Link>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function HeroBanner() {
             </h2>
             {b.link && (
               <Link href={b.link}
-                className="inline-flex items-center gap-2 bg-white text-indigo-600 font-bold px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-indigo-50 transition-colors shadow-lg mt-3 sm:mt-4 text-[13px] sm:text-sm">
+                className="inline-flex items-center gap-2 bg-white text-primary font-bold px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl hover:bg-primary-light transition-colors shadow-lg mt-3 sm:mt-4 text-[13px] sm:text-sm">
                 Shop Now
                 <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
               </Link>

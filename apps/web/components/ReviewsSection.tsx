@@ -73,7 +73,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
         <h2 className="font-bold text-gray-900 text-base sm:text-lg">Customer Reviews</h2>
         {!submitted && (
           <button onClick={() => setShowForm(s => !s)}
-            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+            className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             Write a review
           </button>
@@ -135,7 +135,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
             {error && <p className="text-red-500 text-xs">{error}</p>}
             <div className="flex gap-2">
               <button type="submit" disabled={submitting}
-                className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors">
                 {submitting ? 'Submitting...' : 'Submit Review'}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
@@ -159,7 +159,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
             {reviews.map(r => (
               <div key={r._id} className="flex gap-3 sm:gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
                 {/* Avatar */}
-                <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold shrink-0">
+                <div className="w-9 h-9 rounded-full bg-primary-light text-primary flex items-center justify-center text-sm font-bold shrink-0">
                   {(r.customer?.name || r.customer?.email || 'C')[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -186,7 +186,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
             <p className="text-gray-400 text-xs mt-1">Be the first to share your experience</p>
             {!showForm && (
               <button onClick={() => setShowForm(true)}
-                className="mt-3 text-sm text-indigo-600 hover:underline font-medium">
+                className="mt-3 text-sm text-primary hover:underline font-medium">
                 Write a review
               </button>
             )}

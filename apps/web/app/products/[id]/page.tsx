@@ -38,7 +38,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const savings = product.mrp - product.sellingPrice;
 
   const badges = [
-    product.isFeatured && { label: 'Featured', cls: 'bg-violet-100 text-violet-700' },
+    product.isFeatured && { label: 'Featured', cls: 'bg-primary-light text-violet-700' },
     product.isNewArrival && { label: 'New', cls: 'bg-emerald-100 text-emerald-700' },
     product.isBestSeller && { label: '🔥 Hot', cls: 'bg-amber-100 text-amber-700' },
     product.isTrending && { label: 'Trending', cls: 'bg-rose-100 text-rose-700' },
@@ -53,12 +53,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {/* ── Breadcrumb ── */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-3 sm:pt-5">
           <nav className="flex items-center gap-1 text-[11px] sm:text-xs text-gray-400 overflow-x-auto scrollbar-hide whitespace-nowrap">
-            <Link href="/" className="hover:text-indigo-600 shrink-0">Home</Link>
+            <Link href="/" className="hover:text-primary shrink-0">Home</Link>
             <span className="shrink-0">/</span>
-            <Link href="/products" className="hover:text-indigo-600 shrink-0">Products</Link>
+            <Link href="/products" className="hover:text-primary shrink-0">Products</Link>
             {product.category && <>
               <span className="shrink-0">/</span>
-              <Link href={`/products?category=${product.category._id}`} className="hover:text-indigo-600 shrink-0">{product.category.name}</Link>
+              <Link href={`/products?category=${product.category._id}`} className="hover:text-primary shrink-0">{product.category.name}</Link>
             </>}
             <span className="shrink-0">/</span>
             <span className="text-gray-600 truncate max-w-[140px] sm:max-w-xs">{product.name}</span>
@@ -83,7 +83,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <div className="flex flex-wrap items-center gap-1.5">
                 {product.brand && (
                   <Link href={`/products?brand=${product.brand._id}`}
-                    className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded-full hover:bg-indigo-100">
+                    className="text-[11px] font-bold text-primary uppercase tracking-wider bg-primary-light px-2.5 py-1 rounded-full hover:bg-primary-light">
                     {product.brand.name}
                   </Link>
                 )}
@@ -151,27 +151,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <p className="text-gray-600 text-sm leading-relaxed px-0.5">{product.shortDescription}</p>
               )}
 
-              {/* Trust pills */}
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { icon: '🚚', text: 'Free shipping ₹500+' },
-                  { icon: '🔒', text: 'Secure payment' },
-                  product.warranty && { icon: '🛡️', text: product.warranty },
-                  product.returnPolicy && { icon: '↩️', text: product.returnPolicy },
-                ].filter(Boolean).map((item: any) => (
-                  <div key={item.text} className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 shadow-sm">
-                    <span className="text-sm shrink-0">{item.icon}</span>
-                    <span className="text-[11px] sm:text-xs text-gray-600 leading-tight">{item.text}</span>
-                  </div>
-                ))}
-              </div>
 
               {/* Tags */}
               {product.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 px-0.5">
                   {product.tags.map((tag: string) => (
                     <Link key={tag} href={`/products?q=${encodeURIComponent(tag)}`}
-                      className="text-[11px] bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-500 px-2.5 py-1 rounded-full transition-colors">
+                      className="text-[11px] bg-gray-100 hover:bg-primary-light hover:text-primary text-gray-500 px-2.5 py-1 rounded-full transition-colors">
                       #{tag}
                     </Link>
                   ))}

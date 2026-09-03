@@ -9,7 +9,7 @@ import { apiFetch } from '../../../lib/apiFetch';
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
   confirmed: 'bg-blue-100 text-blue-700',
-  packed: 'bg-indigo-100 text-indigo-700',
+  packed: 'bg-primary-light text-primary-dark',
   shipped: 'bg-purple-100 text-purple-700',
   out_for_delivery: 'bg-orange-100 text-orange-700',
   delivered: 'bg-emerald-100 text-emerald-700',
@@ -94,7 +94,7 @@ function OrderDetail() {
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-3 text-center px-4">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-3xl mb-4">🔍</div>
         <p className="text-gray-500 font-medium mb-6">{order?.error || 'Order not found.'}</p>
-        <Link href="/orders" className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-colors">Back to orders</Link>
+        <Link href="/orders" className="bg-primary text-white px-8 py-3 rounded-2xl font-bold hover:bg-primary-dark transition-colors">Back to orders</Link>
       </div>
     </>
   );
@@ -122,7 +122,7 @@ function OrderDetail() {
         {!showConfetti && (
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <Link href="/orders" className="text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 mb-1">
+              <Link href="/orders" className="text-xs sm:text-sm font-bold text-primary hover:text-indigo-800 transition-colors flex items-center gap-1 mb-1">
                 <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 My Orders
               </Link>
@@ -161,18 +161,18 @@ function OrderDetail() {
         {!isCancelled && (
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 p-4 sm:p-8 shadow-sm">
             <h2 className="font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 text-sm sm:text-base">
-              <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
               Track Order
             </h2>
 
 
             {/* Current Status Note */}
             {order.statusHistory?.length > 0 && (
-              <div className="mt-8 bg-indigo-50/50 rounded-2xl p-4 flex gap-3 items-start border border-indigo-100/50">
+              <div className="mt-8 bg-primary-light/50 rounded-2xl p-4 flex gap-3 items-start border border-primary-light/50">
                 <div className="text-xl">🔔</div>
                 <div>
                   <p className="text-sm font-bold text-indigo-900 capitalize">{order.statusHistory[order.statusHistory.length - 1].status.replace(/_/g, ' ')}</p>
-                  <p className="text-xs text-indigo-700/80 mt-0.5 font-medium">
+                  <p className="text-xs text-primary-dark/80 mt-0.5 font-medium">
                     {order.statusHistory[order.statusHistory.length - 1].note || 'Your order status has been updated.'}
                   </p>
                   <p className="text-[10px] font-bold text-indigo-400 mt-1.5 uppercase tracking-wider">
@@ -186,9 +186,9 @@ function OrderDetail() {
 
         {/* ETA Highlight */}
         {order.estimatedDeliveryAt && !['delivered', 'cancelled', 'returned', 'refunded'].includes(order.status) && (
-          <div className="bg-indigo-600 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-between shadow-md shadow-indigo-600/20">
+          <div className="bg-primary text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex items-center justify-between shadow-md shadow-indigo-600/20">
             <div>
-              <p className="text-indigo-100 text-xs sm:text-sm font-medium">Estimated Delivery</p>
+              <p className="text-primary-light text-xs sm:text-sm font-medium">Estimated Delivery</p>
               <p className="text-lg sm:text-xl font-black mt-0.5">
                 {new Date(order.estimatedDeliveryAt).toLocaleString('en-IN', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
               </p>

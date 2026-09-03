@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { processAndUpload, UploadProgress } from '../../../lib/imageProcessor';
+import * as XLSX from 'xlsx';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const token = () => localStorage.getItem('token') || '';
@@ -16,8 +17,20 @@ export default function ImportPage() {
   const csvRef = useRef<HTMLInputElement>(null);
   const [csvFileName, setCsvFileName] = useState('');
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<any>(null);
   const [importError, setImportError] = useState('');
+  const [parsedRows, setParsedRows] = useState<any[]>([]);
+  const [existingSkus, setExistingSkus] = useState<string[]>([]);
+  const [conflictAction, setConflictAction] = useState<'pending' | 'skip' | 'override' | null>(null);
+  const [importProgress, setImportProgress] = useState<{
+    total: number;
+    processed: number;
+    created: number;
+    updated: number;
+    skipped: number;
+    errors: number;
+    missingImages: any[];
+    errorList: any[];
+  } | null>(null);
 
   // ─── Media Upload Handlers ───
   function handleMediaSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -28,42 +41,141 @@ export default function ImportPage() {
   async function startMediaUpload() {
     if (mediaFiles.length === 0) return;
     setMediaResult(null);
-
-    const result = await processAndUpload(
-      mediaFiles,
-      API!,
-      token(),
-      (progress) => setMediaProgress(progress)
-    );
-
+    const result = await processAndUpload(mediaFiles, API!, token(), (progress) => setMediaProgress(progress));
     setMediaResult({ uploaded: result.uploaded, failed: result.failed });
     setMediaFiles([]);
     if (mediaRef.current) mediaRef.current.value = '';
   }
 
   // ─── CSV Import Handlers ───
-  async function handleImport(e: React.FormEvent) {
-    e.preventDefault();
-    const file = csvRef.current?.files?.[0];
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
     if (!file) return;
-    setImporting(true); setImportError(''); setImportResult(null);
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await fetch(`${API}/import/products`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token()}` },
-        body: formData,
-      });
-      if (!res.ok) { const e = await res.json(); setImportError(e.error || 'Import failed'); return; }
-      setImportResult(await res.json());
-      setCsvFileName('');
-      if (csvRef.current) csvRef.current.value = '';
-    } catch {
-      setImportError('Network error');
-    } finally {
-      setImporting(false);
+    setCsvFileName(file.name);
+    setImportError('');
+    setParsedRows([]);
+    setExistingSkus([]);
+    setConflictAction(null);
+    setImportProgress(null);
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (data.length === 0) {
+          setImportError('File is empty.');
+          return;
+        }
+
+        // Normalize keys to lowercase for easier access
+        const normalizedData = data.map((row: any) => {
+          const newRow: any = {};
+          Object.keys(row).forEach(key => {
+            newRow[key.toLowerCase().trim()] = row[key];
+          });
+          return newRow;
+        });
+
+        // Extract SKUs
+        const skus = normalizedData.map(r => String(r.sku || '')).filter(Boolean);
+        if (skus.length === 0) {
+          setImportError('No SKUs found in the file.');
+          return;
+        }
+
+        setParsedRows(normalizedData);
+        setImporting(true);
+
+        // Pre-flight check
+        const res = await fetch(`${API}/import/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          body: JSON.stringify({ skus }),
+        });
+
+        if (!res.ok) throw new Error('Failed to analyze SKUs');
+        const { existingSkus } = await res.json();
+        
+        setExistingSkus(existingSkus);
+        if (existingSkus.length > 0) {
+          setConflictAction('pending');
+        } else {
+          startImportLoop(normalizedData, existingSkus, 'none');
+        }
+      } catch (err: any) {
+        setImportError(err.message || 'Failed to parse file');
+        setImporting(false);
+      }
+    };
+    reader.readAsBinaryString(file);
+  }
+
+  async function startImportLoop(rows: any[], existing: string[], action: 'skip' | 'override' | 'none') {
+    setConflictAction(null);
+    const progress = {
+      total: rows.length, processed: 0, created: 0, updated: 0, skipped: 0, errors: 0,
+      missingImages: [] as any[], errorList: [] as any[]
+    };
+    setImportProgress({ ...progress });
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const sku = String(row.sku || '');
+      
+      if (!sku) {
+        progress.errors++;
+        progress.errorList.push({ row: i + 2, sku: 'Unknown', error: 'Missing SKU' });
+        progress.processed++;
+        setImportProgress({ ...progress });
+        continue;
+      }
+
+      if (existing.includes(sku) && action === 'skip') {
+        progress.skipped++;
+        progress.processed++;
+        setImportProgress({ ...progress });
+        continue;
+      }
+
+      try {
+        const res = await fetch(`${API}/import/single`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+          body: JSON.stringify({ rowData: row, override: action === 'override' }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.status === 'error') {
+          progress.errors++;
+          progress.errorList.push({ row: i + 2, sku, error: data.error || 'Server error' });
+        } else {
+          if (data.status === 'created') progress.created++;
+          if (data.status === 'updated') progress.updated++;
+          if (data.status === 'skipped') progress.skipped++;
+          
+          if (data.missingImages && data.missingImages.length > 0) {
+            data.missingImages.forEach((img: string) => {
+              progress.missingImages.push({ row: i + 2, sku, filename: img });
+            });
+          }
+        }
+      } catch (err: any) {
+        progress.errors++;
+        progress.errorList.push({ row: i + 2, sku, error: err.message });
+      }
+
+      progress.processed++;
+      setImportProgress({ ...progress });
     }
+    
+    setImporting(false);
+    if (csvRef.current) csvRef.current.value = '';
+    setCsvFileName('');
   }
 
   function downloadTemplate() {
@@ -89,6 +201,24 @@ export default function ImportPage() {
     URL.revokeObjectURL(url);
   }
 
+  function downloadErrorReports() {
+    if (!importProgress || importProgress.errorList.length === 0) return;
+    
+    const headers = ['Row', 'SKU', 'Error Message'];
+    const rows = importProgress.errorList.map(err => 
+      [err.row, `"${err.sku}"`, `"${String(err.error).replace(/"/g, '""')}"`].join(',')
+    );
+    
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `import_errors_${new Date().getTime()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const progressPercent = mediaProgress
     ? mediaProgress.phase === 'processing'
       ? Math.round((mediaProgress.processed / mediaProgress.total) * 50)
@@ -96,7 +226,7 @@ export default function ImportPage() {
     : 0;
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6 pb-12">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Bulk Import</h1>
         <p className="text-sm text-gray-500 mt-1">Upload media files first, then import products via CSV</p>
@@ -113,7 +243,6 @@ export default function ImportPage() {
         </div>
 
         <div className="p-6 space-y-4">
-          {/* File selector */}
           <label
             className="block border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-violet-400 transition-colors cursor-pointer"
             htmlFor="media-input"
@@ -138,7 +267,6 @@ export default function ImportPage() {
             />
           </label>
 
-          {/* Progress */}
           {mediaProgress && mediaProgress.phase !== 'done' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-gray-500">
@@ -161,7 +289,6 @@ export default function ImportPage() {
             </div>
           )}
 
-          {/* Result */}
           {mediaResult && (
             <div className="flex gap-3">
               <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
@@ -177,7 +304,6 @@ export default function ImportPage() {
             </div>
           )}
 
-          {/* Upload button */}
           <button
             onClick={startMediaUpload}
             disabled={mediaFiles.length === 0 || (mediaProgress !== null && mediaProgress.phase !== 'done')}
@@ -196,12 +322,11 @@ export default function ImportPage() {
           <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">2</div>
           <div>
             <h2 className="font-bold text-gray-900">Import Products (CSV / Excel)</h2>
-            <p className="text-xs text-gray-500">Use pipe-separated filenames in the Images column (e.g., 3827.jpg|3828.jpg)</p>
+            <p className="text-xs text-gray-500">Use pipe-separated filenames in the Images column</p>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Info box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 space-y-1">
             <p className="font-semibold">Column format:</p>
             <p className="font-mono text-[11px] bg-blue-100 p-2 rounded overflow-x-auto">
@@ -209,90 +334,126 @@ export default function ImportPage() {
             </p>
             <p>• <strong>Images:</strong> pipe-separated filenames: <code className="bg-blue-100 px-1 rounded">3827.jpg|3828.jpg</code></p>
             <p>• <strong>Category/Brand:</strong> auto-created if not found</p>
-            <p>• <strong>Missing images:</strong> product still created, shown in report</p>
           </div>
 
-          {/* CSV upload form */}
-          <form onSubmit={handleImport} className="space-y-4">
-            <label
-              htmlFor="csv-input"
-              className="block border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
-            >
-              <p className="text-3xl mb-2">📊</p>
-              {csvFileName
-                ? <p className="text-sm font-semibold text-blue-600">{csvFileName}</p>
-                : <>
-                    <p className="text-sm text-gray-600 font-medium">Upload Excel (.xlsx) or CSV</p>
-                    <p className="text-xs text-gray-400 mt-1">Click to choose file</p>
-                  </>}
-              <input
-                ref={csvRef}
-                id="csv-input"
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                className="hidden"
-                onChange={e => setCsvFileName(e.target.files?.[0]?.name || '')}
-              />
-            </label>
+          <label
+            htmlFor="csv-input"
+            className={`block border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-400 transition-colors ${importing ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+          >
+            <p className="text-3xl mb-2">📊</p>
+            {csvFileName
+              ? <p className="text-sm font-semibold text-blue-600">{csvFileName}</p>
+              : <>
+                  <p className="text-sm text-gray-600 font-medium">Upload Excel (.xlsx) or CSV</p>
+                  <p className="text-xs text-gray-400 mt-1">Click to choose file</p>
+                </>}
+            <input
+              ref={csvRef}
+              id="csv-input"
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handleFileSelect}
+              disabled={importing}
+            />
+          </label>
 
-            {importError && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{importError}</p>}
+          {importError && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{importError}</p>}
+          
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            className="w-full border border-gray-200 px-4 py-3 rounded-lg text-sm hover:bg-gray-50 font-medium text-gray-700"
+          >
+            ⬇ Download Template
+          </button>
 
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={importing || !csvFileName}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
-              >
-                {importing ? 'Importing...' : 'Import Products'}
-              </button>
-              <button
-                type="button"
-                onClick={downloadTemplate}
-                className="border border-gray-200 px-4 py-3 rounded-lg text-sm hover:bg-gray-50 font-medium text-gray-700"
-              >
-                ⬇ Template
-              </button>
+          {/* Conflict Resolution UI */}
+          {conflictAction === 'pending' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 space-y-4">
+              <div>
+                <p className="font-bold text-amber-800 text-lg">⚠️ Found {existingSkus.length} existing products</p>
+                <p className="text-sm text-amber-700 mt-1">Some SKUs in your file already exist in the database. How would you like to handle them?</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => startImportLoop(parsedRows, existingSkus, 'skip')} className="flex-1 bg-white border border-amber-300 text-amber-800 py-2.5 rounded-lg font-semibold hover:bg-amber-100 transition-colors text-sm shadow-sm">
+                  Skip All
+                </button>
+                <button onClick={() => startImportLoop(parsedRows, existingSkus, 'override')} className="flex-1 bg-amber-600 text-white py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors text-sm shadow-sm">
+                  Override All
+                </button>
+              </div>
             </div>
-          </form>
+          )}
 
-          {/* Import Results */}
-          {importResult && (
-            <div className="border-t border-gray-100 pt-4 space-y-4">
-              {/* Summary cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {[
-                  { label: 'Total', value: importResult.summary.total, color: 'bg-gray-100 text-gray-700' },
-                  { label: 'Created', value: importResult.summary.created, color: 'bg-emerald-100 text-emerald-700' },
-                  { label: 'Updated', value: importResult.summary.updated, color: 'bg-blue-100 text-blue-700' },
-                  { label: 'Skipped', value: importResult.summary.skipped || 0, color: 'bg-yellow-100 text-yellow-700' },
-                  { label: 'Errors', value: importResult.summary.errors, color: 'bg-red-100 text-red-700' },
-                ].map(s => (
-                  <div key={s.label} className={`${s.color} rounded-lg p-3 text-center`}>
-                    <p className="text-xl font-bold">{s.value}</p>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide">{s.label}</p>
-                  </div>
-                ))}
+          {/* Import Progress & Results */}
+          {importProgress && (
+            <div className="border border-gray-100 rounded-xl p-5 space-y-5 bg-white shadow-sm">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm font-semibold text-gray-700">
+                  <span>Uploading {importProgress.processed} of {importProgress.total}</span>
+                  <span>{Math.round((importProgress.processed / importProgress.total) * 100)}%</span>
+                </div>
+                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${(importProgress.processed / importProgress.total) * 100}%` }}
+                  />
+                </div>
               </div>
 
-              {/* Row errors */}
-              {importResult.results?.filter((r: any) => r.status === 'error').length > 0 && (
-                <div className="bg-red-50 rounded-lg p-3 space-y-1 max-h-40 overflow-y-auto border border-red-100">
-                  <p className="text-xs font-bold text-red-700 mb-1">Row Errors:</p>
-                  {importResult.results.filter((r: any) => r.status === 'error').map((r: any) => (
-                    <p key={r.row} className="text-xs text-red-600">Row {r.row} ({r.sku}): {r.error}</p>
-                  ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-emerald-50 text-emerald-700 rounded-lg p-3 text-center border border-emerald-100">
+                  <p className="text-2xl font-bold">{importProgress.created}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide">Created</p>
+                </div>
+                <div className="bg-blue-50 text-blue-700 rounded-lg p-3 text-center border border-blue-100">
+                  <p className="text-2xl font-bold">{importProgress.updated}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide">Updated</p>
+                </div>
+                <div className="bg-yellow-50 text-yellow-700 rounded-lg p-3 text-center border border-yellow-100">
+                  <p className="text-2xl font-bold">{importProgress.skipped}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide">Skipped</p>
+                </div>
+                <div className="bg-red-50 text-red-700 rounded-lg p-3 text-center border border-red-100">
+                  <p className="text-2xl font-bold">{importProgress.errors}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide">Errors</p>
+                </div>
+              </div>
+
+              {importProgress.errorList.length > 0 && (
+                <div className="bg-red-50 rounded-lg p-4 space-y-3 border border-red-100">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-red-700 flex items-center gap-1.5">
+                      <span>❌</span> Row Errors:
+                    </p>
+                    {importProgress.errorList.length > 1 && (
+                      <button 
+                        onClick={downloadErrorReports}
+                        className="bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-50 transition-colors shadow-sm flex items-center gap-1"
+                      >
+                        ⬇ Download Report
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {importProgress.errorList.map((r: any, i: number) => (
+                      <p key={i} className="text-xs text-red-600 font-medium bg-red-100/50 p-2 rounded">
+                        <span className="font-bold text-red-700">Row {r.row} ({r.sku}):</span> {r.error}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Missing images report */}
-              {importResult.missingImages?.length > 0 && (
-                <div className="bg-amber-50 rounded-lg p-3 space-y-1 max-h-48 overflow-y-auto border border-amber-200">
-                  <p className="text-xs font-bold text-amber-700 mb-2 flex items-center gap-1.5">
-                    <span>⚠️</span> Missing Images ({importResult.missingImages.length})
+              {importProgress.missingImages.length > 0 && (
+                <div className="bg-amber-50 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto border border-amber-200">
+                  <p className="text-sm font-bold text-amber-700 flex items-center gap-1.5">
+                    <span>⚠️</span> Missing Images ({importProgress.missingImages.length})
                   </p>
-                  <p className="text-[11px] text-amber-600 mb-2">These products were created/updated but the listed images were not found in Media Gallery:</p>
-                  <div className="space-y-0.5">
-                    {importResult.missingImages.map((m: any, i: number) => (
+                  <p className="text-[11px] text-amber-600">These products were created/updated but the listed images were not found:</p>
+                  <div className="space-y-1">
+                    {importProgress.missingImages.map((m: any, i: number) => (
                       <p key={i} className="text-xs text-amber-700 font-mono">
                         Row {m.row} • <span className="font-semibold">{m.sku}</span> → <code className="bg-amber-100 px-1 rounded">{m.filename}</code>
                       </p>

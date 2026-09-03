@@ -82,7 +82,7 @@ export default function MobileBottomNav() {
               <div className={`relative transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100'}`}>
                 {item.icon}
                 {'badge' in item && (item as any).badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-indigo-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1.5 -right-2 bg-primary text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-bold">
                     {(item as any).badge > 9 ? '9+' : (item as any).badge}
                   </span>
                 )}

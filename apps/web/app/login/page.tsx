@@ -127,7 +127,7 @@ export default function LoginPage() {
             <img src="/logo192.png" alt="Ecom" className="w-8 h-8 rounded-xl object-contain" />
             <span className="font-bold text-gray-900 text-base">Ecom</span>
           </Link>
-          <Link href="/" className="text-xs text-indigo-600 font-medium hover:underline">
+          <Link href="/" className="text-xs text-primary font-medium hover:underline">
             ← Back to store
           </Link>
         </div>
@@ -169,7 +169,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <button type="submit" disabled={loading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3.5 rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 text-sm">
+                  className="w-full bg-primary hover:bg-primary-dark active:bg-indigo-800 text-white font-semibold py-3.5 rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 text-sm">
                   {loading
                     ? <><Spinner /> Sending code...</>
                     : <>Continue with email <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></>}
@@ -186,7 +186,7 @@ export default function LoginPage() {
                     {countdown > 0
                       ? <p className="text-xs text-gray-400">Resend in {countdown}s</p>
                       : <button type="button" onClick={requestOtp as any}
-                          className="text-xs text-indigo-600 hover:underline font-medium">Resend code</button>}
+                          className="text-xs text-primary hover:underline font-medium">Resend code</button>}
                   </div>
                 </div>
 
@@ -202,7 +202,7 @@ export default function LoginPage() {
                 )}
 
                 <button type="submit" disabled={loading || otp.length < 6 || (isNewUser && !name.trim())}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3.5 rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 text-sm">
+                  className="w-full bg-primary hover:bg-primary-dark active:bg-indigo-800 text-white font-semibold py-3.5 rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 text-sm">
                   {loading ? <><Spinner /> Verifying...</> : 'Verify & Sign In'}
                 </button>
                 <button type="button" onClick={() => { setStep('email'); setOtp(''); setError(''); setCountdown(0); }}
@@ -231,8 +231,8 @@ export default function LoginPage() {
 
             <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-5 sm:mt-6">
               By signing in, you agree to our{' '}
-              <Link href="/pages/terms" className="text-indigo-600 hover:underline">Terms</Link> and{' '}
-              <Link href="/pages/privacy" className="text-indigo-600 hover:underline">Privacy Policy</Link>
+              <Link href="/pages/terms" className="text-primary hover:underline">Terms</Link> and{' '}
+              <Link href="/pages/privacy" className="text-primary hover:underline">Privacy Policy</Link>
             </p>
           </div>
         </div>

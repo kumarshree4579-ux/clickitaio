@@ -23,6 +23,22 @@ export async function requireAuth(req: AuthedRequest, res: Response, next: NextF
   }
 }
 
+export async function optionalAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+  let token = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+  if (!token && req.query.token && typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+  if (!token) return next();
+  try {
+    const payload = verifyAccessToken(token) as any;
+    const user = await User.findById(payload.sub).select('role isActive');
+    if (user && user.isActive) {
+      req.user = { sub: payload.sub, email: payload.email, role: user.role };
+    }
+  } catch {}
+  next();
+}
+
 export function requireRole(...roles: UserRole[]) {
   return (req: AuthedRequest, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.role)) {

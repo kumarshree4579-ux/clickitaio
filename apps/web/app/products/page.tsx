@@ -29,6 +29,8 @@ async function getData(sp: any) {
   }
 }
 
+import ReloadButton from '../../components/ReloadButton';
+
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<any> }) {
   const sp = await searchParams;
   const { products, total, categories, brands } = await getData(sp);
@@ -51,13 +53,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <Header />
-      {/* Spacer: mobile 146px (logo 56 + search 50 + tabs ~40), desktop 64px */}
-      <div className="h-[146px] sm:h-16 shrink-0" />
       <main className="w-full px-3 sm:px-6 lg:px-8 py-3 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:py-6 sm:pb-6">
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-400 mb-3 sm:mb-4 overflow-x-auto scrollbar-hide whitespace-nowrap">
-          <Link href="/" className="hover:text-indigo-600 shrink-0">Home</Link>
+          <Link href="/" className="hover:text-primary shrink-0">Home</Link>
           <span>/</span>
           <span className="text-gray-700 font-medium shrink-0">Products</span>
           {sp.q && <><span>/</span><span className="text-gray-700 shrink-0">"{sp.q}"</span></>}
@@ -78,15 +78,19 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               {sorted.map((p: any) => <ProductCard key={p._id} product={p} />)}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            activeFilters.length > 0 || sp.q ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-100">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 font-medium">No products found for these filters</p>
+                <Link href="/products" className="text-primary text-sm hover:underline mt-2">Clear all filters</Link>
               </div>
-              <p className="text-gray-500 font-medium">No products found</p>
-              <Link href="/products" className="text-indigo-600 text-sm hover:underline mt-2">Clear all filters</Link>
-            </div>
+            ) : (
+              <ReloadButton message="No products found or failed to load." />
+            )
           )}
 
         </ProductsClient>

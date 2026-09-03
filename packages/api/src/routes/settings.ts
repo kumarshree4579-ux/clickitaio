@@ -35,7 +35,7 @@ async function getSettings() {
 router.get('/public', async (_req: Request, res: Response) => {
   const s = await getSettings();
   return res.json({
-    storeName: s.storeName,
+    backgroundImage: s.backgroundImage,
     storeLocation: s.storeLocation,
     estimatedDeliveryMinutes: s.estimatedDeliveryMinutes,
     isDeliveryEnabled: s.isDeliveryEnabled,
@@ -43,7 +43,6 @@ router.get('/public', async (_req: Request, res: Response) => {
     freeDeliveryAbove: s.freeDeliveryAbove,
     deliveryCharge: s.deliveryCharge,
     hasZones: s.deliveryZones.filter(z => z.isActive).length > 0,
-    trustBadges: s.trustBadges,
     topbarTabs: s.topbarTabs,
     appTheme: s.appTheme,
     orderAlertSound: (s as any).orderAlertSound || 'beep',

@@ -225,4 +225,126 @@ router.post('/products', requireAuth, requireRole('super_admin', 'inventory_staf
   });
 });
 
+// Analyze endpoint for pre-flight check
+router.post('/analyze', requireAuth, requireRole('super_admin', 'inventory_staff'), async (req: AuthedRequest, res: Response) => {
+  try {
+    const { skus } = req.body;
+    if (!skus || !Array.isArray(skus)) return res.status(400).json({ error: 'Invalid payload' });
+    
+    const existing = await Product.find({ sku: { $in: skus } }, 'sku');
+    const existingSkus = existing.map(p => p.sku);
+    return res.json({ existingSkus });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Single row import endpoint (called by frontend loop)
+router.post('/single', requireAuth, requireRole('super_admin', 'inventory_staff'), async (req: AuthedRequest, res: Response) => {
+  try {
+    const { rowData, override } = req.body;
+    if (!rowData || !rowData.sku) return res.status(400).json({ error: 'Missing SKU in rowData' });
+    const { sku } = rowData;
+
+    const existing = await Product.findOne({ sku });
+    if (existing && !override) {
+      return res.json({ status: 'skipped', sku, message: 'Product exists and override is false' });
+    }
+
+    // Helper functions (same as bulk import)
+    async function resolveCategory(name: string, parentId?: string) {
+      if (!name) return undefined;
+      const key = name.toLowerCase().trim();
+      let cat = await Category.findOne({ name: { $regex: new RegExp(`^${key}$`, 'i') } });
+      if (!cat) cat = await Category.create({ name: name.trim(), slug: toSlug(name), ...(parentId ? { parent: parentId } : {}) });
+      return cat._id.toString();
+    }
+
+    async function resolveBrand(name: string) {
+      if (!name) return undefined;
+      const key = name.toLowerCase().trim();
+      let brand = await Brand.findOne({ name: { $regex: new RegExp(`^${key}$`, 'i') } });
+      if (!brand) brand = await Brand.create({ name: name.trim(), slug: toSlug(name) });
+      return brand._id.toString();
+    }
+
+    async function resolveImages(imagesStr: string) {
+      if (!imagesStr) return { resolved: [], pending: [] };
+      const filenames = imagesStr.split('|').map((f: string) => f.trim()).filter(Boolean);
+      const resolved: { url: string }[] = [];
+      const pending: string[] = [];
+
+      for (const filename of filenames) {
+        if (filename.startsWith('http://') || filename.startsWith('https://')) {
+          resolved.push({ url: filename });
+        } else {
+          const media = await Media.findOne({ originalName: filename });
+          if (media) resolved.push({ url: media.url });
+          else pending.push(filename);
+        }
+      }
+      return { resolved, pending };
+    }
+
+    const name = rowData.name || rowData['product name'];
+    if (!name) return res.status(400).json({ status: 'error', sku, error: 'No product name' });
+
+    let categoryId: string | undefined;
+    let subCategoryId: string | undefined;
+    let brandId: string | undefined;
+
+    try {
+      categoryId = await resolveCategory(rowData.category);
+      if (rowData.subCategory || rowData['sub category'] || rowData.subcategory) {
+        subCategoryId = await resolveCategory(rowData.subCategory || rowData['sub category'] || rowData.subcategory, categoryId);
+      }
+      brandId = await resolveBrand(rowData.brand);
+    } catch {}
+
+    const imagesCol = rowData.images;
+    const imgRes = await resolveImages(imagesCol);
+
+    const mrp = parseFloat(rowData.mrp) || 0;
+    const productData: any = {
+      name,
+      mrp,
+      sellingPrice: parseFloat(rowData.sellingPrice || rowData.price || rowData['selling price']) || mrp,
+      stock: parseInt(rowData.stock) || 0,
+      description: rowData.description || '',
+      shortDescription: rowData.shortDescription || rowData['short description'] || '',
+      weight: rowData.weight || undefined,
+      warranty: rowData.warranty || '',
+      returnPolicy: rowData.returnPolicy || rowData['return policy'] || '',
+      barcode: rowData.barcode || '',
+      tags: rowData.tags ? rowData.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+      gst: parseFloat(rowData.gst) || 0,
+      minStock: parseInt(rowData.minStock || rowData['min stock']) || 0,
+      status: rowData.status || 'active',
+      isFeatured: parseBool(String(rowData.featured || '')),
+      isNewArrival: parseBool(String(rowData.newArrival || rowData['new arrival'] || '')),
+      isBestSeller: parseBool(String(rowData.bestSeller || rowData['best seller'] || '')),
+      isTrending: parseBool(String(rowData.trending || '')),
+      metaTitle: rowData.metaTitle || rowData['meta title'] || '',
+      metaDescription: rowData.metaDescription || rowData['meta description'] || '',
+      pendingImages: imgRes.pending,
+      ...(categoryId && { category: categoryId }),
+      ...(subCategoryId && { subCategory: subCategoryId }),
+      ...(brandId && { brand: brandId }),
+      ...(imgRes.resolved.length && { images: imgRes.resolved }),
+    };
+
+    Object.keys(productData).forEach(k => productData[k] === undefined && delete productData[k]);
+
+    if (existing && override) {
+      await Product.findByIdAndUpdate(existing._id, productData);
+      return res.json({ status: 'updated', sku, missingImages: imgRes.pending });
+    } else {
+      await Product.create({ ...productData, sku, slug: toSlug(name || sku) });
+      return res.json({ status: 'created', sku, missingImages: imgRes.pending });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ status: 'error', sku: req.body?.rowData?.sku, error: err.message });
+  }
+});
+
 export default router;

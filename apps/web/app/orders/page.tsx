@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
-  packed: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  packed: 'bg-primary-light text-primary-dark border-indigo-200',
   shipped: 'bg-purple-100 text-purple-700 border-purple-200',
   out_for_delivery: 'bg-orange-100 text-orange-700 border-orange-200',
   delivered: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -47,7 +47,7 @@ export default function OrdersPage() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-100 h-14 px-4 sm:px-6 flex items-center gap-6 shadow-sm">
 
-        {/* <div className="sticky top-0 z-40 bg-indigo-600 text-white px-4 sm:px-6 py-4 flex items-center gap-3 shadow-sm"> */}
+        {/* <div className="sticky top-0 z-40 bg-primary text-white px-4 sm:px-6 py-4 flex items-center gap-3 shadow-sm"> */}
         <h1 className="text-[18px] font-bold tracking-tight">My Orders</h1>
         {!loading && orders.length > 0 && (
           <span className="text-indigo-200 text-[14px] font-medium">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
@@ -76,12 +76,12 @@ export default function OrdersPage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-sm p-12 text-center"
           >
-            <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+            <div className="w-24 h-24 bg-primary-light rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
               🛍️
             </div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">No orders yet</h2>
             <p className="text-gray-500 mb-8">Looks like you haven't made your first purchase yet.</p>
-            <Link href="/products" className="inline-block bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+            <Link href="/products" className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-indigo-200">
               Start Shopping
             </Link>
           </motion.div>
@@ -98,7 +98,7 @@ export default function OrdersPage() {
                 {/* Order Header */}
                 <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-gray-50 bg-gray-50/50">
                   <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-[15px] sm:text-base">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary-light flex items-center justify-center text-primary text-[15px] sm:text-base">
                       {STATUS_ICONS[order.status] || '📦'}
                     </div>
                     <div>
@@ -116,7 +116,7 @@ export default function OrdersPage() {
                   <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto pb-1 sm:pb-2 scrollbar-hide">
                     {order.items.map((item: any, i: number) => (
                       <div key={i} className="flex flex-col items-center gap-0.5 sm:gap-1 min-w-[56px] sm:min-w-[70px]">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative group-hover:border-indigo-100 transition-colors">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative group-hover:border-primary-light transition-colors">
                           {item.image ? (
                             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           ) : (
@@ -142,7 +142,7 @@ export default function OrdersPage() {
 
                     <Link
                       href={`/orders/${order._id}`}
-                      className="bg-gray-900 text-white px-4 sm:px-6 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold hover:bg-indigo-600 transition-colors shadow-sm flex items-center gap-1.5 sm:gap-2"
+                      className="bg-gray-900 text-white px-4 sm:px-6 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold hover:bg-primary transition-colors shadow-sm flex items-center gap-1.5 sm:gap-2"
                     >
                       <span>Track Order</span>
                       <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>

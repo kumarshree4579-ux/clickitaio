@@ -185,7 +185,7 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
               <div className="absolute top-full mt-1.5 left-0 w-full bg-white shadow-2xl rounded-xl max-h-52 overflow-y-auto border border-gray-100 z-10">
                 {searchResults.map((r, i) => (
                   <button key={i} onMouseDown={() => handleSelectResult(r)}
-                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 border-b border-gray-50 last:border-0 transition-colors flex items-start gap-3">
+                    className="w-full text-left px-4 py-3 hover:bg-primary-light border-b border-gray-50 last:border-0 transition-colors flex items-start gap-3">
                     <svg className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -215,9 +215,9 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
         <button onClick={handleLocateMe} disabled={locating}
           className="absolute bottom-6 right-4 z-[1000] bg-white shadow-xl border border-gray-100 rounded-xl w-12 h-12 flex items-center justify-center active:scale-95 disabled:opacity-60 transition-transform">
           {locating ? (
-            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
-            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="3" strokeWidth={2} />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v2m0 16v2m10-10h-2M4 12H2" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
@@ -265,7 +265,7 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
 
           {checking || locating ? (
             <div className="flex items-center gap-3 py-3">
-              <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
               <p className="text-sm text-gray-500 font-medium">{locating ? 'Getting your location...' : 'Checking delivery availability...'}</p>
             </div>
           ) : result ? (
@@ -293,14 +293,14 @@ export default function DeliveryMap({ onConfirm, onClose }: Props) {
 
               {/* Confirm button */}
               <button onClick={() => onConfirm(result)}
-                className={`w-full py-4 rounded-xl text-[15px] font-bold text-white transition-all active:scale-[0.98] shadow-md ${result.serviceable ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-gray-800 hover:bg-gray-900 shadow-gray-300'}`}>
+                className={`w-full py-4 rounded-xl text-[15px] font-bold text-white transition-all active:scale-[0.98] shadow-md ${result.serviceable ? 'bg-primary hover:bg-primary-dark shadow-indigo-200' : 'bg-gray-800 hover:bg-gray-900 shadow-gray-300'}`}>
                 {result.serviceable ? 'Confirm Location' : 'Confirm Anyway'}
               </button>
             </>
           ) : (
             <div className="flex flex-col items-center py-4 gap-2">
-              <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>

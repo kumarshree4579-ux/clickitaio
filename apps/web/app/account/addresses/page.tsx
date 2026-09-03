@@ -59,7 +59,7 @@ export default function AddressesPage() {
           </div>
           {!showForm && (
             <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
-              className="bg-indigo-600 text-white px-3.5 py-2 rounded-lg text-[13px] font-bold hover:bg-indigo-700 active:scale-95 transition-all">
+              className="bg-primary text-white px-3.5 py-2 rounded-lg text-[13px] font-bold hover:bg-primary-dark active:scale-95 transition-all">
               + Add New
             </button>
           )}
@@ -158,7 +158,7 @@ export default function AddressesPage() {
               </div>
 
               <label className="flex items-center gap-2.5 pt-1 cursor-pointer">
-                <input type="checkbox" checked={form.isDefault} onChange={e => setForm((f: any) => ({ ...f, isDefault: e.target.checked }))} className="w-4 h-4 accent-indigo-600 rounded" />
+                <input type="checkbox" checked={form.isDefault} onChange={e => setForm((f: any) => ({ ...f, isDefault: e.target.checked }))} className="w-4 h-4 accent-primary rounded" />
                 <span className="text-[14px] text-gray-700 font-medium">Set as default address</span>
               </label>
             </div>
@@ -166,7 +166,7 @@ export default function AddressesPage() {
             {/* Actions — sticky at bottom on mobile */}
             <div className="px-4 py-3 border-t border-gray-100 bg-white sticky bottom-0 flex gap-2.5 rounded-b-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
               <button onClick={save} disabled={saving}
-                className="flex-1 bg-indigo-600 text-white py-3.5 rounded-xl text-[15px] font-bold hover:bg-indigo-700 disabled:opacity-50 active:scale-[0.98] transition-all">
+                className="flex-1 bg-primary text-white py-3.5 rounded-xl text-[15px] font-bold hover:bg-primary-dark disabled:opacity-50 active:scale-[0.98] transition-all">
                 {saving ? 'Saving...' : editing ? 'Update Address' : 'Save Address'}
               </button>
               <button onClick={() => { setShowForm(false); setForm(empty); setEditing(null); }}
@@ -193,7 +193,7 @@ export default function AddressesPage() {
           </div>
         ) : addresses.length === 0 && !showForm ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -202,7 +202,7 @@ export default function AddressesPage() {
             <p className="text-gray-800 font-semibold text-[15px]">No addresses yet</p>
             <p className="text-gray-400 text-[13px] mt-1">Add your first delivery address</p>
             <button onClick={() => { setForm(empty); setEditing(null); setShowForm(true); }}
-              className="mt-5 bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-indigo-700 active:scale-95 transition-all">
+              className="mt-5 bg-primary text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-primary-dark active:scale-95 transition-all">
               + Add Address
             </button>
           </div>
@@ -231,7 +231,7 @@ export default function AddressesPage() {
                 <div className="flex border-t border-gray-100 divide-x divide-gray-100">
                   <button
                     onClick={() => { setForm({ ...a }); setEditing(a._id); setShowForm(true); window.scrollTo({ top: 0 }); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 text-[13px] font-semibold text-primary hover:bg-primary-light active:bg-primary-light transition-colors"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     Edit

@@ -19,13 +19,13 @@ export default function SupportPage() {
     <div className="min-h-screen bg-gray-50 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-12">
 
       {/* Hero Banner */}
-      <div className="bg-indigo-600 text-white pt-8 sm:pt-10 pb-16 sm:pb-20 px-3 sm:px-4 rounded-b-[32px] sm:rounded-b-[40px] shadow-sm relative overflow-hidden">
+      <div className="bg-primary text-white pt-8 sm:pt-10 pb-16 sm:pb-20 px-3 sm:px-4 rounded-b-[32px] sm:rounded-b-[40px] shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-5"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-white opacity-5"></div>
         
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 sm:mb-4">Help & Support</h1>
-          <p className="text-indigo-100 text-xs sm:text-base max-w-lg mx-auto mb-5 sm:mb-8">
+          <p className="text-primary-light text-xs sm:text-base max-w-lg mx-auto mb-5 sm:mb-8">
             Need help with your recent orders or account? Search our FAQs or get in touch with our team.
           </p>
           
@@ -59,8 +59,8 @@ export default function SupportPage() {
         
         {/* Contact Cards */}
         <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12">
-          <a href="mailto:support@ecomstore.com" className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-100 hover:-translate-y-1 transition-all duration-300 text-center flex flex-col items-center group">
-            <div className="w-10 h-10 sm:w-16 sm:h-16 bg-indigo-50 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-2.5 sm:mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+          <a href="mailto:support@ecomstore.com" className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 hover:shadow-md hover:border-primary-light hover:-translate-y-1 transition-all duration-300 text-center flex flex-col items-center group">
+            <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary-light text-primary rounded-xl sm:rounded-2xl flex items-center justify-center mb-2.5 sm:mb-4 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
               <svg className="w-5 h-5 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             </div>
             <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-0.5 sm:mb-1">Email Us</h3>
@@ -88,10 +88,10 @@ export default function SupportPage() {
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
                 >
-                  <span className={`font-semibold text-xs sm:text-base transition-colors pr-2 ${openFaq === i ? 'text-indigo-600' : 'text-gray-800'}`}>
+                  <span className={`font-semibold text-xs sm:text-base transition-colors pr-2 ${openFaq === i ? 'text-primary' : 'text-gray-800'}`}>
                     {faq.q}
                   </span>
-                  <span className={`ml-2 flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-transform duration-300 ${openFaq === i ? 'bg-indigo-100 text-indigo-600 rotate-180' : 'bg-gray-50 text-gray-400'}`}>
+                  <span className={`ml-2 flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-transform duration-300 ${openFaq === i ? 'bg-primary-light text-primary rotate-180' : 'bg-gray-50 text-gray-400'}`}>
                     <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>

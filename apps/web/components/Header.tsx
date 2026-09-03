@@ -147,13 +147,13 @@ export default function Header() {
               return (
                 <button key={item._id}
                   onMouseDown={() => { router.push(`/products/${item._id}`); setShowSuggest(false); setSearch(''); }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 transition-colors text-left ${isActive ? 'bg-indigo-50' : ''}`}>
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary-light transition-colors text-left ${isActive ? 'bg-primary-light' : ''}`}>
                   <div className="w-9 h-9 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
                     {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <span className="text-gray-300 text-lg">📦</span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
-                    <p className="text-xs text-indigo-600 font-bold">₹{item.sellingPrice.toLocaleString('en-IN')}</p>
+                    <p className="text-xs text-primary font-bold">₹{item.sellingPrice.toLocaleString('en-IN')}</p>
                   </div>
                 </button>
               );
@@ -169,7 +169,7 @@ export default function Header() {
       {/* ═══════════════════════════════════════════
           DESKTOP — Fixed at top, full-width bar
           ═══════════════════════════════════════════ */}
-      <header className="hidden sm:block fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+      <header className="hidden sm:block fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm pt-safe">
         <div className="w-full px-6 lg:px-8 max-w-[1400px] mx-auto">
           <div className="flex items-center h-16 gap-4">
 
@@ -177,7 +177,7 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <img src="/logo192.png" alt="Daily Basket" className="w-9 h-9 rounded-xl object-contain" />
               <span className="text-lg font-extrabold tracking-tight">
-                <span className="text-indigo-600">Daily</span>
+                <span className="text-primary">Daily</span>
                 <span className="text-gray-900"> Basket</span>
               </span>
             </Link>
@@ -187,7 +187,7 @@ export default function Header() {
               <button onClick={openPrompt} className="flex flex-col items-start hover:opacity-80 transition-opacity">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Delivering to</span>
                 <div className="flex items-center gap-1 text-sm font-bold text-gray-900 mt-0.5">
-                  <svg className="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -232,16 +232,16 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-1 shrink-0">
-              <Link href="/support" title="Support" className="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+              <Link href="/support" title="Support" className="p-2.5 rounded-xl text-gray-500 hover:text-primary hover:bg-primary-light transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </Link>
               <Link href="/wishlist" title="Wishlist" className="p-2.5 rounded-xl text-gray-500 hover:text-rose-500 hover:bg-rose-50 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
               </Link>
-              <Link href="/cart" title="Cart" className="relative p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+              <Link href="/cart" title="Cart" className="relative p-2.5 rounded-xl text-gray-500 hover:text-primary hover:bg-primary-light transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartCount > 9 ? '9+' : cartCount}</span>
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartCount > 9 ? '9+' : cartCount}</span>
                 )}
               </Link>
 
@@ -281,7 +281,7 @@ export default function Header() {
                   )}
                 </div>
               ) : (
-                <Link href="/login" className="ml-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap">Login</Link>
+                <Link href="/login" className="ml-1 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap">Login</Link>
               )}
             </div>
           </div>
@@ -294,14 +294,14 @@ export default function Header() {
           Row 2: Search Bar + Tabs (h ~= 90px)
           Total fixed height ≈ 146px
           ═══════════════════════════════════════════ */}
-      <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 24px)' }}>
+      <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm pt-safe">
         {/* Row 1 — Logo + Location */}
         <div className="border-b border-gray-100 px-4">
           <div className="flex items-center justify-between h-[60px]">
             <Link href="/" className="flex items-center gap-3 shrink-0">
               <img src="/logo192.png" alt="Daily Basket" className="w-11 h-11 rounded-xl object-contain" />
               <span className="text-[19px] font-extrabold tracking-tight">
-                <span className="text-indigo-600">Daily</span>
+                <span className="text-primary">Daily</span>
                 <span className="text-gray-900"> Basket</span>
               </span>
             </Link>
@@ -311,7 +311,7 @@ export default function Header() {
               <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -359,6 +359,10 @@ export default function Header() {
           </Suspense>
         </div>
       </div>
+      
+      {/* Spacer that pushes content below the fixed header */}
+      <div className="hidden sm:block h-16 shrink-0 box-content pt-safe" />
+      <div className="sm:hidden h-[146px] shrink-0 box-content pt-safe" />
     </>
   );
 }

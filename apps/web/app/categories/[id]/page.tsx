@@ -31,7 +31,6 @@ export default async function CategoryDetailPage({
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
-        <div className="h-[146px] sm:h-16 shrink-0" />
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-5">
             <span className="text-4xl">🗂️</span>
@@ -54,15 +53,13 @@ export default async function CategoryDetailPage({
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="h-[146px] sm:h-16 shrink-0" />
-
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="w-full px-3 sm:px-6 lg:px-8 py-0">
           <nav className="flex items-center gap-1.5 text-xs text-gray-400 overflow-x-auto scrollbar-hide whitespace-nowrap">
-            <Link href="/" className="hover:text-indigo-600 shrink-0">Home</Link>
+            <Link href="/" className="hover:text-primary shrink-0">Home</Link>
             <span>/</span>
-            <Link href="/categories" className="hover:text-indigo-600 shrink-0">Categories</Link>
+            <Link href="/categories" className="hover:text-primary shrink-0">Categories</Link>
             <span>/</span>
             <span className="text-gray-700 font-medium shrink-0">{mainCategory?.name || 'Category'}</span>
           </nav>
@@ -77,7 +74,7 @@ export default async function CategoryDetailPage({
             <Link
               href={`/categories/${mainCategoryId}`}
               className={`flex flex-col items-center justify-center p-2 sm:px-5 sm:py-4 text-xs sm:text-sm font-medium border-l-[3px] sm:border-l-4 transition-colors ${!activeSubId
-                ? 'border-[var(--color-primary)] bg-indigo-50/50 text-[var(--color-primary)]'
+                ? 'border-[var(--color-primary)] bg-primary-light/50 text-[var(--color-primary)]'
                 : 'border-transparent text-gray-600 hover:bg-gray-50'
                 }`}
             >
@@ -98,7 +95,7 @@ export default async function CategoryDetailPage({
                   key={sub._id}
                   href={`/categories/${mainCategoryId}?sub=${sub._id}`}
                   className={`flex flex-col items-center justify-center p-2 sm:px-5 sm:py-4 text-xs sm:text-sm font-medium border-l-[3px] sm:border-l-4 transition-colors ${isActive
-                    ? 'border-[var(--color-primary)] bg-indigo-50/50 text-[var(--color-primary)]'
+                    ? 'border-[var(--color-primary)] bg-primary-light/50 text-[var(--color-primary)]'
                     : 'border-transparent text-gray-600 hover:bg-gray-50'
                     }`}
                 >
