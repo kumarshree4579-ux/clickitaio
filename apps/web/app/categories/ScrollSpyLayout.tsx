@@ -89,7 +89,7 @@ export default function ScrollSpyLayout({ categories }: { categories: any[] }) {
       
       {/* Left Sidebar - Categories */}
       <aside className="w-24 sm:w-1/4 lg:w-1/5 bg-white border-r border-gray-100 shrink-0 overflow-y-auto scrollbar-hide h-[calc(100vh-140px)] sm:h-[calc(100vh-65px)] sticky top-0">
-        <div className="py-2">
+        <div className="py-2 pb-24 sm:pb-4 flex flex-col gap-1 sm:gap-0">
           {categories.map((cat: any) => {
             const isActive = activeId === cat._id;
             return (

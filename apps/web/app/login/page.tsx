@@ -40,10 +40,13 @@ export default function LoginPage() {
   async function requestOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setError('');
+    const input = email.trim();
+    const isMobile = /^\d{10}$/.test(input);
+    const body = isMobile ? { mobile: input } : { email: input };
     const res = await fetch(`${API}/auth/request-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(body),
     });
     setLoading(false);
     const data = await res.json();
@@ -59,10 +62,16 @@ export default function LoginPage() {
   async function verifyOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setError('');
+    const input = email.trim();
+    const isMobile = /^\d{10}$/.test(input);
+    const body = isMobile 
+      ? { mobile: input, otp, name: isNewUser ? name : undefined }
+      : { email: input, otp, name: isNewUser ? name : undefined };
+
     const res = await fetch(`${API}/auth/verify-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, otp, name: isNewUser ? name : undefined }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     setLoading(false);
@@ -144,7 +153,7 @@ export default function LoginPage() {
               </h1>
               <p className="text-gray-500 text-sm mt-2">
                 {step === 'email'
-                  ? 'Sign in with your email — no password needed.'
+                  ? 'Sign in with your email or phone number — no password needed.'
                   : <>We sent a 6-digit code to <span className="font-semibold text-gray-700">{email}</span></>}
               </p>
             </div>
@@ -162,10 +171,10 @@ export default function LoginPage() {
             {step === 'email' ? (
               <form onSubmit={requestOtp} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email or Phone Number</label>
                   <input
-                    type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                    placeholder="you@example.com" autoFocus
+                    type="text" value={email} onChange={e => setEmail(e.target.value)} required
+                    placeholder="you@example.com or 9876543210" autoFocus
                     className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
                   />
                 </div>
@@ -173,7 +182,7 @@ export default function LoginPage() {
                   className="w-full bg-primary hover:bg-primary-dark active:bg-indigo-800 text-white font-semibold py-3.5 rounded-2xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm shadow-indigo-200 text-sm">
                   {loading
                     ? <><Spinner /> Sending code...</>
-                    : <>Continue with email <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></>}
+                    : <>Continue <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></>}
                 </button>
               </form>
             ) : (
@@ -209,7 +218,7 @@ export default function LoginPage() {
                 <button type="button" onClick={() => { setStep('email'); setOtp(''); setError(''); setCountdown(0); }}
                   className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 transition-colors flex items-center justify-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                  Use a different email
+                  Use a different email or phone
                 </button>
               </form>
             )}

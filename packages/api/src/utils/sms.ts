@@ -11,7 +11,7 @@ export async function sendOtpSms(mobile: string, otp: string) {
   
   // Create your message template here
   // Ensure the message strictly matches the approved DLT template
-  const message = `Your verification code is: ${otp}. Expires in 10 minutes.`;
+  const message = `Verify your account using the code: ${otp}. Enjoy a seamless shopping experience. - CLICKIT E-COMMERCE`;
 
   // Construct URL based on smsfortius.in API requirements
   const url = new URL('http://smsfortius.in/V2/apikey.php');
