@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [isNewUser, setIsNewUser] = useState(false);
   const [name, setName] = useState('');
 
+  
   // Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
