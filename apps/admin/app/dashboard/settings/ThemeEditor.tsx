@@ -218,19 +218,20 @@ export default function ThemeEditor({ initialTheme, initialBgImage, savedThemes 
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (overrideDraft?: any) => {
+    const currentDraft = overrideDraft || draft;
     setSaving(true);
     let updatedThemes = [...themesList];
     
     // Auto-save to library logic
-    const name = draft.activeThemeName.trim();
+    const name = currentDraft.activeThemeName.trim();
     if (name) {
-      const existingIdx = updatedThemes.findIndex(t => t.name.toLowerCase() === name.toLowerCase());
+      const existingIdx = updatedThemes.findIndex((t: any) => t.name.toLowerCase() === name.toLowerCase());
       const newThemeData = {
         name,
-        primaryColor: draft.primaryColor,
-        secondaryColor: draft.secondaryColor,
-        backgroundImage: draft.backgroundImage
+        primaryColor: currentDraft.primaryColor,
+        secondaryColor: currentDraft.secondaryColor,
+        backgroundImage: currentDraft.backgroundImage
       };
       if (existingIdx >= 0) {
         updatedThemes[existingIdx] = newThemeData; // update existing
@@ -242,11 +243,11 @@ export default function ThemeEditor({ initialTheme, initialBgImage, savedThemes 
 
     await onSave({
       appTheme: {
-        primaryColor: draft.primaryColor,
-        secondaryColor: draft.secondaryColor,
-        activeThemeName: draft.activeThemeName,
+        primaryColor: currentDraft.primaryColor,
+        secondaryColor: currentDraft.secondaryColor,
+        activeThemeName: currentDraft.activeThemeName,
       },
-      backgroundImage: draft.backgroundImage,
+      backgroundImage: currentDraft.backgroundImage,
       savedThemes: updatedThemes,
     });
     setSaving(false);
@@ -382,7 +383,11 @@ export default function ThemeEditor({ initialTheme, initialBgImage, savedThemes 
               <div className="w-24 h-40 rounded-lg overflow-hidden border-2 border-gray-100 shrink-0 relative group shadow-sm">
                 <img src={draft.backgroundImage} className="w-full h-full object-cover" alt="bg" />
                 <button 
-                  onClick={() => setDraft(d => ({ ...d, backgroundImage: '' }))}
+                  onClick={() => {
+                    const newDraft = { ...draft, backgroundImage: '' };
+                    setDraft(newDraft);
+                    handleSave(newDraft);
+                  }}
                   className="absolute inset-0 bg-black/60 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold backdrop-blur-sm"
                 >
                   <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

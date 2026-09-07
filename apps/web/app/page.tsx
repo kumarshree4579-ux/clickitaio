@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import HeroBanner from '../components/HeroBanner';
 import RecentlyViewed from '../components/RecentlyViewed';
+import CategorySection from '../components/CategorySection';
 
 import API from '../lib/api';
 
@@ -28,7 +29,7 @@ async function getData() {
       featured: featuredItems,
       newArrivals: newArrivals.items || [],
       bestSellers: bestSellers.items || [],
-      categories: (categories || []).filter((c: any) => !c.parent).slice(0, 6),
+      categories: (categories || []).filter((c: any) => !c.parent), // All main categories
     };
   } catch {
     return { featured: [], newArrivals: [], bestSellers: [], categories: [] };
@@ -146,6 +147,16 @@ export default async function HomePage() {
               <p className="text-slate-500">Check back soon for amazing products!</p>
             </div>
           )}
+
+          {/* Infinite Category Blocks */}
+          {categories.length > 0 && (
+            <div className="pt-4 border-t border-slate-100 mt-8 space-y-2">
+              {categories.map((c: any) => (
+                <CategorySection key={c._id} category={c} />
+              ))}
+            </div>
+          )}
+
         </div>
       </main>
     </div>

@@ -17,31 +17,62 @@ const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { e
 
 // POST /auth/request-otp
 router.post('/request-otp', otpLimiter, validate(OtpRequestSchema), async (req: Request, res: Response) => {
-  const { email } = req.body;
-  const normalizedEmail = email.toLowerCase().trim();
+  const { email, mobile } = req.body;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const hashedOtp = await bcrypt.hash(otp, 10);
-  await OTP.create({ email: normalizedEmail, hashedOtp, expiresAt: new Date(Date.now() + OTP_TTL), used: false });
-  await sendOtpEmail(normalizedEmail, otp);
-  console.log(`OTP requested for: ${sanitizeLog(normalizedEmail)}`);
   
-  const existingUser = await User.findOne({ email: normalizedEmail });
+  let existingUser;
+
+  if (email) {
+    const normalizedEmail = email.toLowerCase().trim();
+    await OTP.create({ email: normalizedEmail, hashedOtp, expiresAt: new Date(Date.now() + OTP_TTL), used: false });
+    await sendOtpEmail(normalizedEmail, otp);
+    console.log(`OTP requested for: ${sanitizeLog(normalizedEmail)}`);
+    existingUser = await User.findOne({ email: normalizedEmail });
+  } else if (mobile) {
+    const normalizedMobile = mobile.trim();
+    await OTP.create({ mobile: normalizedMobile, hashedOtp, expiresAt: new Date(Date.now() + OTP_TTL), used: false });
+    const { sendOtpSms } = await import('../utils/sms');
+    await sendOtpSms(normalizedMobile, otp);
+    console.log(`OTP requested for: ${sanitizeLog(normalizedMobile)}`);
+    existingUser = await User.findOne({ mobile: normalizedMobile });
+  }
+  
   return res.json({ success: true, isNewUser: !existingUser });
 });
 
 // POST /auth/verify-otp
-router.post('/verify-otp', otpLimiter, async (req: Request, res: Response) => {
-  const { email, otp, name } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP required' });
-  const normalizedEmail = email.toLowerCase().trim();
-  const record = await OTP.findOne({ email: normalizedEmail, used: false, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
-  if (!record) return res.status(400).json({ error: 'OTP expired or not found' });
-  const match = await bcrypt.compare(String(otp), record.hashedOtp);
-  if (!match) return res.status(400).json({ error: 'Invalid OTP' });
-  record.used = true;
-  await record.save();
-  let user = await User.findOne({ email: normalizedEmail });
-  if (!user) user = await User.create({ email: normalizedEmail, name: name?.trim() || undefined });
+router.post('/verify-otp', otpLimiter, validate(OtpVerifySchema), async (req: Request, res: Response) => {
+  const { email, mobile, otp, name } = req.body;
+  
+  let record;
+  let user;
+
+  if (email) {
+    const normalizedEmail = email.toLowerCase().trim();
+    record = await OTP.findOne({ email: normalizedEmail, used: false, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
+    if (!record) return res.status(400).json({ error: 'OTP expired or not found' });
+    const match = await bcrypt.compare(String(otp), record.hashedOtp);
+    if (!match) return res.status(400).json({ error: 'Invalid OTP' });
+    record.used = true;
+    await record.save();
+    
+    user = await User.findOne({ email: normalizedEmail });
+    if (!user) user = await User.create({ email: normalizedEmail, name: name?.trim() || undefined });
+  } else if (mobile) {
+    const normalizedMobile = mobile.trim();
+    record = await OTP.findOne({ mobile: normalizedMobile, used: false, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
+    if (!record) return res.status(400).json({ error: 'OTP expired or not found' });
+    const match = await bcrypt.compare(String(otp), record.hashedOtp);
+    if (!match) return res.status(400).json({ error: 'Invalid OTP' });
+    record.used = true;
+    await record.save();
+    
+    user = await User.findOne({ mobile: normalizedMobile });
+    if (!user) user = await User.create({ mobile: normalizedMobile, name: name?.trim() || undefined });
+  }
+
+  if (!user) return res.status(400).json({ error: 'User creation failed' });
   const accessToken = signAccessToken({ sub: user._id.toString(), email: user.email });
   const refreshToken = signRefreshToken({ sub: user._id.toString() });
   

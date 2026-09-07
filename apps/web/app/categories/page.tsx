@@ -1,7 +1,7 @@
 import Header from '../../components/Header';
-import Link from 'next/link';
 import API from '../../lib/api';
 import ReloadButton from '../../components/ReloadButton';
+import ScrollSpyLayout from './ScrollSpyLayout';
 
 async function getCategories() {
   try {
@@ -24,34 +24,13 @@ export default async function CategoriesPage() {
   return (
     <>
       <Header />
-      <main className="w-full px-3 sm:px-6 lg:px-8 py-9 pb-20 sm:py-6 sm:pb-6 max-w-4xl mx-auto">
-        <h1 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 px-0.5 sm:px-1">Shop by Category</h1>
-
-        {mainCategories.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 sm:gap-4">
-            {mainCategories.map((cat: any) => (
-              <Link
-                key={cat._id}
-                href={`/categories/${cat._id}`}
-                className="flex flex-col items-center gap-1.5 sm:gap-2 group p-1.5 sm:p-2 hover:bg-gray-50 rounded-2xl transition-colors"
-              >
-                <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-gray-100 border border-gray-150 shadow-sm group-hover:shadow-md transition-all group-hover:border-[var(--theme-primary)]">
-                  {cat.image ? (
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl sm:text-4xl">📦</div>
-                  )}
-                </div>
-                <span className="text-xs sm:text-sm font-medium text-gray-700 text-center leading-tight group-hover:text-[var(--theme-primary)] transition-colors">
-                  {cat.name}
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
+      {mainCategories.length > 0 ? (
+        <ScrollSpyLayout categories={mainCategories} />
+      ) : (
+        <main className="w-full px-3 sm:px-6 lg:px-8 py-9 max-w-4xl mx-auto text-center">
           <ReloadButton message="No categories found or failed to load." />
-        )}
-      </main>
+        </main>
+      )}
     </>
   );
 }

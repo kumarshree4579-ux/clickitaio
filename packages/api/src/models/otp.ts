@@ -1,14 +1,16 @@
 import { Schema, model, Document } from 'mongoose';
 
 export interface IOTP extends Document {
-  email: string;
+  email?: string;
+  mobile?: string;
   hashedOtp: string;
   expiresAt: Date;
   used: boolean;
 }
 
 const OTPSchema = new Schema<IOTP>({
-  email: { type: String, required: true, index: true },
+  email: { type: String, index: true },
+  mobile: { type: String, index: true },
   hashedOtp: { type: String, required: true },
   expiresAt: { type: Date, required: true },
   used: { type: Boolean, default: false },

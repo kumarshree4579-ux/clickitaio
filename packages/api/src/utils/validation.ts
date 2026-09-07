@@ -9,12 +9,18 @@ export const LoginSchema = z.object({
 });
 
 export const OtpRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
+  mobile: z.string().min(10).max(15).optional(),
+}).refine(data => data.email || data.mobile, {
+  message: 'Either email or mobile is required',
 });
 
 export const OtpVerifySchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
+  mobile: z.string().min(10).max(15).optional(),
   otp: z.string().length(6),
+}).refine(data => data.email || data.mobile, {
+  message: 'Either email or mobile is required',
 });
 
 export const ProductSchema = z.object({
