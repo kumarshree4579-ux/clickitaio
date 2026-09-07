@@ -24,17 +24,18 @@ router.get('/', async (req: Request, res: Response) => {
 
   const cats = await catsQuery;
 
-  // Batch fetch one product image per category in a single query
+  // Batch fetch one product image per category efficiently using aggregation
   const catIds = cats.map(c => c._id);
-  const products = await Product.find(
-    { category: { $in: catIds }, status: 'active', 'images.0': { $exists: true } },
-    'category images'
-  ).lean();
+  const products = await Product.aggregate([
+    { $match: { category: { $in: catIds }, status: 'active', 'images.0': { $exists: true } } },
+    { $group: { _id: '$category', images: { $first: '$images' } } }
+  ]);
 
   const imageMap: Record<string, string> = {};
   for (const p of products) {
-    const key = p.category!.toString();
-    if (!imageMap[key]) imageMap[key] = p.images[0].url;
+    if (p._id && p.images && p.images[0]) {
+      imageMap[p._id.toString()] = p.images[0].url;
+    }
   }
 
   const enriched = cats.map(cat => {

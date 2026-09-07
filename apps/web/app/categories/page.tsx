@@ -7,7 +7,7 @@ async function getCategories() {
   try {
     const res = await fetch(`${API}/categories`, {
       cache: 'no-store',
-      signal: AbortSignal.timeout(3000)
+      signal: AbortSignal.timeout(8000)
     });
     if (!res.ok) return [];
     return await res.json();
