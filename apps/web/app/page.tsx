@@ -4,6 +4,7 @@ import ProductCard from '../components/ProductCard';
 import HeroBanner from '../components/HeroBanner';
 import RecentlyViewed from '../components/RecentlyViewed';
 import CategorySection from '../components/CategorySection';
+import InfiniteHomeCategories from '../components/InfiniteHomeCategories';
 
 import API from '../lib/api';
 
@@ -14,7 +15,7 @@ async function getData() {
       fetch(`${API}/products?limit=8&status=active&featured=true`, { cache: 'no-store', signal }),
       fetch(`${API}/products?limit=8&status=active&newArrival=true`, { cache: 'no-store', signal }),
       fetch(`${API}/products?limit=4&status=active&bestSeller=true`, { cache: 'no-store', signal }),
-      fetch(`${API}/categories`, { cache: 'no-store', signal }),
+      fetch(`${API}/categories?limit=3&page=1&parent=null`, { cache: 'no-store', signal }),
       fetch(`${API}/settings/public`, { next: { revalidate: 300 }, signal }),
     ]);
     const [featured, newArrivals, bestSellers, categories, settings] = await Promise.all([
@@ -29,7 +30,7 @@ async function getData() {
       featured: featuredItems,
       newArrivals: newArrivals.items || [],
       bestSellers: bestSellers.items || [],
-      categories: (categories || []).filter((c: any) => !c.parent), // All main categories
+      categories: (categories || []), // We used parent=null in query, so these are all main categories
     };
   } catch {
     return { featured: [], newArrivals: [], bestSellers: [], categories: [] };
@@ -150,11 +151,7 @@ export default async function HomePage() {
 
           {/* Infinite Category Blocks */}
           {categories.length > 0 && (
-            <div className="pt-4 border-t border-slate-100 mt-8 space-y-2">
-              {categories.map((c: any) => (
-                <CategorySection key={c._id} category={c} />
-              ))}
-            </div>
+            <InfiniteHomeCategories initialCategories={categories} />
           )}
 
         </div>

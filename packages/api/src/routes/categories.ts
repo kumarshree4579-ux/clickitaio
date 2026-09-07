@@ -7,8 +7,22 @@ import { validate, CategorySchema } from '../utils/validation';
 const router = Router();
 
 // GET /categories — includes firstProductImage fallback
-router.get('/', async (_req: Request, res: Response) => {
-  const cats = await Category.find().populate('parent', 'name slug').sort({ name: 1 });
+router.get('/', async (req: Request, res: Response) => {
+  const { limit, page, parent } = req.query;
+
+  let query: any = {};
+  if (parent === 'null') query.parent = null;
+  else if (parent) query.parent = parent;
+
+  let catsQuery = Category.find(query).populate('parent', 'name slug').sort({ name: 1 });
+
+  if (limit) {
+    const l = parseInt(limit as string) || 10;
+    const p = parseInt(page as string) || 1;
+    catsQuery = catsQuery.skip((p - 1) * l).limit(l);
+  }
+
+  const cats = await catsQuery;
 
   // Batch fetch one product image per category in a single query
   const catIds = cats.map(c => c._id);
