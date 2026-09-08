@@ -85,10 +85,10 @@ export default function ScrollSpyLayout({ categories }: { categories: any[] }) {
   };
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto bg-gray-50 flex flex-row min-h-[calc(100vh-140px)] sm:min-h-[calc(100vh-65px)]">
+    <div className="w-full max-w-[1600px] mx-auto bg-gray-50 flex flex-row min-h-[calc(100vh-110px)] sm:min-h-[calc(100vh-65px)]">
       
       {/* Left Sidebar - Categories */}
-      <aside className="w-24 sm:w-1/4 lg:w-1/5 bg-white border-r border-gray-100 shrink-0 overflow-y-auto scrollbar-hide h-[calc(100vh-140px)] sm:h-[calc(100vh-65px)] sticky top-0">
+      <aside className="w-24 sm:w-1/4 lg:w-1/5 bg-white border-r border-gray-100 shrink-0 overflow-y-auto scrollbar-hide h-[calc(100vh-110px)] sm:h-[calc(100vh-65px)] sticky top-[110px] sm:top-[65px]">
         <div className="py-2 pb-24 sm:pb-4 flex flex-col gap-1 sm:gap-0">
           {categories.map((cat: any) => {
             const isActive = activeId === cat._id;
@@ -118,7 +118,7 @@ export default function ScrollSpyLayout({ categories }: { categories: any[] }) {
       {/* Right Pane - Products */}
       <div 
         ref={rightPaneRef} 
-        className="flex-1 w-[calc(100%-6rem)] sm:w-3/4 lg:w-4/5 overflow-y-auto h-[calc(100vh-140px)] sm:h-[calc(100vh-65px)] scroll-smooth relative"
+        className="flex-1 w-[calc(100%-6rem)] sm:w-3/4 lg:w-4/5 overflow-y-auto h-[calc(100vh-110px)] sm:h-[calc(100vh-65px)] scroll-smooth relative"
       >
         <div className="p-2 sm:p-6 pb-20 sm:pb-6 relative">
           {categories.map((cat) => (

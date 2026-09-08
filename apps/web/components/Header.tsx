@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import API from '../lib/api';
 import MobileTopbar from './MobileTopbar';
 import { useLocation } from '../lib/LocationContext';
@@ -95,6 +95,10 @@ export default function Header() {
     if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)); }
     if (e.key === 'Escape') { setShowSuggest(false); setActiveIdx(-1); }
   }
+
+  const pathname = usePathname();
+  // MobileTopbar only renders on / and /products, adding ~36px tabs row
+  const hasTopbarTabs = pathname === '/' || pathname === '/products';
 
   function logout() {
     localStorage.removeItem('token');
@@ -362,7 +366,8 @@ export default function Header() {
       
       {/* Spacer that pushes content below the fixed header */}
       <div className="hidden sm:block h-16 shrink-0 box-content pt-safe" />
-      <div className="sm:hidden h-[146px] shrink-0 box-content pt-safe" />
+      {/* Row1(60px) + search(~50px) + tabs(~36px only on / and /products) */}
+      <div className={`sm:hidden shrink-0 box-content pt-safe ${hasTopbarTabs ? 'h-[146px]' : 'h-[110px]'}`} />
     </>
   );
 }
