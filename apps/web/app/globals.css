@@ -17,7 +17,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
-  overflow-x: hidden;
+  /* overflow-clip does not create a scroll container, so position:sticky works */
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
 }
@@ -28,7 +29,9 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* overflow-clip instead of overflow-hidden — prevents horizontal scroll
+     without creating a new scroll container that breaks position:sticky */
+  overflow-x: clip;
   width: 100%;
   min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
