@@ -293,81 +293,78 @@ export default function Header() {
       </header>
 
       {/* ═══════════════════════════════════════════
-          MOBILE — Fixed at top, two-row layout
-          Row 1: Logo + Location (h-14 = 56px)
-          Row 2: Search Bar + Tabs (h ~= 90px)
-          Total fixed height ≈ 146px
+          MOBILE — Two-part layout
+          Part 1: Logo row — scrolls with page (not fixed)
+          Part 2: Sticky bar — sticks at top-0 on scroll
+                  home/products: search + tabs
+                  other pages:   search only
           ═══════════════════════════════════════════ */}
-      <div className="sm:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm pt-safe">
-        {/* Row 1 — Logo + Location */}
-        <div className="border-b border-gray-100 px-4">
-          <div className="flex items-center justify-between h-[60px]">
-            <Link href="/" className="flex items-center gap-3 shrink-0">
-              <img src="/logo192.png" alt="Daily Basket" className="w-11 h-11 rounded-xl object-contain" />
-              <span className="text-[19px] font-extrabold tracking-tight">
-                <span className="text-primary">Daily</span>
-                <span className="text-gray-900"> Basket</span>
-              </span>
-            </Link>
 
-            <div className="flex items-center gap-3">
-              {/* Location */}
-              <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-[14px] font-bold text-gray-900 max-w-[100px] truncate">{addressString || 'Select'}</span>
-                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                </div>
-                {isServiceable === false && (
-                  <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Not serviceable'}</span>
-                )}
-              </button>
+      {/* Part 1 — Logo + Location (scrolls away) */}
+      <div className="sm:hidden bg-white border-b border-gray-100 pt-safe">
+        <div className="flex items-center justify-between h-[60px] px-4">
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <img src="/logo192.png" alt="Daily Basket" className="w-11 h-11 rounded-xl object-contain" />
+            <span className="text-[19px] font-extrabold tracking-tight">
+              <span className="text-primary">Daily</span>
+              <span className="text-gray-900"> Basket</span>
+            </span>
+          </Link>
+          <button onClick={openPrompt} className="flex flex-col items-end hover:opacity-80 transition-opacity">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Deliver to</span>
+            <div className="flex items-center gap-1 mt-0.5">
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-[14px] font-bold text-gray-900 max-w-[100px] truncate">{addressString || 'Select'}</span>
+              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
             </div>
-          </div>
-        </div>
-
-        {/* Row 2 — Search + Tabs */}
-        <div className="border-b border-gray-100 bg-white">
-          <div className="px-3 pt-2 pb-1.5 relative" ref={searchRef}>
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  ref={mobileSearchRef}
-                  value={search} onChange={handleChange} onKeyDown={handleKeyDown}
-                  onFocus={() => suggestions.length > 0 && setShowSuggest(true)}
-                  placeholder="Search for products..."
-                  autoComplete="off"
-                  className="w-full bg-gray-100 border-0 rounded-xl pl-10 pr-10 py-3 text-[15px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
-                />
-                {search ? (
-                  <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl leading-none">&times;</button>
-                ) : (
-                  <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                  </button>
-                )}
-              </div>
-            </form>
-            <SuggestDropdown />
-          </div>
-          <Suspense fallback={<div className="h-9 bg-white" />}>
-            <MobileTopbar />
-          </Suspense>
+            {isServiceable === false && (
+              <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mt-0.5">{serviceabilityMessage || 'Not serviceable'}</span>
+            )}
+          </button>
         </div>
       </div>
-      
-      {/* Spacer that pushes content below the fixed header */}
+
+      {/* Part 2 — Sticky search bar (+ tabs on home/products) */}
+      <div className="sm:hidden sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div className="px-3 pt-2 pb-1.5 relative" ref={searchRef}>
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                ref={mobileSearchRef}
+                value={search} onChange={handleChange} onKeyDown={handleKeyDown}
+                onFocus={() => suggestions.length > 0 && setShowSuggest(true)}
+                placeholder="Search for products..."
+                autoComplete="off"
+                className="w-full bg-gray-100 border-0 rounded-xl pl-10 pr-10 py-3 text-[15px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-400"
+              />
+              {search ? (
+                <button type="button" onClick={() => { setSearch(''); setSuggestions([]); setShowSuggest(false); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl leading-none">&times;</button>
+              ) : (
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </button>
+              )}
+            </div>
+          </form>
+          <SuggestDropdown />
+        </div>
+        {/* Tabs row — only on / and /products */}
+        {hasTopbarTabs && (
+          <Suspense fallback={<div className="h-9" />}>
+            <MobileTopbar />
+          </Suspense>
+        )}
+      </div>
+
+      {/* Desktop spacer only */}
       <div className="hidden sm:block h-16 shrink-0 box-content pt-safe" />
-      {/* Row1(60px) + search(~50px) + tabs(~36px only on / and /products) */}
-      <div className={`sm:hidden shrink-0 box-content pt-safe ${hasTopbarTabs ? 'h-[146px]' : 'h-[110px]'}`} />
     </>
   );
 }
