@@ -35,9 +35,9 @@ body {
 }
 
 /* Only prevent horizontal overflow, don't cap widths */
+/* NOTE: overflow-x on these breaks position:sticky — use clip on body instead */
 #__next, main, section, article {
   max-width: 100vw;
-  overflow-x: hidden;
 }
 
 /* Mobile-first touch interactions */

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
     const updateCart = () => {
@@ -16,6 +17,20 @@ export default function MobileBottomNav() {
     window.addEventListener('cart-updated', updateCart);
     return () => window.removeEventListener('cart-updated', updateCart);
   }, []);
+
+  // Hide bottom nav when virtual keyboard is open
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      // keyboard is open when visual viewport height is significantly less than window height
+      setKeyboardOpen(vv.height < window.innerHeight * 0.75);
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
+  if (keyboardOpen) return null;
 
   const navItems = [
     {
@@ -93,9 +108,6 @@ export default function MobileBottomNav() {
           );
         })}
       </div>
-      <style jsx>{`
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-      `}</style>
     </div>
   );
 }
